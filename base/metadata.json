@@ -1,0 +1,7 @@
+{
+  "name": "AF Design Explorer",
+  "description": "A design system exploration tool for Anytime Fitness inspired fitness tracking applications, showcasing 10 distinct UI patterns.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

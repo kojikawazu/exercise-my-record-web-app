@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Report {
+  id               String             @id
+  title            String
+  summary          String?
+  content          String
+  category         String
+  author           String
+  publishDate      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  ReportTagMapping ReportTagMapping[]
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([publishDate])
+}
+
+model ReportTag {
+  id               String             @id
+  name             String             @unique
+  createdAt        DateTime           @default(now())
+  ReportTagMapping ReportTagMapping[]
+
+  @@index([name])
+}
+
+model ReportTagMapping {
+  id          String    @id
+  reportId    String
+  reportTagId String
+  createdAt   DateTime  @default(now())
+  Report      Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  ReportTag   ReportTag @relation(fields: [reportTagId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, reportTagId])
+  @@index([reportId])
+  @@index([reportTagId])
+}
+
+model VideoEntry {
+  id           String    @id
+  youtubeUrl   String
+  title        String
+  thumbnailUrl String
+  tags         String[]
+  category     String
+  goodPoints   String
+  memo         String
+  rating       Int
+  publishDate  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+
+  @@index([createdAt])
+  @@index([publishDate])
+  @@index([rating])
+}
+
+model ExerciseRecord {
+  id        String            @id @default(cuid())
+  date      DateTime          @unique
+  memo      String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  cardio    ExerciseCardio?
+  workouts  ExerciseWorkout[]
+
+  @@index([date])
+  @@index([createdAt])
+}
+
+model ExerciseWorkout {
+  id        String         @id @default(cuid())
+  recordId  String
+  part      String
+  name      String
+  sets      Float
+  reps      Float
+  weight    Float
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  record    ExerciseRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+}
+
+model ExerciseCardio {
+  id        String         @id @default(cuid())
+  recordId  String         @unique
+  type      String
+  minutes   Float
+  distance  Float
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  record    ExerciseRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+}
+
+model ExerciseMaster {
+  id        String   @id @default(cuid())
+  type      String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([type, name])
+  @@index([type])
+  @@index([name])
+}
+
+model ExerciseProfile {
+  id        String   @id @default(cuid())
+  weightKg  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
