@@ -11,12 +11,18 @@ export async function GET() {
     include: { workouts: true, cardio: true },
   });
 
-  const result = records.map((record) => ({
+  const result = records.map(
+    (record: {
+      date: Date;
+      workouts: { sets: number }[];
+      cardio: { minutes: number; distance: number } | null;
+    }) => ({
     date: record.date.toISOString().slice(0, 10),
     totalSets: record.workouts.reduce((sum, workout) => sum + workout.sets, 0),
     cardioMinutes: record.cardio?.minutes ?? 0,
     cardioDistance: record.cardio?.distance ?? 0,
-  }));
+  }),
+  );
 
   return NextResponse.json(result);
 }
