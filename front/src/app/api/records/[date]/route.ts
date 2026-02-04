@@ -24,13 +24,21 @@ export async function GET(_request: Request, context: RouteContext) {
   return NextResponse.json({
     date: record.date.toISOString().slice(0, 10),
     memo: record.memo,
-    workouts: record.workouts.map((workout) => ({
+    workouts: record.workouts.map(
+      (workout: {
+        part: string;
+        name: string;
+        sets: number;
+        reps: number;
+        weight: number;
+      }) => ({
       part: workout.part,
       name: workout.name,
       sets: workout.sets,
       reps: workout.reps,
       weight: workout.weight,
-    })),
+    }),
+    ),
     cardio: record.cardio
       ? {
           type: record.cardio.type,

@@ -59,7 +59,7 @@ export default function RecordsListClient() {
         setRecords([]);
         return;
       }
-      const withType = data.map((record) => ({
+      const withType: RecordSummary[] = data.map((record) => ({
         ...record,
         cardioType: record.cardioMinutes > 0 ? 'ラン' : 'ウォーク',
       }));

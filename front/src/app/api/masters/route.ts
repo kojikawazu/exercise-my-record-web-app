@@ -3,7 +3,8 @@ import { getPrisma } from '@/lib/prisma';
 
 const ALLOWED_TYPES = new Set(['body-parts', 'exercises', 'cardio-types']);
 
-const isValidType = (value: string | null) => value !== null && ALLOWED_TYPES.has(value);
+const isValidType = (value: string | null): value is string =>
+  value !== null && ALLOWED_TYPES.has(value);
 
 export async function GET(request: Request) {
   const prisma = getPrisma();
