@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { ExerciseWorkout } from '@prisma/client';
 import { getPrisma } from '@/lib/prisma';
 
 type RouteContext = {
@@ -24,7 +25,7 @@ export async function GET(_request: Request, context: RouteContext) {
   return NextResponse.json({
     date: record.date.toISOString().slice(0, 10),
     memo: record.memo,
-    workouts: record.workouts.map((workout) => ({
+    workouts: record.workouts.map((workout: ExerciseWorkout) => ({
       part: workout.part,
       name: workout.name,
       sets: workout.sets,
