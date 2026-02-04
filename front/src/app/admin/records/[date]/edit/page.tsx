@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -26,7 +26,7 @@ type RecordDetail = {
 };
 
 type PageProps = {
-  params: { date: string };
+  params: Promise<{ date: string }>;
 };
 
 const toRow = (workout: RecordDetail['workouts'][number]): WorkoutRow => ({
@@ -48,6 +48,7 @@ const emptyRow = (): WorkoutRow => ({
 });
 
 export default function AdminRecordEditPage({ params }: PageProps) {
+  const { date } = use(params);
   const router = useRouter();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([emptyRow()]);
   const [memo, setMemo] = useState('');
@@ -60,7 +61,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
 
   useEffect(() => {
     const fetchRecord = async () => {
-      const res = await fetch(`/api/records/${params.date}`);
+      const res = await fetch(`/api/records/${date}`);
       if (!res.ok) {
         setNotice('記録が見つかりません。');
         setLoading(false);
@@ -78,7 +79,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
     };
 
     void fetchRecord();
-  }, [params.date]);
+  }, [date]);
 
   const totalSets = useMemo(
     () => workouts.reduce((sum, row) => sum + Number(row.sets || 0), 0),
@@ -105,7 +106,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
     setNotice('');
 
     const cardioHasValue = cardioMinutes !== '' || cardioDistance !== '';
-    const res = await fetch(`/api/records/${params.date}`, {
+    const res = await fetch(`/api/records/${date}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -159,7 +160,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
               日付
             </label>
             <div className="mt-3">
-              <DatePicker value={params.date} onChange={() => undefined} disabled />
+              <DatePicker value={date} onChange={() => undefined} disabled />
             </div>
           </Card>
 

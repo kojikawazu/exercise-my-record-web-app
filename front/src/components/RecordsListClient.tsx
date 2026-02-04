@@ -17,53 +17,35 @@ export type RecordSummary = {
   cardioType: 'ラン' | 'ウォーク';
 };
 
-const fallbackRecords: RecordSummary[] = [
-  {
-    date: '2026-02-02',
-    totalSets: 14,
-    cardioMinutes: 42,
-    cardioDistance: 5.6,
-    cardioType: 'ラン',
-  },
-  {
-    date: '2026-02-01',
-    totalSets: 10,
-    cardioMinutes: 30,
-    cardioDistance: 4.2,
-    cardioType: 'ウォーク',
-  },
-  {
-    date: '2026-01-31',
-    totalSets: 18,
-    cardioMinutes: 55,
-    cardioDistance: 7.1,
-    cardioType: 'ラン',
-  },
-];
-
 export default function RecordsListClient() {
-  const [records, setRecords] = useState<RecordSummary[]>(fallbackRecords);
+  const [records, setRecords] = useState<RecordSummary[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { isAdmin } = useAdminSession();
 
   useEffect(() => {
     const fetchRecords = async () => {
-      const res = await fetch('/api/records');
-      if (!res.ok) {
+      try {
+        const res = await fetch('/api/records');
+        if (!res.ok) {
+          setErrorMessage('記録の取得に失敗しました。');
+          setRecords([]);
+          setHasFetched(true);
+          return;
+        }
+        const data = (await res.json()) as Omit<RecordSummary, 'cardioType'>[];
+        const withType: RecordSummary[] = data.map((record) => ({
+          ...record,
+          cardioType: record.cardioMinutes > 0 ? 'ラン' : 'ウォーク',
+        }));
+        setErrorMessage('');
+        setRecords(withType);
         setHasFetched(true);
-        return;
-      }
-      const data = (await res.json()) as Omit<RecordSummary, 'cardioType'>[];
-      setHasFetched(true);
-      if (data.length === 0) {
+      } catch {
+        setErrorMessage('記録の取得に失敗しました。');
         setRecords([]);
-        return;
+        setHasFetched(true);
       }
-      const withType: RecordSummary[] = data.map((record) => ({
-        ...record,
-        cardioType: record.cardioMinutes > 0 ? 'ラン' : 'ウォーク',
-      }));
-      setRecords(withType);
     };
 
     void fetchRecords();
@@ -101,6 +83,9 @@ export default function RecordsListClient() {
         </div>
 
         <div className="mt-8 grid gap-6">
+          {errorMessage ? (
+            <Card className="p-6 text-sm font-bold text-red-500">{errorMessage}</Card>
+          ) : null}
           {records.length === 0 && hasFetched ? (
             <Card className="p-10 text-center">
               <p className="text-lg font-bold text-gray-500">

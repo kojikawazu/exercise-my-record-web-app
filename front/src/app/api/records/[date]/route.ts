@@ -26,12 +26,14 @@ export async function GET(_request: Request, context: RouteContext) {
     memo: record.memo,
     workouts: record.workouts.map(
       (workout: {
+        id: string;
         part: string;
         name: string;
         sets: number;
         reps: number;
         weight: number;
       }) => ({
+      id: workout.id,
       part: workout.part,
       name: workout.name,
       sets: workout.sets,

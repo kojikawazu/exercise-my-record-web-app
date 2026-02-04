@@ -12,10 +12,16 @@ type DatePickerProps = {
 
 const WEEK_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
 
-const toIso = (date: Date) => date.toISOString().slice(0, 10);
+const pad = (value: number) => String(value).padStart(2, '0');
+
+const toLocalIso = (date: Date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const parseDate = (value: string) => {
-  const parsed = new Date(value);
+  if (!value) return null;
+  const [year, month, day] = value.split('-').map((part) => Number(part));
+  if (!year || !month || !day) return null;
+  const parsed = new Date(year, month - 1, day);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed;
 };
@@ -59,7 +65,7 @@ export default function DatePicker({
 
   const handleSelect = (day: number) => {
     const selected = new Date(year, month, day);
-    onChange(toIso(selected));
+    onChange(toLocalIso(selected));
     setOpen(false);
   };
 
@@ -76,7 +82,11 @@ export default function DatePicker({
       </button>
 
       {open ? (
-        <div className="absolute left-0 top-full z-20 mt-2 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-lg">
+        <div
+          className="absolute left-0 top-full z-20 mt-2 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+          onClick={(event) => event.stopPropagation()}
+          onMouseDown={(event) => event.preventDefault()}
+        >
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
@@ -130,7 +140,11 @@ export default function DatePicker({
                 <button
                   key={`${year}-${month}-${day}-${idx}`}
                   type="button"
-                  onClick={() => handleSelect(day)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleSelect(day);
+                  }}
                   className="rounded-lg px-2 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100"
                 >
                   {day}

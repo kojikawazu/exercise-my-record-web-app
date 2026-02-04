@@ -16,14 +16,6 @@ export type DetailWorkout = {
   weight: number;
 };
 
-const fallbackWorkouts: DetailWorkout[] = [
-  { id: '1', name: 'ベンチプレス', part: '胸', sets: 4, reps: 8, weight: 75 },
-  { id: '2', name: 'スクワット', part: '脚', sets: 5, reps: 6, weight: 90 },
-  { id: '3', name: 'ラットプルダウン', part: '背中', sets: 3, reps: 10, weight: 55 },
-];
-
-const fallbackCardio = { type: 'ラン' as const, minutes: 42, distance: 5.6 };
-
 type RecordDetailData = {
   date: string;
   memo: string | null;
@@ -41,21 +33,29 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
 
   useEffect(() => {
     const fetchDetail = async () => {
-      const res = await fetch(`/api/records/${date}`);
-      if (res.status === 404) {
-        setErrorMessage('記録が見つかりません。');
-        return;
+      try {
+        const res = await fetch(`/api/records/${date}`);
+        if (res.status === 404) {
+          setErrorMessage('記録が見つかりません。');
+          return;
+        }
+        if (!res.ok) {
+          setErrorMessage('記録の取得に失敗しました。');
+          return;
+        }
+        const data = (await res.json()) as RecordDetailData;
+        setDetail(data);
+        setErrorMessage('');
+      } catch {
+        setErrorMessage('記録の取得に失敗しました。');
       }
-      if (!res.ok) return;
-      const data = (await res.json()) as RecordDetailData;
-      setDetail(data);
     };
 
     void fetchDetail();
   }, [date]);
 
-  const workouts = detail?.workouts ?? fallbackWorkouts;
-  const cardio = detail?.cardio ?? fallbackCardio;
+  const workouts = detail?.workouts ?? [];
+  const cardio = detail?.cardio ?? null;
   const memo = detail?.memo ?? '';
 
   const totalSets = useMemo(
@@ -89,8 +89,8 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
           <Card className="p-6">
             <CalorieEstimate
               totalSets={totalSets}
-              cardioMinutes={cardio.minutes}
-              cardioType={cardio.type === 'ウォーク' ? 'ウォーク' : 'ラン'}
+              cardioMinutes={cardio?.minutes ?? 0}
+              cardioType={cardio?.type === 'ウォーク' ? 'ウォーク' : 'ラン'}
             />
           </Card>
 
@@ -136,15 +136,15 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
             <div className="mt-4 grid gap-3 text-sm text-gray-800 md:grid-cols-3">
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-[10px] font-black uppercase text-gray-400">種別</p>
-                <p className="font-bold">{cardio.type}</p>
+                <p className="font-bold">{cardio?.type ?? '未入力'}</p>
               </div>
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-[10px] font-black uppercase text-gray-400">時間</p>
-                <p className="font-bold">{cardio.minutes}分</p>
+                <p className="font-bold">{cardio?.minutes ?? 0}分</p>
               </div>
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-[10px] font-black uppercase text-gray-400">距離</p>
-                <p className="font-bold">{cardio.distance}km</p>
+                <p className="font-bold">{cardio?.distance ?? 0}km</p>
               </div>
             </div>
           </Card>
