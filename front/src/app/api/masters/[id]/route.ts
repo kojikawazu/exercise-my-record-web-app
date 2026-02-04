@@ -1,16 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 
 type RouteContext = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export async function PATCH(request: Request, context: RouteContext) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });
   }
 
+  const { id } = await context.params;
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === 'string' ? body.name.trim() : '';
   if (!name) {
@@ -19,7 +20,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const updated = await prisma.exerciseMaster.update({
-      where: { id: context.params.id },
+      where: { id },
       data: { name },
     });
     return NextResponse.json(updated);
@@ -28,15 +29,16 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(_request: NextRequest, context: RouteContext) {
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });
   }
 
+  const { id } = await context.params;
   try {
     await prisma.exerciseMaster.delete({
-      where: { id: context.params.id },
+      where: { id },
     });
     return NextResponse.json({ ok: true });
   } catch {
