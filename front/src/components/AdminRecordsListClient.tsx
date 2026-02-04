@@ -14,33 +14,30 @@ export type AdminRecordSummary = {
   cardioDistance: number;
 };
 
-const fallbackRecords: AdminRecordSummary[] = [
-  {
-    date: '2026-02-02',
-    totalSets: 14,
-    cardioMinutes: 42,
-    cardioDistance: 5.6,
-  },
-  {
-    date: '2026-02-01',
-    totalSets: 10,
-    cardioMinutes: 30,
-    cardioDistance: 4.2,
-  },
-];
-
 export default function AdminRecordsListClient() {
-  const [records, setRecords] = useState<AdminRecordSummary[]>(fallbackRecords);
+  const [records, setRecords] = useState<AdminRecordSummary[]>([]);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     const fetchRecords = async () => {
-      const res = await fetch('/api/records');
-      if (!res.ok) return;
-      const data = (await res.json()) as AdminRecordSummary[];
-      if (data.length === 0) return;
-      setRecords(data);
+      try {
+        const res = await fetch('/api/records');
+        if (!res.ok) {
+          setError('記録の取得に失敗しました。');
+          setRecords([]);
+          setHasFetched(true);
+          return;
+        }
+        const data = (await res.json()) as AdminRecordSummary[];
+        setRecords(data);
+        setHasFetched(true);
+      } catch {
+        setError('記録の取得に失敗しました。');
+        setRecords([]);
+        setHasFetched(true);
+      }
     };
 
     void fetchRecords();
@@ -85,6 +82,13 @@ export default function AdminRecordsListClient() {
 
         <div className="mt-8 grid gap-6">
           {error ? <p className="text-sm font-bold text-red-500">{error}</p> : null}
+          {records.length === 0 && hasFetched ? (
+            <Card className="p-10 text-center">
+              <p className="text-lg font-bold text-gray-500">
+                記録がありません。最初の記録を追加しましょう
+              </p>
+            </Card>
+          ) : null}
           {records.map((record) => (
             <Card key={record.date} className="p-6 md:p-8">
               <div className="flex flex-wrap items-center justify-between gap-4">
