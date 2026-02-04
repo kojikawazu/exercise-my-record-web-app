@@ -89,10 +89,12 @@ export default function AdminExportPage() {
           <div className="mt-6">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">形式</p>
             <div className="mt-3 flex flex-wrap gap-3">
-              {[
-                { label: 'CSV', value: 'csv' },
-                { label: 'JSON', value: 'json' },
-              ].map((option) => (
+              {(
+                [
+                  { label: 'CSV', value: 'csv' },
+                  { label: 'JSON', value: 'json' },
+                ] as const
+              ).map((option) => (
                 <label
                   key={option.value}
                   className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold"
