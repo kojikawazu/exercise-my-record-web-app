@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export type AdminRecordSummary = {
   date: string;
@@ -82,6 +83,11 @@ export default function AdminRecordsListClient() {
 
         <div className="mt-8 grid gap-6">
           {error ? <p className="text-sm font-bold text-red-500">{error}</p> : null}
+          {!hasFetched ? (
+            <Card className="p-10">
+              <LoadingSpinner mode="fetching" />
+            </Card>
+          ) : null}
           {records.length === 0 && hasFetched ? (
             <Card className="p-10 text-center">
               <p className="text-lg font-bold text-gray-500">
@@ -112,7 +118,11 @@ export default function AdminRecordsListClient() {
                     onClick={() => handleDelete(record.date)}
                     disabled={deletingDate === record.date}
                   >
-                    {deletingDate === record.date ? '削除中...' : '削除'}
+                    {deletingDate === record.date ? (
+                      <LoadingSpinner mode="deleting" variant="inline" className="text-inherit" />
+                    ) : (
+                      '削除'
+                    )}
                   </button>
                 </div>
               </div>

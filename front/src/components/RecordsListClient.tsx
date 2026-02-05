@@ -6,6 +6,7 @@ import { CalendarDays, Plus } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 
@@ -85,6 +86,11 @@ export default function RecordsListClient() {
         <div className="mt-8 grid gap-6">
           {errorMessage ? (
             <Card className="p-6 text-sm font-bold text-red-500">{errorMessage}</Card>
+          ) : null}
+          {!hasFetched ? (
+            <Card className="p-10">
+              <LoadingSpinner mode="fetching" />
+            </Card>
           ) : null}
           {records.length === 0 && hasFetched ? (
             <Card className="p-10 text-center">
