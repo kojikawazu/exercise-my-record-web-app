@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import DatePicker from '@/components/DatePicker';
 
 export default function AdminExportPage() {
@@ -124,8 +125,14 @@ export default function AdminExportPage() {
             onClick={handleExport}
             disabled={status === 'loading'}
           >
-            <Download size={16} />
-            {status === 'loading' ? 'エクスポート中...' : 'エクスポート'}
+            {status === 'loading' ? (
+              <LoadingSpinner mode="exporting" variant="inline" className="text-white" />
+            ) : (
+              <>
+                <Download size={16} />
+                エクスポート
+              </>
+            )}
           </button>
         </div>
       </section>

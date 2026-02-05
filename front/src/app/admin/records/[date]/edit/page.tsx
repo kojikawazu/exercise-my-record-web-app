@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
 
@@ -136,6 +137,28 @@ export default function AdminRecordEditPage({ params }: PageProps) {
 
     router.push('/admin/records');
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen pb-16">
+        <PageHeader
+          title="記録編集"
+          subtitle="Edit record"
+          action={
+            <Link href="/admin/records" className={buttonClasses('outline')}>
+              管理者一覧へ戻る
+            </Link>
+          }
+        />
+
+        <section className="mx-auto max-w-5xl px-6 pt-8">
+          <Card className="p-10">
+            <LoadingSpinner mode="fetching" />
+          </Card>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen pb-16">
@@ -307,7 +330,11 @@ export default function AdminRecordEditPage({ params }: PageProps) {
               onClick={handleSave}
               disabled={status === 'saving' || loading}
             >
-              {status === 'saving' ? '保存中...' : '保存'}
+              {status === 'saving' ? (
+                <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+              ) : (
+                '保存'
+              )}
             </button>
           </div>
 

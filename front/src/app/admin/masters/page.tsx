@@ -6,6 +6,7 @@ import { Plus, Save, Trash2, X } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const masterTabs = [
   { label: '部位', type: 'body-parts' },
@@ -29,6 +30,9 @@ export default function AdminMastersPage() {
   const [editingValue, setEditingValue] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const activeLabel = useMemo(
     () => masterTabs.find((tab) => tab.type === activeType)?.label ?? '',
@@ -57,25 +61,30 @@ export default function AdminMastersPage() {
     const name = inputValue.trim();
     if (!name) return;
     setStatusMessage('');
-    const res = await fetch(`/api/masters?type=${activeType}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
+    setAdding(true);
+    try {
+      const res = await fetch(`/api/masters?type=${activeType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
 
-    if (res.status === 409) {
-      setStatusMessage('同じ名称が既に存在します。');
-      return;
+      if (res.status === 409) {
+        setStatusMessage('同じ名称が既に存在します。');
+        return;
+      }
+
+      if (!res.ok) {
+        setStatusMessage('追加に失敗しました。');
+        return;
+      }
+
+      const created = (await res.json()) as MasterItem;
+      setItems((prev) => [created, ...prev]);
+      setInputValue('');
+    } finally {
+      setAdding(false);
     }
-
-    if (!res.ok) {
-      setStatusMessage('追加に失敗しました。');
-      return;
-    }
-
-    const created = (await res.json()) as MasterItem;
-    setItems((prev) => [created, ...prev]);
-    setInputValue('');
   };
 
   const handleEdit = (item: MasterItem) => {
@@ -86,30 +95,40 @@ export default function AdminMastersPage() {
   const handleSave = async (id: string) => {
     const name = editingValue.trim();
     if (!name) return;
-    const res = await fetch(`/api/masters/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
+    setSavingId(id);
+    try {
+      const res = await fetch(`/api/masters/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
 
-    if (!res.ok) {
-      setStatusMessage('更新に失敗しました。');
-      return;
+      if (!res.ok) {
+        setStatusMessage('更新に失敗しました。');
+        return;
+      }
+
+      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, name } : item)));
+      setEditingId(null);
+      setEditingValue('');
+    } finally {
+      setSavingId(null);
     }
-
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, name } : item)));
-    setEditingId(null);
-    setEditingValue('');
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('この項目を削除します。よろしいですか？')) return;
-    const res = await fetch(`/api/masters/${id}`, { method: 'DELETE' });
-    if (!res.ok) {
-      setStatusMessage('削除に失敗しました。');
-      return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/masters/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        setStatusMessage('削除に失敗しました。');
+        return;
+      }
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } finally {
+      setDeletingId(null);
     }
-    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
@@ -159,9 +178,16 @@ export default function AdminMastersPage() {
               type="button"
               className={`${buttonClasses('pink')} flex items-center gap-2`}
               onClick={handleAdd}
+              disabled={adding}
             >
-              <Plus size={16} />
-              追加
+              {adding ? (
+                <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+              ) : (
+                <>
+                  <Plus size={16} />
+                  追加
+                </>
+              )}
             </button>
           </div>
         </Card>
@@ -171,7 +197,9 @@ export default function AdminMastersPage() {
         ) : null}
 
         {loading ? (
-          <Card className="mt-6 p-6 text-sm font-bold text-gray-500">読み込み中...</Card>
+          <Card className="mt-6 p-6">
+            <LoadingSpinner mode="fetching" />
+          </Card>
         ) : (
           <section className="mt-6 grid gap-3">
             {items.map((item) => (
@@ -197,9 +225,16 @@ export default function AdminMastersPage() {
                           type="button"
                           className={`${buttonClasses('pink')} flex items-center gap-1`}
                           onClick={() => handleSave(item.id)}
+                          disabled={savingId === item.id}
                         >
-                          <Save size={14} />
-                          保存
+                          {savingId === item.id ? (
+                            <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+                          ) : (
+                            <>
+                              <Save size={14} />
+                              保存
+                            </>
+                          )}
                         </button>
                         <button
                           type="button"
@@ -226,9 +261,16 @@ export default function AdminMastersPage() {
                           type="button"
                           className={`${buttonClasses('danger')} flex items-center gap-1`}
                           onClick={() => handleDelete(item.id)}
+                          disabled={deletingId === item.id}
                         >
-                          <Trash2 size={14} />
-                          削除
+                          {deletingId === item.id ? (
+                            <LoadingSpinner mode="deleting" variant="inline" className="text-inherit" />
+                          ) : (
+                            <>
+                              <Trash2 size={14} />
+                              削除
+                            </>
+                          )}
                         </button>
                       </>
                     )}

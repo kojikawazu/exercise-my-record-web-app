@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { supabase } from '@/lib/supabase';
 import { isBypassAllowed, setBypassSession, useAdminSession } from '@/hooks/useAdminSession';
 
@@ -43,7 +44,18 @@ export default function AdminLoginPage() {
     router.replace('/admin?bypass=1');
   };
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <main className="min-h-screen pb-16">
+        <PageHeader title="管理者ログイン" subtitle="Admin login" maxWidth="xl" />
+        <section className="mx-auto max-w-xl px-6 pt-8">
+          <Card className="p-8">
+            <LoadingSpinner mode="fetching" />
+          </Card>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen pb-16">
@@ -60,8 +72,14 @@ export default function AdminLoginPage() {
             onClick={handleLogin}
             disabled={isWorking}
           >
-            <LogIn size={16} />
-            {isWorking ? 'ログイン中...' : 'Googleでログイン'}
+            {isWorking ? (
+              <LoadingSpinner mode="auth" variant="inline" className="text-white" />
+            ) : (
+              <>
+                <LogIn size={16} />
+                Googleでログイン
+              </>
+            )}
           </button>
           {error ? <p className="mt-4 text-sm font-bold text-red-500">{error}</p> : null}
           {isBypassAllowed ? (
