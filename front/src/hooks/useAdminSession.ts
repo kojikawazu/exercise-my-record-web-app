@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 const BYPASS_KEY = 'e2e_admin_bypass';
@@ -36,23 +37,62 @@ export function useAdminSession(): AdminSessionState {
 
   useEffect(() => {
     let mounted = true;
+    let requestId = 0;
 
     if (isBypassAllowed) {
       setBypassActive(getBypassFlag());
     }
 
+    const syncAdminFromSession = async (session: Session | null) => {
+      const currentRequestId = ++requestId;
+
+      if (!session?.access_token) {
+        if (!mounted || currentRequestId !== requestId) return;
+        setSessionActive(false);
+        setReady(true);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/me', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          cache: 'no-store',
+        });
+
+        if (!mounted || currentRequestId !== requestId) return;
+        if (!response.ok) {
+          setSessionActive(false);
+          setReady(true);
+          return;
+        }
+
+        const data = (await response.json().catch(() => null)) as { isAdmin?: boolean } | null;
+        setSessionActive(Boolean(data?.isAdmin));
+      } catch {
+        if (!mounted || currentRequestId !== requestId) return;
+        setSessionActive(false);
+      } finally {
+        if (!mounted || currentRequestId !== requestId) return;
+        setReady(true);
+      }
+    };
+
     const syncSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
-      setSessionActive(Boolean(data.session));
-      setReady(true);
+      setReady(false);
+      await syncAdminFromSession(data.session);
     };
 
     void syncSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-      setSessionActive(Boolean(session));
+      setReady(false);
+      void syncAdminFromSession(session);
     });
 
     return () => {
