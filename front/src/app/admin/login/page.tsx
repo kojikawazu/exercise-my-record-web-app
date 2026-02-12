@@ -23,6 +23,29 @@ export default function AdminLoginPage() {
     }
   }, [isAdmin, isLoading, router]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const rejectNonAdminSession = async () => {
+      if (isLoading || isAdmin) return;
+
+      const { data } = await supabase.auth.getSession();
+      if (!mounted || !data.session) return;
+
+      await supabase.auth.signOut();
+      if (!mounted) return;
+
+      setError('このアカウントでは管理者ログインできません。');
+      setIsWorking(false);
+    };
+
+    void rejectNonAdminSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAdmin, isLoading]);
+
   const handleLogin = async () => {
     setIsWorking(true);
     setError('');
