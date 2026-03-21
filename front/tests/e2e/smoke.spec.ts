@@ -18,6 +18,28 @@ test('detail page renders sections', async ({ page }) => {
   await expect(page.getByText('筋トレ')).toBeVisible();
   await expect(page.getByText('有酸素')).toBeVisible();
   await expect(page.getByRole('heading', { name: '体調メモ' })).toBeVisible();
+
+  // Non-admin: edit button should NOT be visible
+  await expect(page.getByRole('link', { name: '編集' })).not.toBeVisible();
+});
+
+test('detail page shows edit button for admin and navigates to edit page', async ({ page }) => {
+  // Login as admin
+  await page.goto('/admin/login');
+  await page.getByRole('button', { name: 'テストログイン' }).click();
+
+  // Navigate to detail page
+  await page.goto('/records/2026-02-02');
+  await expect(page.getByRole('heading', { name: '記録詳細' })).toBeVisible();
+
+  // Admin: edit button should be visible
+  const editLink = page.getByRole('link', { name: '編集' });
+  await expect(editLink).toBeVisible();
+
+  // Click edit and verify navigation to edit page
+  await editLink.click();
+  await expect(page).toHaveURL(/\/admin\/records\/2026-02-02\/edit/);
+  await expect(page.getByRole('heading', { name: '記録編集' })).toBeVisible();
 });
 
 test('admin pages render', async ({ page }) => {
