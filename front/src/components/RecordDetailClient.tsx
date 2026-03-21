@@ -7,6 +7,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
+import { useAdminSession } from '@/hooks/useAdminSession';
 
 export type DetailWorkout = {
   id: string;
@@ -36,6 +37,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
   const [detail, setDetail] = useState<RecordDetailData | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const { isAdmin } = useAdminSession();
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -101,8 +103,20 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
           {!isLoading && !errorMessage ? (
             <>
               <Card className="p-6 md:p-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">日付</p>
-                <h2 className="text-2xl font-black text-gray-900">{detail?.date ?? date}</h2>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">日付</p>
+                    <h2 className="text-2xl font-black text-gray-900">{detail?.date ?? date}</h2>
+                  </div>
+                  {isAdmin ? (
+                    <Link
+                      href={`/admin/records/${detail?.date ?? date}/edit`}
+                      className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
+                    >
+                      編集
+                    </Link>
+                  ) : null}
+                </div>
               </Card>
 
               <Card className="p-6">
