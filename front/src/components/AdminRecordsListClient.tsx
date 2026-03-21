@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
@@ -16,33 +17,55 @@ export type AdminRecordSummary = {
 };
 
 export default function AdminRecordsListClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [records, setRecords] = useState<AdminRecordSummary[]>([]);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [hasFetched, setHasFetched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const res = await fetch('/api/records');
-        if (!res.ok) {
-          setError('記録の取得に失敗しました。');
-          setRecords([]);
-          setHasFetched(true);
-          return;
-        }
-        const data = (await res.json()) as AdminRecordSummary[];
-        setRecords(data);
-        setHasFetched(true);
-      } catch {
+  const currentPage = Number(searchParams.get('page') ?? 1) || 1;
+
+  const fetchRecords = useCallback(async (p: number) => {
+    setHasFetched(false);
+    try {
+      const res = await fetch(`/api/records?page=${p}`);
+      if (!res.ok) {
         setError('記録の取得に失敗しました。');
         setRecords([]);
         setHasFetched(true);
+        return;
       }
-    };
+      const data = (await res.json()) as {
+        records: AdminRecordSummary[];
+        page: number;
+        totalPages: number;
+      };
+      setRecords(data.records);
+      setPage(data.page);
+      setTotalPages(data.totalPages);
+      setHasFetched(true);
 
-    void fetchRecords();
-  }, []);
+      if (data.page !== p) {
+        router.replace(`/admin/records?page=${data.page}`);
+      }
+    } catch {
+      setError('記録の取得に失敗しました。');
+      setRecords([]);
+      setHasFetched(true);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    void fetchRecords(currentPage);
+  }, [currentPage, fetchRecords]);
+
+  const goToPage = (p: number) => {
+    window.scrollTo({ top: 0 });
+    router.push(`/admin/records?page=${p}`);
+  };
 
   const handleDelete = async (date: string) => {
     if (!confirm('この記録を削除しますか？')) return;
@@ -54,8 +77,27 @@ export default function AdminRecordsListClient() {
       setDeletingDate(null);
       return;
     }
-    setRecords((prev) => prev.filter((record) => record.date !== date));
     setDeletingDate(null);
+    // Re-fetch current page; if empty and not first page, go to previous page
+    const refetchRes = await fetch(`/api/records?page=${page}`);
+    if (refetchRes.ok) {
+      const data = (await refetchRes.json()) as {
+        records: AdminRecordSummary[];
+        page: number;
+        totalPages: number;
+      };
+      if (data.records.length === 0 && data.page > 1) {
+        goToPage(data.page - 1);
+      } else {
+        setRecords(data.records);
+        setPage(data.page);
+        setTotalPages(data.totalPages);
+        // Correct URL if API clamped the page
+        if (data.page !== page) {
+          router.replace(`/admin/records?page=${data.page}`);
+        }
+      }
+    }
   };
 
   return (
@@ -95,7 +137,7 @@ export default function AdminRecordsListClient() {
               </p>
             </Card>
           ) : null}
-          {records.map((record) => (
+          {records.length > 0 && records.map((record) => (
             <Card key={record.date} className="p-6 md:p-8">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -148,6 +190,30 @@ export default function AdminRecordsListClient() {
               </div>
             </Card>
           ))}
+
+          {hasFetched && totalPages > 1 ? (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                className={buttonClasses('outline')}
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1}
+              >
+                前へ
+              </button>
+              <span className="text-sm font-bold text-gray-600">
+                {page} / {totalPages} ページ
+              </span>
+              <button
+                type="button"
+                className={buttonClasses('outline')}
+                onClick={() => goToPage(page + 1)}
+                disabled={page >= totalPages}
+              >
+                次へ
+              </button>
+            </div>
+          ) : null}
         </div>
       </section>
     </main>

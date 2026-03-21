@@ -1,14 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 
-export async function GET() {
+const PAGE_LIMIT = 10;
+
+export async function GET(request: Request) {
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });
   }
+
+  const { searchParams } = new URL(request.url);
+  const totalCount = await prisma.exerciseRecord.count();
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_LIMIT));
+
+  let page = Math.floor(Number(searchParams.get('page') ?? 1));
+  if (Number.isNaN(page) || page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+
   const records = await prisma.exerciseRecord.findMany({
     orderBy: { date: 'desc' },
     include: { workouts: true, cardios: true },
+    skip: (page - 1) * PAGE_LIMIT,
+    take: PAGE_LIMIT,
   });
 
   const result = records.map(
@@ -29,7 +42,7 @@ export async function GET() {
   }),
   );
 
-  return NextResponse.json(result);
+  return NextResponse.json({ records: result, totalCount, page, totalPages });
 }
 
 export async function POST(request: Request) {

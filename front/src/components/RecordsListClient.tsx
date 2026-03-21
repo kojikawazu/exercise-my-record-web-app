@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarDays, Plus } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
@@ -21,34 +22,57 @@ export type RecordSummary = {
 };
 
 export default function RecordsListClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [records, setRecords] = useState<RecordSummary[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { isAdmin } = useAdminSession();
 
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const res = await fetch('/api/records');
-        if (!res.ok) {
-          setErrorMessage('記録の取得に失敗しました。');
-          setRecords([]);
-          setHasFetched(true);
-          return;
-        }
-        const data = (await res.json()) as RecordSummary[];
-        setErrorMessage('');
-        setRecords(data);
-        setHasFetched(true);
-      } catch {
+  const currentPage = Number(searchParams.get('page') ?? 1) || 1;
+
+  const fetchRecords = useCallback(async (p: number) => {
+    setHasFetched(false);
+    try {
+      const res = await fetch(`/api/records?page=${p}`);
+      if (!res.ok) {
         setErrorMessage('記録の取得に失敗しました。');
         setRecords([]);
         setHasFetched(true);
+        return;
       }
-    };
+      const data = (await res.json()) as {
+        records: RecordSummary[];
+        page: number;
+        totalPages: number;
+      };
+      setErrorMessage('');
+      setRecords(data.records);
+      setPage(data.page);
+      setTotalPages(data.totalPages);
+      setHasFetched(true);
 
-    void fetchRecords();
-  }, []);
+      // Correct URL if API clamped the page
+      if (data.page !== p) {
+        router.replace(data.page === 1 ? '/' : `/?page=${data.page}`);
+      }
+    } catch {
+      setErrorMessage('記録の取得に失敗しました。');
+      setRecords([]);
+      setHasFetched(true);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    void fetchRecords(currentPage);
+  }, [currentPage, fetchRecords]);
+
+  const goToPage = (p: number) => {
+    window.scrollTo({ top: 0 });
+    router.push(p === 1 ? '/' : `/?page=${p}`);
+  };
 
   return (
     <main className="min-h-screen pb-16">
@@ -147,6 +171,30 @@ export default function RecordsListClient() {
               </Card>
             ))
           )}
+
+          {hasFetched && totalPages > 1 ? (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                className={buttonClasses('outline')}
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1}
+              >
+                前へ
+              </button>
+              <span className="text-sm font-bold text-gray-600">
+                {page} / {totalPages} ページ
+              </span>
+              <button
+                type="button"
+                className={buttonClasses('outline')}
+                onClick={() => goToPage(page + 1)}
+                disabled={page >= totalPages}
+              >
+                次へ
+              </button>
+            </div>
+          ) : null}
         </div>
       </section>
     </main>
