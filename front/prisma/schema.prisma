@@ -72,7 +72,7 @@ model ExerciseRecord {
   memo      String?
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
-  cardio    ExerciseCardio?
+  cardios   ExerciseCardio[]
   workouts  ExerciseWorkout[]
 
   @@index([date])
@@ -96,7 +96,7 @@ model ExerciseWorkout {
 
 model ExerciseCardio {
   id        String         @id @default(cuid())
-  recordId  String         @unique
+  recordId  String
   type      String
   minutes   Float
   distance  Float

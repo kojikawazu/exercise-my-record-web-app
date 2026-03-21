@@ -8,16 +8,19 @@ import {
   type CardioType,
 } from '@/lib/calorie';
 
+type CardioEntry = {
+  type: CardioType;
+  minutes: number;
+};
+
 type CalorieEstimateProps = {
   totalSets: number;
-  cardioMinutes: number;
-  cardioType: CardioType;
+  cardios: CardioEntry[];
 };
 
 export default function CalorieEstimate({
   totalSets,
-  cardioMinutes,
-  cardioType,
+  cardios,
 }: CalorieEstimateProps) {
   const [weightKg, setWeightKg] = useState<number | null>(null);
 
@@ -37,9 +40,12 @@ export default function CalorieEstimate({
   const calories = useMemo(() => {
     if (weightKg === null) return null;
     const strength = calculateStrengthCalories(weightKg, totalSets);
-    const cardio = calculateCardioCalories(weightKg, cardioMinutes, cardioType);
-    return strength + cardio;
-  }, [weightKg, totalSets, cardioMinutes, cardioType]);
+    const cardioTotal = cardios.reduce(
+      (sum, c) => sum + calculateCardioCalories(weightKg, c.minutes, c.type),
+      0,
+    );
+    return strength + cardioTotal;
+  }, [weightKg, totalSets, cardios]);
 
   return (
     <div className="rounded-2xl bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600">

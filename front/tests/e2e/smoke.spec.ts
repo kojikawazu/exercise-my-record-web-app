@@ -43,6 +43,29 @@ test('admin pages render', async ({ page }) => {
   await expect(page.getByText('推定消費カロリー')).toBeVisible();
   await expect(page.getByRole('button', { name: '保存' })).toBeVisible();
 
+  // Multiple cardio rows: locate the cardio section by its "任意" badge
+  // The cardio "追加" button is the second one on the page (first is for workouts)
+  const cardioAddButton = page.getByRole('button', { name: '追加' }).nth(1);
+
+  // Add first cardio row
+  await cardioAddButton.click();
+  await expect(page.getByText('任意')).toBeVisible();
+
+  // Add second cardio row
+  await cardioAddButton.click();
+
+  // Verify 2 cardio rows exist by counting "種別" selects in the cardio section
+  // Workouts have a "部位" select; cardio has "種別" (ラン/ウォーク) select
+  const cardioTypeSelects = page.locator('select').filter({ hasText: 'ラン' });
+  await expect(cardioTypeSelects).toHaveCount(2);
+
+  // Delete one cardio row using the delete button next to a cardio type select
+  const cardioRows = page.locator('.rounded-2xl.bg-gray-50').filter({ has: page.locator('option[value="ウォーク"]') });
+  await cardioRows.last().getByRole('button', { name: '削除' }).click();
+
+  // Verify only 1 cardio row remains
+  await expect(cardioTypeSelects).toHaveCount(1);
+
   await page.goto('/admin/masters');
   await expect(page.getByRole('heading', { name: 'マスター管理' })).toBeVisible();
   await expect(page.getByRole('button', { name: '部位' })).toBeVisible();

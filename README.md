@@ -26,6 +26,17 @@
 - `NEXT_PUBLIC_SITE_URL`
 - `DATABASE_URL`（未設定時はAPIがフォールバック）
 
+## DBマイグレーション
+スキーマ変更時は `front/prisma/migrations/` にSQLを配置する。
+デプロイ前に Supabase SQL Editor または `psql` で手動適用すること。
+
+```bash
+# 例: ローカルで適用
+psql $DATABASE_URL -f front/prisma/migrations/20260321_cardio_multiple_rows/migration.sql
+```
+
+**注意**: `pnpm run build` は `prisma generate` のみ実行する。マイグレーションは自動適用されない。
+
 ## 仕様ドキュメント
 - `docs/05.spec.md`
 - `docs/07.e2e-cases.md`

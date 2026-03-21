@@ -14,7 +14,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const recordDate = new Date(date);
   const record = await prisma.exerciseRecord.findUnique({
     where: { date: recordDate },
-    include: { workouts: true, cardio: true },
+    include: { workouts: true, cardios: true },
   });
 
   if (!record) {
@@ -41,13 +41,13 @@ export async function GET(_request: Request, context: RouteContext) {
       weight: workout.weight,
     }),
     ),
-    cardio: record.cardio
-      ? {
-          type: record.cardio.type,
-          minutes: record.cardio.minutes,
-          distance: record.cardio.distance,
-        }
-      : null,
+    cardios: record.cardios.map(
+      (c: { type: string; minutes: number; distance: number }) => ({
+        type: c.type,
+        minutes: c.minutes,
+        distance: c.distance,
+      }),
+    ),
   });
 }
 
@@ -65,7 +65,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const recordDate = new Date(date);
   const record = await prisma.exerciseRecord.findUnique({
     where: { date: recordDate },
-    include: { cardio: true },
+    include: { cardios: true },
   });
 
   if (!record) {
@@ -73,9 +73,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   await prisma.exerciseWorkout.deleteMany({ where: { recordId: record.id } });
-  if (record.cardio) {
-    await prisma.exerciseCardio.delete({ where: { recordId: record.id } });
-  }
+  await prisma.exerciseCardio.deleteMany({ where: { recordId: record.id } });
 
   const updated = await prisma.exerciseRecord.update({
     where: { id: record.id },
@@ -92,13 +90,13 @@ export async function PATCH(request: Request, context: RouteContext) {
             })),
           }
         : undefined,
-      cardio: body.cardio
+      cardios: body.cardios?.length
         ? {
-            create: {
-              type: body.cardio.type,
-              minutes: Number(body.cardio.minutes ?? 0),
-              distance: Number(body.cardio.distance ?? 0),
-            },
+            create: body.cardios.map((c: any) => ({
+              type: c.type,
+              minutes: Number(c.minutes ?? 0),
+              distance: Number(c.distance ?? 0),
+            })),
           }
         : undefined,
     },

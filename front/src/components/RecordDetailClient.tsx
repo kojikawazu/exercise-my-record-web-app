@@ -17,11 +17,13 @@ export type DetailWorkout = {
   weight: number;
 };
 
+type CardioDetail = { type: string; minutes: number; distance: number };
+
 type RecordDetailData = {
   date: string;
   memo: string | null;
   workouts: DetailWorkout[];
-  cardio: { type: string; minutes: number; distance: number } | null;
+  cardios: CardioDetail[];
 };
 
 type RecordDetailClientProps = {
@@ -65,7 +67,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
   }, [date]);
 
   const workouts = detail?.workouts ?? EMPTY_WORKOUTS;
-  const cardio = detail?.cardio ?? null;
+  const cardios = detail?.cardios ?? [];
   const memo = detail?.memo ?? '';
 
   const totalSets = useMemo(
@@ -106,8 +108,10 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
               <Card className="p-6">
                 <CalorieEstimate
                   totalSets={totalSets}
-                  cardioMinutes={cardio?.minutes ?? 0}
-                  cardioType={cardio?.type === 'ウォーク' ? 'ウォーク' : 'ラン'}
+                  cardios={cardios.map((c) => ({
+                    type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as import('@/lib/calorie').CardioType,
+                    minutes: c.minutes,
+                  }))}
                 />
               </Card>
 
@@ -149,21 +153,36 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
               </Card>
 
               <Card className="p-6 md:p-8">
-                <h3 className="text-xl font-black text-[color:var(--accent)]">有酸素</h3>
-                <div className="mt-4 grid gap-3 text-sm text-gray-800 md:grid-cols-3">
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-[10px] font-black uppercase text-gray-400">種別</p>
-                    <p className="font-bold">{cardio?.type ?? '未入力'}</p>
-                  </div>
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-[10px] font-black uppercase text-gray-400">時間</p>
-                    <p className="font-bold">{cardio?.minutes ?? 0}分</p>
-                  </div>
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-[10px] font-black uppercase text-gray-400">距離</p>
-                    <p className="font-bold">{cardio?.distance ?? 0}km</p>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black text-[color:var(--accent)]">有酸素</h3>
+                  <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-[color:var(--accent)]">
+                    {cardios.length} 件
+                  </span>
                 </div>
+                {cardios.length === 0 ? (
+                  <p className="mt-4 text-sm text-gray-400">有酸素の記録なし</p>
+                ) : (
+                  <div className="mt-5 grid gap-4">
+                    {cardios.map((c, i) => (
+                      <div key={i} className="rounded-2xl bg-gray-50 p-4">
+                        <div className="grid gap-3 text-sm text-gray-800 md:grid-cols-3">
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-gray-400">種別</p>
+                            <p className="font-bold">{c.type}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-gray-400">時間</p>
+                            <p className="font-bold">{c.minutes}分</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-gray-400">距離</p>
+                            <p className="font-bold">{c.distance}km</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Card>
 
               <Card className="p-6 md:p-8">
