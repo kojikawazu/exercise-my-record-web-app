@@ -61,4 +61,12 @@ test('admin pages render', async ({ page }) => {
   await page.getByRole('spinbutton').fill('65.5');
   await page.getByRole('button', { name: '保存' }).click();
   await expect(page.getByText('保存しました。')).toBeVisible();
+
+  // Verify overwrite: save a different value and confirm it persists after reload
+  await page.getByRole('spinbutton').fill('70.0');
+  await page.getByRole('button', { name: '保存' }).click();
+  await expect(page.getByText('保存しました。')).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole('spinbutton')).toHaveValue('70');
 });

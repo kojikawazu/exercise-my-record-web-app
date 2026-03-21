@@ -31,7 +31,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (prisma) await prisma.exerciseProfile.create({ data: { weightKg } });
+    if (prisma) {
+      const existing = await prisma.exerciseProfile.findFirst({
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existing) {
+        await prisma.exerciseProfile.update({
+          where: { id: existing.id },
+          data: { weightKg },
+        });
+        // Clean up duplicate rows created by the old create-only bug
+        await prisma.exerciseProfile.deleteMany({
+          where: { id: { not: existing.id } },
+        });
+      } else {
+        await prisma.exerciseProfile.create({ data: { weightKg } });
+      }
+    }
   } catch {
     // Ignore DB errors in the provisional profile endpoint.
   }
