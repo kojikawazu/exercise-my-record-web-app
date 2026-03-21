@@ -8,19 +8,24 @@ export async function GET() {
   }
   const records = await prisma.exerciseRecord.findMany({
     orderBy: { date: 'desc' },
-    include: { workouts: true, cardio: true },
+    include: { workouts: true, cardios: true },
   });
 
   const result = records.map(
     (record: {
       date: Date;
       workouts: { sets: number }[];
-      cardio: { minutes: number; distance: number } | null;
+      cardios: { type: string; minutes: number; distance: number }[];
     }) => ({
     date: record.date.toISOString().slice(0, 10),
     totalSets: record.workouts.reduce((sum, workout) => sum + workout.sets, 0),
-    cardioMinutes: record.cardio?.minutes ?? 0,
-    cardioDistance: record.cardio?.distance ?? 0,
+    cardioMinutes: record.cardios.reduce((sum, c) => sum + c.minutes, 0),
+    cardioDistance: record.cardios.reduce((sum, c) => sum + c.distance, 0),
+    cardios: record.cardios.map((c) => ({
+      type: c.type,
+      minutes: c.minutes,
+      distance: c.distance,
+    })),
   }),
   );
 
@@ -62,13 +67,13 @@ export async function POST(request: Request) {
             })),
           }
         : undefined,
-      cardio: body.cardio
+      cardios: body.cardios?.length
         ? {
-            create: {
-              type: body.cardio.type,
-              minutes: Number(body.cardio.minutes ?? 0),
-              distance: Number(body.cardio.distance ?? 0),
-            },
+            create: body.cardios.map((c: any) => ({
+              type: c.type,
+              minutes: Number(c.minutes ?? 0),
+              distance: Number(c.distance ?? 0),
+            })),
           }
         : undefined,
     },

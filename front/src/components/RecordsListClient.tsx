@@ -10,12 +10,14 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 
+type CardioSummary = { type: string; minutes: number; distance: number };
+
 export type RecordSummary = {
   date: string;
   totalSets: number;
   cardioMinutes: number;
   cardioDistance: number;
-  cardioType: 'ラン' | 'ウォーク';
+  cardios: CardioSummary[];
 };
 
 export default function RecordsListClient() {
@@ -34,13 +36,9 @@ export default function RecordsListClient() {
           setHasFetched(true);
           return;
         }
-        const data = (await res.json()) as Omit<RecordSummary, 'cardioType'>[];
-        const withType: RecordSummary[] = data.map((record) => ({
-          ...record,
-          cardioType: record.cardioMinutes > 0 ? 'ラン' : 'ウォーク',
-        }));
+        const data = (await res.json()) as RecordSummary[];
         setErrorMessage('');
-        setRecords(withType);
+        setRecords(data);
         setHasFetched(true);
       } catch {
         setErrorMessage('記録の取得に失敗しました。');
@@ -140,8 +138,10 @@ export default function RecordsListClient() {
                 <div className="mt-4">
                   <CalorieEstimate
                     totalSets={record.totalSets}
-                    cardioMinutes={record.cardioMinutes}
-                    cardioType={record.cardioType}
+                    cardios={(record.cardios ?? []).map((c) => ({
+                      type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as import('@/lib/calorie').CardioType,
+                      minutes: c.minutes,
+                    }))}
                   />
                 </div>
               </Card>

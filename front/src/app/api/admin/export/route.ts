@@ -26,43 +26,30 @@ const buildCsv = (records: any[]) => {
   const rows = [header.join(',')];
 
   records.forEach((record) => {
-    if (!record.workouts.length) {
+    const cardiosList: any[] = record.cardios ?? [];
+    const workoutsList: any[] = record.workouts ?? [];
+    const maxLen = Math.max(workoutsList.length, cardiosList.length, 1);
+
+    for (let i = 0; i < maxLen; i++) {
+      const workout = workoutsList[i];
+      const cardio = cardiosList[i];
       rows.push(
         [
           formatDate(record.date),
           record.memo ?? '',
-          '',
-          '',
-          '',
-          '',
-          '',
-          record.cardio?.type ?? '',
-          record.cardio?.minutes ?? '',
-          record.cardio?.distance ?? '',
+          workout?.part ?? '',
+          workout?.name ?? '',
+          workout?.sets ?? '',
+          workout?.reps ?? '',
+          workout?.weight ?? '',
+          cardio?.type ?? '',
+          cardio?.minutes ?? '',
+          cardio?.distance ?? '',
         ]
           .map((value) => escapeCsv(String(value)))
           .join(','),
       );
-      return;
     }
-    record.workouts.forEach((workout: any) => {
-      rows.push(
-        [
-          formatDate(record.date),
-          record.memo ?? '',
-          workout.part ?? '',
-          workout.name ?? '',
-          workout.sets ?? '',
-          workout.reps ?? '',
-          workout.weight ?? '',
-          record.cardio?.type ?? '',
-          record.cardio?.minutes ?? '',
-          record.cardio?.distance ?? '',
-        ]
-          .map((value) => escapeCsv(String(value)))
-          .join(','),
-      );
-    });
   });
 
   return rows.join('\n');
@@ -94,7 +81,7 @@ export async function GET(request: Request) {
         lte: new Date(to),
       },
     },
-    include: { workouts: true, cardio: true },
+    include: { workouts: true, cardios: true },
     orderBy: { date: 'asc' },
   });
 
