@@ -9,6 +9,7 @@ import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
+import { useRecordValidation } from '@/hooks/useRecordValidation';
 
 type WorkoutRow = {
   id: string;
@@ -97,13 +98,10 @@ export default function AdminRecordEditPage({ params }: PageProps) {
     void fetchRecord();
   }, [date]);
 
+  const { displayErrors, hasErrors, setSubmitted } = useRecordValidation(date, workouts, cardios);
+
   const totalSets = useMemo(
     () => workouts.reduce((sum, row) => sum + Number(row.sets || 0), 0),
-    [workouts],
-  );
-
-  const hasValidationIssue = useMemo(
-    () => workouts.some((row) => !row.part || !row.name || !row.weight),
     [workouts],
   );
 
@@ -127,8 +125,13 @@ export default function AdminRecordEditPage({ params }: PageProps) {
     setCardios((prev) => prev.filter((row) => row.id !== id));
 
   const handleSave = async () => {
-    setStatus('saving');
+    setSubmitted(true);
     setNotice('');
+    if (hasErrors) {
+      setStatus('error');
+      return;
+    }
+    setStatus('saving');
 
     const cardioRows = cardios.filter((c) => c.minutes !== '' || c.distance !== '');
     const res = await fetch(`/api/records/${date}`, {
@@ -199,9 +202,6 @@ export default function AdminRecordEditPage({ params }: PageProps) {
       <section className="mx-auto max-w-5xl px-6 pt-8">
         <div className="grid gap-8">
           {notice ? <p className="text-sm font-bold text-red-500">{notice}</p> : null}
-          {hasValidationIssue ? (
-            <p className="text-xs font-bold text-amber-600">未入力の項目があります。</p>
-          ) : null}
           <Card className="p-6 md:p-8">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               日付
@@ -235,6 +235,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         <option value="脚">脚</option>
                         <option value="腹">腹</option>
                       </select>
+                      {displayErrors.workouts[row.id]?.part ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].part}</p>
+                      ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400 md:col-span-2">
                       種目名
@@ -245,6 +248,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         value={row.name}
                         onChange={(event) => updateWorkout(row.id, 'name', event.target.value)}
                       />
+                      {displayErrors.workouts[row.id]?.name ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].name}</p>
+                      ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
                       セット数
@@ -255,6 +261,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         value={row.sets}
                         onChange={(event) => updateWorkout(row.id, 'sets', event.target.value)}
                       />
+                      {displayErrors.workouts[row.id]?.sets ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].sets}</p>
+                      ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
                       回数
@@ -265,6 +274,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         value={row.reps}
                         onChange={(event) => updateWorkout(row.id, 'reps', event.target.value)}
                       />
+                      {displayErrors.workouts[row.id]?.reps ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].reps}</p>
+                      ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
                       重量 (kg)
@@ -275,6 +287,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         value={row.weight}
                         onChange={(event) => updateWorkout(row.id, 'weight', event.target.value)}
                       />
+                      {displayErrors.workouts[row.id]?.weight ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].weight}</p>
+                      ) : null}
                     </label>
                   </div>
                   <div className="mt-4 flex justify-end">
@@ -330,6 +345,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         value={row.minutes}
                         onChange={(event) => updateCardio(row.id, 'minutes', event.target.value)}
                       />
+                      {displayErrors.cardios[row.id]?.minutes ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.cardios[row.id].minutes}</p>
+                      ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
                       距離 (km)
@@ -340,6 +358,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         value={row.distance}
                         onChange={(event) => updateCardio(row.id, 'distance', event.target.value)}
                       />
+                      {displayErrors.cardios[row.id]?.distance ? (
+                        <p className="mt-1 text-xs text-red-500">{displayErrors.cardios[row.id].distance}</p>
+                      ) : null}
                     </label>
                   </div>
                   <div className="mt-4 flex justify-end">
@@ -377,7 +398,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
               type="button"
               className={`${buttonClasses('primary')} rounded-2xl px-6 py-3 text-sm`}
               onClick={handleSave}
-              disabled={status === 'saving' || loading}
+              disabled={status === 'saving'}
             >
               {status === 'saving' ? (
                 <LoadingSpinner mode="saving" variant="inline" className="text-white" />

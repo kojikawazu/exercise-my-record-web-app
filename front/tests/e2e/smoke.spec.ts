@@ -43,13 +43,40 @@ test('admin pages render', async ({ page }) => {
   await expect(page.getByText('推定消費カロリー')).toBeVisible();
   await expect(page.getByRole('button', { name: '保存' })).toBeVisible();
 
+  // Validation: click save with empty form, expect field errors
+  await page.getByRole('button', { name: '保存' }).click();
+  await expect(page.getByText('日付を選択してください')).toBeVisible();
+  await expect(page.getByText('部位を選択してください').first()).toBeVisible();
+  await expect(page.getByText('種目名を入力してください').first()).toBeVisible();
+  await expect(page.getByText('値を入力してください').first()).toBeVisible();
+
+  // Validation: negative number shows specific error
+  const setsInput = page.locator('input[type="number"]').first();
+  await setsInput.fill('-5');
+  await expect(page.getByText('正しい数値を入力してください').first()).toBeVisible();
+  await setsInput.fill('');
+
   // Multiple cardio rows: locate the cardio section by its "任意" badge
   // The cardio "追加" button is the second one on the page (first is for workouts)
   const cardioAddButton = page.getByRole('button', { name: '追加' }).nth(1);
 
-  // Add first cardio row
+  // Add first cardio row and fill only minutes (partial input)
   await cardioAddButton.click();
   await expect(page.getByText('任意')).toBeVisible();
+  const cardioMinutesInput = page.locator('.rounded-2xl.bg-gray-50').filter({ has: page.locator('option[value="ウォーク"]') }).first().locator('input[type="number"]').first();
+  await cardioMinutesInput.fill('30');
+
+  // Save should show cardio distance validation error (partial input)
+  await page.getByRole('button', { name: '保存' }).click();
+  // Distance is empty while minutes is filled, so error should appear
+  const cardioDistanceError = page.locator('.rounded-2xl.bg-gray-50').filter({ has: page.locator('option[value="ウォーク"]') }).first().getByText('値を入力してください');
+  await expect(cardioDistanceError).toBeVisible();
+
+  // Fill distance to clear the error, then clear minutes for next test
+  const cardioDistanceInput = page.locator('.rounded-2xl.bg-gray-50').filter({ has: page.locator('option[value="ウォーク"]') }).first().locator('input[type="number"]').nth(1);
+  await cardioDistanceInput.fill('5');
+  await cardioMinutesInput.fill('');
+  await cardioDistanceInput.fill('');
 
   // Add second cardio row
   await cardioAddButton.click();
