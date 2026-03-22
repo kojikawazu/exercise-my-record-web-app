@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminAuth';
 
 type RouteContext = {
   params: Promise<{ date: string }>;
@@ -52,6 +53,9 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
+  const auth = await requireAdmin(request);
+  if (!auth.authorized) return auth.response;
+
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });
@@ -105,7 +109,10 @@ export async function PATCH(request: Request, context: RouteContext) {
   return NextResponse.json({ id: updated.id });
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
+  const auth = await requireAdmin(request);
+  if (!auth.authorized) return auth.response;
+
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });

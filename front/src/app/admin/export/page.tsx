@@ -8,6 +8,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import DatePicker from '@/components/DatePicker';
+import { authFetch } from '@/lib/authFetch';
 
 export default function AdminExportPage() {
   const [fromDate, setFromDate] = useState('');
@@ -23,7 +24,7 @@ export default function AdminExportPage() {
     }
     setStatus('loading');
     setMessage('');
-    const res = await fetch(
+    const res = await authFetch(
       `/api/admin/export?from=${fromDate}&to=${toDate}&format=${format}`,
     );
     if (!res.ok) {

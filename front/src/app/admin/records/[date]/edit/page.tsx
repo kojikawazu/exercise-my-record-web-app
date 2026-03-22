@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
+import { authFetch } from '@/lib/authFetch';
 
 type WorkoutRow = {
   id: string;
@@ -134,7 +135,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
     setStatus('saving');
 
     const cardioRows = cardios.filter((c) => c.minutes !== '' || c.distance !== '');
-    const res = await fetch(`/api/records/${date}`, {
+    const res = await authFetch(`/api/records/${date}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
