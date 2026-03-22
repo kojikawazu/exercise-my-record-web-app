@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminAuth';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const auth = await requireAdmin(request);
+  if (!auth.authorized) return auth.response;
+
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });
@@ -29,7 +33,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: NextRequest, context: RouteContext) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const auth = await requireAdmin(request);
+  if (!auth.authorized) return auth.response;
+
   const prisma = getPrisma();
   if (!prisma) {
     return NextResponse.json({ error: 'database unavailable' }, { status: 503 });

@@ -6,6 +6,7 @@ import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { authFetch } from '@/lib/authFetch';
 import Link from 'next/link';
 
 export default function AdminProfilePage() {
@@ -38,7 +39,7 @@ export default function AdminProfilePage() {
       return;
     }
     try {
-      const res = await fetch('/api/profile', {
+      const res = await authFetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ weightKg: value }),

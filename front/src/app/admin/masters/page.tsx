@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { authFetch } from '@/lib/authFetch';
 
 const masterTabs = [
   { label: '部位', type: 'body-parts' },
@@ -63,7 +64,7 @@ export default function AdminMastersPage() {
     setStatusMessage('');
     setAdding(true);
     try {
-      const res = await fetch(`/api/masters?type=${activeType}`, {
+      const res = await authFetch(`/api/masters?type=${activeType}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
@@ -97,7 +98,7 @@ export default function AdminMastersPage() {
     if (!name) return;
     setSavingId(id);
     try {
-      const res = await fetch(`/api/masters/${id}`, {
+      const res = await authFetch(`/api/masters/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
@@ -120,7 +121,7 @@ export default function AdminMastersPage() {
     if (!confirm('この項目を削除します。よろしいですか？')) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/masters/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/masters/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         setStatusMessage('削除に失敗しました。');
         return;

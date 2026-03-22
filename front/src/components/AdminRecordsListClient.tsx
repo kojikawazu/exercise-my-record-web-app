@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { authFetch } from '@/lib/authFetch';
 
 export type AdminRecordSummary = {
   date: string;
@@ -71,7 +72,7 @@ export default function AdminRecordsListClient() {
     if (!confirm('この記録を削除しますか？')) return;
     setDeletingDate(date);
     setError('');
-    const res = await fetch(`/api/records/${date}`, { method: 'DELETE' });
+    const res = await authFetch(`/api/records/${date}`, { method: 'DELETE' });
     if (!res.ok) {
       setError('削除に失敗しました。');
       setDeletingDate(null);

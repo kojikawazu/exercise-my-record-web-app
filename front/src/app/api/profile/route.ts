@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminAuth';
 
 let fallbackWeightKg: number | null = null;
 
@@ -22,6 +23,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdmin(request);
+  if (!auth.authorized) return auth.response;
+
   const prisma = getPrisma();
   const body = await request.json().catch(() => null);
   const weightKg = typeof body?.weightKg === 'number' ? body.weightKg : null;
