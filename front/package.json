@@ -13,8 +13,8 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.3.0",
-    "@prisma/client": "^7.3.0",
+    "@prisma/adapter-pg": "^6.19.2",
+    "@prisma/client": "^6.19.2",
     "@supabase/supabase-js": "^2.56.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
@@ -24,6 +24,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@prisma/client",
       "@prisma/engines",
       "prisma"
     ]
@@ -39,7 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "prettier": "^3.8.1",
-    "prisma": "^7.3.0",
+    "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
