@@ -70,6 +70,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    console.log('[POST] step1: create record');
     const record = await prisma.exerciseRecord.create({
       data: {
         date,
@@ -78,42 +79,45 @@ export async function POST(request: Request) {
     });
 
     if (body.workouts?.length) {
-      await Promise.all(
-        body.workouts.map((workout: any) =>
-          prisma.exerciseWorkout.create({
-            data: {
-              recordId: record.id,
-              part: workout.part,
-              name: workout.name,
-              sets: Number(workout.sets ?? 0),
-              reps: Number(workout.reps ?? 0),
-              weight: Number(workout.weight ?? 0),
-            },
-          }),
-        ),
-      );
+      console.log('[POST] step2: create workouts count=' + body.workouts.length);
+      for (let i = 0; i < body.workouts.length; i++) {
+        const w = body.workouts[i];
+        console.log('[POST] workout ' + i + ':', JSON.stringify(w));
+        await prisma.exerciseWorkout.create({
+          data: {
+            recordId: record.id,
+            part: String(w.part ?? ''),
+            name: String(w.name ?? ''),
+            sets: Number(w.sets ?? 0),
+            reps: Number(w.reps ?? 0),
+            weight: Number(w.weight ?? 0),
+          },
+        });
+      }
     }
 
     if (body.cardios?.length) {
-      await Promise.all(
-        body.cardios.map((c: any) =>
-          prisma.exerciseCardio.create({
-            data: {
-              recordId: record.id,
-              type: c.type,
-              minutes: Number(c.minutes ?? 0),
-              distance: Number(c.distance ?? 0),
-            },
-          }),
-        ),
-      );
+      console.log('[POST] step3: create cardios count=' + body.cardios.length);
+      for (let i = 0; i < body.cardios.length; i++) {
+        const c = body.cardios[i];
+        console.log('[POST] cardio ' + i + ':', JSON.stringify(c));
+        await prisma.exerciseCardio.create({
+          data: {
+            recordId: record.id,
+            type: String(c.type ?? ''),
+            minutes: Number(c.minutes ?? 0),
+            distance: Number(c.distance ?? 0),
+          },
+        });
+      }
     }
 
+    console.log('[POST] done');
     return NextResponse.json({ id: record.id });
   } catch (error: unknown) {
     const message =
-      error instanceof Error ? error.message : 'unknown error';
-    console.error('POST /api/records error:', message);
+      error instanceof Error ? error.message : String(error);
+    console.error('[POST] ERROR:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
