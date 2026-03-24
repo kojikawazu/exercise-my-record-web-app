@@ -77,9 +77,11 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   try {
+    console.log('[PATCH] step1: deleteMany workouts/cardios');
     await prisma.exerciseWorkout.deleteMany({ where: { recordId: record.id } });
     await prisma.exerciseCardio.deleteMany({ where: { recordId: record.id } });
 
+    console.log('[PATCH] step2: update record memo');
     const updated = await prisma.exerciseRecord.update({
       where: { id: record.id },
       data: {
@@ -88,42 +90,45 @@ export async function PATCH(request: Request, context: RouteContext) {
     });
 
     if (body.workouts?.length) {
-      await Promise.all(
-        body.workouts.map((workout: any) =>
-          prisma.exerciseWorkout.create({
-            data: {
-              recordId: record.id,
-              part: workout.part,
-              name: workout.name,
-              sets: Number(workout.sets ?? 0),
-              reps: Number(workout.reps ?? 0),
-              weight: Number(workout.weight ?? 0),
-            },
-          }),
-        ),
-      );
+      console.log('[PATCH] step3: create workouts count=' + body.workouts.length);
+      for (let i = 0; i < body.workouts.length; i++) {
+        const w = body.workouts[i];
+        console.log('[PATCH] workout ' + i + ':', JSON.stringify(w));
+        await prisma.exerciseWorkout.create({
+          data: {
+            recordId: record.id,
+            part: String(w.part ?? ''),
+            name: String(w.name ?? ''),
+            sets: Number(w.sets ?? 0),
+            reps: Number(w.reps ?? 0),
+            weight: Number(w.weight ?? 0),
+          },
+        });
+      }
     }
 
     if (body.cardios?.length) {
-      await Promise.all(
-        body.cardios.map((c: any) =>
-          prisma.exerciseCardio.create({
-            data: {
-              recordId: record.id,
-              type: c.type,
-              minutes: Number(c.minutes ?? 0),
-              distance: Number(c.distance ?? 0),
-            },
-          }),
-        ),
-      );
+      console.log('[PATCH] step4: create cardios count=' + body.cardios.length);
+      for (let i = 0; i < body.cardios.length; i++) {
+        const c = body.cardios[i];
+        console.log('[PATCH] cardio ' + i + ':', JSON.stringify(c));
+        await prisma.exerciseCardio.create({
+          data: {
+            recordId: record.id,
+            type: String(c.type ?? ''),
+            minutes: Number(c.minutes ?? 0),
+            distance: Number(c.distance ?? 0),
+          },
+        });
+      }
     }
 
+    console.log('[PATCH] done');
     return NextResponse.json({ id: updated.id });
   } catch (error: unknown) {
     const message =
-      error instanceof Error ? error.message : 'unknown error';
-    console.error('PATCH /api/records/:date error:', message);
+      error instanceof Error ? error.message : String(error);
+    console.error('[PATCH] ERROR:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
