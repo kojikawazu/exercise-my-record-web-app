@@ -22,6 +22,12 @@
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma"
+    ]
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
     "@tailwindcss/postcss": "^4",

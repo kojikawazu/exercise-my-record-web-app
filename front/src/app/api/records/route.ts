@@ -69,32 +69,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'duplicate date' }, { status: 409 });
   }
 
-  const record = await prisma.exerciseRecord.create({
-    data: {
-      date,
-      memo: body.memo ?? null,
-      workouts: body.workouts?.length
-        ? {
-            create: body.workouts.map((workout: any) => ({
+  try {
+    const record = await prisma.exerciseRecord.create({
+      data: {
+        date,
+        memo: body.memo ?? null,
+      },
+    });
+
+    if (body.workouts?.length) {
+      await Promise.all(
+        body.workouts.map((workout: any) =>
+          prisma.exerciseWorkout.create({
+            data: {
+              recordId: record.id,
               part: workout.part,
               name: workout.name,
               sets: Number(workout.sets ?? 0),
               reps: Number(workout.reps ?? 0),
               weight: Number(workout.weight ?? 0),
-            })),
-          }
-        : undefined,
-      cardios: body.cardios?.length
-        ? {
-            create: body.cardios.map((c: any) => ({
+            },
+          }),
+        ),
+      );
+    }
+
+    if (body.cardios?.length) {
+      await Promise.all(
+        body.cardios.map((c: any) =>
+          prisma.exerciseCardio.create({
+            data: {
+              recordId: record.id,
               type: c.type,
               minutes: Number(c.minutes ?? 0),
               distance: Number(c.distance ?? 0),
-            })),
-          }
-        : undefined,
-    },
-  });
+            },
+          }),
+        ),
+      );
+    }
 
-  return NextResponse.json({ id: record.id });
+    return NextResponse.json({ id: record.id });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : 'unknown error';
+    console.error('POST /api/records error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
