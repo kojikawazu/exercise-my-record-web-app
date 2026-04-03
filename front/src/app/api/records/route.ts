@@ -70,7 +70,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    console.log('[POST] step1: create record');
     const record = await prisma.exerciseRecord.create({
       data: {
         date,
@@ -79,10 +78,8 @@ export async function POST(request: Request) {
     });
 
     if (body.workouts?.length) {
-      console.log('[POST] step2: create workouts count=' + body.workouts.length);
       for (let i = 0; i < body.workouts.length; i++) {
         const w = body.workouts[i];
-        console.log('[POST] workout ' + i + ':', JSON.stringify(w));
         await prisma.exerciseWorkout.create({
           data: {
             recordId: record.id,
@@ -97,10 +94,8 @@ export async function POST(request: Request) {
     }
 
     if (body.cardios?.length) {
-      console.log('[POST] step3: create cardios count=' + body.cardios.length);
       for (let i = 0; i < body.cardios.length; i++) {
         const c = body.cardios[i];
-        console.log('[POST] cardio ' + i + ':', JSON.stringify(c));
         await prisma.exerciseCardio.create({
           data: {
             recordId: record.id,
@@ -112,12 +107,11 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log('[POST] done');
     return NextResponse.json({ id: record.id });
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : String(error);
-    console.error('[POST] ERROR:', message);
+    console.error('POST /api/records error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
