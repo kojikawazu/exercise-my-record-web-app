@@ -58,6 +58,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
       - name: Create .env.local for E2E
         run: |
           echo "NEXT_PUBLIC_E2E_BYPASS=1" >> .env.local
