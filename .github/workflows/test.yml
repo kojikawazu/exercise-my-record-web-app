@@ -58,6 +58,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create .env.local for E2E
+        run: |
+          echo "NEXT_PUBLIC_E2E_BYPASS=1" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key" >> .env.local
+          echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy" >> .env.local
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
@@ -65,10 +72,6 @@ jobs:
         run: pnpm run test:e2e
         env:
           CI: 'true'
-          NEXT_PUBLIC_E2E_BYPASS: '1'
-          NEXT_PUBLIC_SUPABASE_URL: 'https://dummy.supabase.co'
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'dummy-anon-key'
-          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
       - name: Upload Playwright report
         if: failure()
