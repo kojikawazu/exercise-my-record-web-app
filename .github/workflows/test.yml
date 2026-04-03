@@ -65,6 +65,8 @@ jobs:
         run: pnpm run test:e2e
         env:
           NEXT_PUBLIC_E2E_BYPASS: '1'
+          NEXT_PUBLIC_SUPABASE_URL: 'https://dummy.supabase.co'
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'dummy-anon-key'
 
       - name: Upload Playwright report
         if: failure()
