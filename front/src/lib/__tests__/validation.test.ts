@@ -3,6 +3,7 @@ import {
   validateNumericField,
   validatePositiveNumericField,
   computeErrors,
+  hasAnyErrors,
 } from '../validation';
 
 // ---------------------------------------------------------------------------
@@ -215,5 +216,38 @@ describe('computeErrors', () => {
   it('should return no errors when cardios array is empty', () => {
     const errors = computeErrors('2026-01-01', [validWorkout], []);
     expect(errors.cardios).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// hasAnyErrors
+// ---------------------------------------------------------------------------
+describe('hasAnyErrors', () => {
+  it('should return false when there are no errors', () => {
+    const errors = computeErrors('2026-01-01', [validWorkout], []);
+    expect(hasAnyErrors(errors)).toBe(false);
+  });
+
+  it('should return true when date error is present', () => {
+    const errors = computeErrors('', [validWorkout], []);
+    expect(hasAnyErrors(errors)).toBe(true);
+  });
+
+  it('should return true when a workout error is present', () => {
+    const workout = { ...validWorkout, part: '' };
+    const errors = computeErrors('2026-01-01', [workout], []);
+    expect(hasAnyErrors(errors)).toBe(true);
+  });
+
+  it('should return true when a cardio error is present', () => {
+    const cardio = { ...validCardio, minutes: '30', distance: '' };
+    const errors = computeErrors('2026-01-01', [validWorkout], [cardio]);
+    expect(hasAnyErrors(errors)).toBe(true);
+  });
+
+  it('should return false when cardio row is completely empty (skipped)', () => {
+    const emptyCardio = { id: 'c2', type: 'ウォーク', minutes: '', distance: '' };
+    const errors = computeErrors('2026-01-01', [validWorkout], [emptyCardio]);
+    expect(hasAnyErrors(errors)).toBe(false);
   });
 });

@@ -63,7 +63,7 @@ jobs:
 
       - name: Create .env.local for E2E
         run: |
-          echo "NEXT_PUBLIC_E2E_BYPASS=1" >> .env.local
+          echo "E2E_BYPASS=1" >> .env.local
           echo "NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co" >> .env.local
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key" >> .env.local
           echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy" >> .env.local

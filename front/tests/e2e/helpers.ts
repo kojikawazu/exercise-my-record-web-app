@@ -33,7 +33,7 @@ export const selectDate = async (page: Page, dateStr: string) => {
 /**
  * Supabase v2 の偽セッションを localStorage に注入し、
  * /api/admin/me をモックして isAdmin=true にする。
- * isBypassAllowed (NEXT_PUBLIC_E2E_BYPASS) に依存しない。
+ * isBypassAllowed (E2E_BYPASS) に依存しない。
  */
 export const injectAdminSession = async (page: Page) => {
   // Supabase v2 のセッションキー: sb-{hostname}-auth-token
