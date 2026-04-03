@@ -30,17 +30,54 @@ export const selectDate = async (page: Page, dateStr: string) => {
 // 管理者セッション注入
 // ---------------------------------------------------------------------------
 
-/** E2Eバイパスフラグを localStorage にセットし、Supabase auth 呼び出しをモックして安定させる */
+/**
+ * Supabase v2 の偽セッションを localStorage に注入し、
+ * /api/admin/me をモックして isAdmin=true にする。
+ * isBypassAllowed (NEXT_PUBLIC_E2E_BYPASS) に依存しない。
+ */
 export const injectAdminSession = async (page: Page) => {
-  await page.addInitScript(() => {
+  // Supabase v2 のセッションキー: sb-{hostname}-auth-token
+  const storageKey = 'sb-dummy.supabase.co-auth-token';
+
+  await page.addInitScript((key: string) => {
+    const fakeSession = {
+      access_token: 'fake-e2e-access-token',
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      expires_in: 7200,
+      refresh_token: 'fake-e2e-refresh-token',
+      token_type: 'bearer',
+      user: {
+        id: 'fake-e2e-user-id',
+        aud: 'authenticated',
+        email: 'admin@example.com',
+        role: 'authenticated',
+      },
+    };
+    localStorage.setItem(key, JSON.stringify(fakeSession));
     localStorage.setItem('e2e_admin_bypass', '1');
-  });
-  // Supabase auth API をモックして onAuthStateChange の不要なリトライを防ぐ
+  }, storageKey);
+
+  // /api/admin/me をモック → isAdmin: true
+  await page.route('**/api/admin/me**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ isAdmin: true }),
+    }),
+  );
+
+  // Supabase auth API をモックしてリフレッシュ試行を即時解決
   await page.route('**/auth/v1/**', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user: null, session: null }),
+      body: JSON.stringify({
+        access_token: 'fake-e2e-access-token',
+        expires_in: 7200,
+        refresh_token: 'fake-e2e-refresh-token',
+        token_type: 'bearer',
+        user: { id: 'fake-e2e-user-id', email: 'admin@example.com' },
+      }),
     }),
   );
 };
