@@ -7,7 +7,7 @@ const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() ?? '';
 
 const isE2eBypass =
   process.env.NODE_ENV !== 'production' &&
-  process.env.NEXT_PUBLIC_E2E_BYPASS === '1';
+  process.env.E2E_BYPASS === '1';
 
 type AuthResult =
   | { authorized: true }

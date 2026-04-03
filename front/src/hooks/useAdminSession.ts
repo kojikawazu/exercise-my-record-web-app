@@ -12,9 +12,7 @@ type AdminSessionState = {
   isBypass: boolean;
 };
 
-export const isBypassAllowed =
-  process.env.NODE_ENV !== 'production' &&
-  process.env.NEXT_PUBLIC_E2E_BYPASS === '1';
+export const isBypassAllowed = process.env.NODE_ENV !== 'production';
 
 export function getBypassFlag() {
   if (!isBypassAllowed || typeof window === 'undefined') return false;

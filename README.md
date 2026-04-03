@@ -10,6 +10,7 @@
 ## 開発コマンド
 - `cd front && pnpm dev` : ローカル開発
 - `cd front && pnpm run build` : ビルド
+- `cd front && pnpm test` : Vitestユニットテスト
 - `cd front && pnpm run test:e2e` : Playwright E2E
 
 ## 認証
