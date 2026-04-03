@@ -66,7 +66,7 @@ test('should show 404 UI when record does not exist', async ({ page }) => {
   await mockRecordDetailApi(page, null);
   await page.goto('/records/2099-01-01');
 
-  await expect(page.getByText(/見つかりません|not found|404/i)).toBeVisible();
+  await expect(page.getByText(/見つかりません|not found|404/i).first()).toBeVisible();
 });
 
 test('should not show edit button for non-admin user', async ({ page }) => {
@@ -241,6 +241,9 @@ test('should delete a record from admin list', async ({ page }) => {
 test('should navigate from detail to edit page via edit button', async ({ page }) => {
   await injectAdminSession(page);
   await mockRecordDetailApi(page, recordDetailFixture);
+  await page.route('**/api/profile**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ weightKg: 65 }) }),
+  );
   await page.goto('/records/2026-02-02');
 
   await page.getByRole('link', { name: '編集' }).click();
