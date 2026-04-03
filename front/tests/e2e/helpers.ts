@@ -30,11 +30,19 @@ export const selectDate = async (page: Page, dateStr: string) => {
 // 管理者セッション注入
 // ---------------------------------------------------------------------------
 
-/** E2Eバイパスフラグを localStorage にセットしてから初期スクリプトで注入する */
+/** E2Eバイパスフラグを localStorage にセットし、Supabase auth 呼び出しをモックして安定させる */
 export const injectAdminSession = async (page: Page) => {
   await page.addInitScript(() => {
     localStorage.setItem('e2e_admin_bypass', '1');
   });
+  // Supabase auth API をモックして onAuthStateChange の不要なリトライを防ぐ
+  await page.route('**/auth/v1/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ user: null, session: null }),
+    }),
+  );
 };
 
 // ---------------------------------------------------------------------------

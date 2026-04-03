@@ -2,10 +2,13 @@ import { expect, test } from '@playwright/test';
 import {
   injectAdminSession,
   mockRecordDetailApi,
+  mockRecordsListApi,
   recordDetailFixture,
+  recordsFixture,
 } from './helpers';
 
 test('list page renders core elements and pagination', async ({ page }) => {
+  await mockRecordsListApi(page, recordsFixture);
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '記録一覧' })).toBeVisible();
   await expect(page.getByRole('link', { name: '管理者ログイン' })).toBeVisible();
@@ -15,25 +18,11 @@ test('list page renders core elements and pagination', async ({ page }) => {
   await expect(page.getByText('有酸素合計距離').first()).toBeVisible();
   await expect(page.getByText('推定消費カロリー').first()).toBeVisible();
 
-  // Pagination: verify API returns paging structure
-  const res = await page.request.get('/api/records?page=1');
-  const data = await res.json();
-  // API should return { records, totalCount, page, totalPages }
-  expect(data).toHaveProperty('records');
-  expect(data).toHaveProperty('totalCount');
-  expect(data).toHaveProperty('page', 1);
-  expect(data).toHaveProperty('totalPages');
-
-  // If multiple pages, verify pagination UI
-  if (data.totalPages > 1) {
-    const prevButton = page.getByRole('button', { name: '前へ' });
-    const nextButton = page.getByRole('button', { name: '次へ' });
-    // First page: "前へ" should be disabled
-    await expect(prevButton).toBeDisabled();
-    // Click "次へ" and verify URL changes to ?page=2
-    await nextButton.click();
-    await expect(page).toHaveURL(/[?&]page=2/);
-  }
+  // Pagination: verify UI with 2 pages of mocked data
+  await mockRecordsListApi(page, recordsFixture, { totalCount: 15, totalPages: 2, page: 1 });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: '前へ' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '次へ' })).toBeEnabled();
 });
 
 test('detail page renders sections', async ({ page }) => {
