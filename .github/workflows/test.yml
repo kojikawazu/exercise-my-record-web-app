@@ -4,11 +4,13 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'docs/**'
+    paths:
+      - '.github/workflows/**'
+      - 'front/**'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
+    paths:
+      - '.github/workflows/**'
+      - 'front/**'
 
 jobs:
   unit-test:
