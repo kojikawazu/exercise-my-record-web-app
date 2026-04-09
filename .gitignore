@@ -1,4 +1,6 @@
 .DS_Store
 .pnpm-store/
 front/test-results/
-.claude/
+.claude/worktrees/
+.claude/plugins/
+.claude/todos/
