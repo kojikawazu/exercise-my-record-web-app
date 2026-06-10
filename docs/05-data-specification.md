@@ -4,6 +4,19 @@
 
 > 本アプリが使用するのは `Exercise*` 系モデルのみ。同 schema 内の `Report` / `ReportTag` / `ReportTagMapping` / `VideoEntry` は本アプリ対象外（共有スキーマの名残）。
 
+## 目次
+
+- [データモデル](#データモデル)
+- [ER 図（テーブル関係）](#er-図テーブル関係)
+- [テーブルスキーマ](#テーブルスキーマ)
+  - [ExerciseRecord](#exerciserecord)
+  - [ExerciseWorkout](#exerciseworkout)
+  - [ExerciseCardio](#exercisecardio)
+  - [ExerciseMaster](#exercisemaster)
+  - [ExerciseProfile](#exerciseprofile)
+- [データフロー](#データフロー)
+- [マイグレーション](#マイグレーション)
+
 ## データモデル
 
 | エンティティ | 説明 |
