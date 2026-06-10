@@ -2,6 +2,24 @@
 
 エンドポイント・リクエスト/レスポンス形式・認証・エラーハンドリングを定義する。
 
+## 目次
+
+- [前提](#前提)
+- [エンドポイント一覧](#エンドポイント一覧)
+- [認証方式](#認証方式)
+- [リクエスト/レスポンス形式](#リクエストレスポンス形式)
+  - [POST /records](#post-records)
+  - [GET /records](#get-records)
+  - [GET /records/:date](#get-recordsdate)
+  - [GET /records/calendar?month=YYYY-MM ※未実装（設計のみ）](#get-recordscalendarmonthyyyy-mm-未実装設計のみ)
+  - [GET /records/trends?period=1w|1m|3m|all ※未実装（設計のみ）](#get-recordstrendsperiod1w1m3mall-未実装設計のみ)
+  - [GET /admin/me](#get-adminme)
+  - [マスター管理](#マスター管理)
+  - [プロフィール](#プロフィール)
+  - [GET /admin/export（Issue #20 で削除予定、現時点では現役）](#get-adminexportissue-20-で削除予定現時点では現役)
+- [エラーレスポンス](#エラーレスポンス)
+- [バリデーション方針](#バリデーション方針)
+
 ## 前提
 
 - 1 日 1 レコード。POST は同日存在時にエラー（上書きしない）。

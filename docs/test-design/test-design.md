@@ -1,5 +1,26 @@
 # テスト設計: exercise-my-record-web-app 全体
 
+## 目次
+
+- [対象](#対象)
+- [前提: リファクタリング方針](#前提-リファクタリング方針)
+- [テスト環境セットアップ](#テスト環境セットアップ)
+  - [追加パッケージ](#追加パッケージ)
+  - [追加スクリプト (package.json)](#追加スクリプト-packagejson)
+  - [設定ファイル](#設定ファイル)
+- [テストケース一覧](#テストケース一覧)
+  - [1. `lib/validation.ts` — 純粋バリデーション関数](#1-libvalidationts--純粋バリデーション関数)
+  - [2. `lib/calorie.ts` — カロリー計算関数](#2-libcaloriets--カロリー計算関数)
+  - [3. `hooks/useRecordValidation` — フックの状態管理](#3-hooksuserecordvalidation--フックの状態管理)
+  - [4. API Routes — `GET/POST /api/records`](#4-api-routes--getpost-apirecords)
+  - [5. API Routes — `GET/PATCH/DELETE /api/records/[date]`](#5-api-routes--getpatchdelete-apirecordsdate)
+  - [6. E2Eテスト — 拡充方針](#6-e2eテスト--拡充方針)
+- [テスト構成まとめ](#テスト構成まとめ)
+  - [ユニットテスト (Vitest)](#ユニットテスト-vitest)
+  - [E2Eテスト (Playwright)](#e2eテスト-playwright)
+- [モック方針](#モック方針)
+- [実装順序](#実装順序)
+
 ## 対象
 
 - 対象機能: バリデーション / カロリー計算 / useRecordValidation フック / API Routes (records, profile, masters) / E2Eフロー
