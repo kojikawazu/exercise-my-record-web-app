@@ -45,8 +45,15 @@ jobs:
       - name: Typecheck (tsc --noEmit)
         run: pnpm exec tsc --noEmit
 
+      # next build は静的生成時に Supabase クライアントを初期化するため、
+      # ダミーの公開 env を与える（未設定だと createClient が "supabaseUrl is required" で失敗）。
+      # 本番の実値は Vercel 側で設定。
       - name: Build (next build)
         run: pnpm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
   unit-test:
     name: Unit Tests (Vitest)
