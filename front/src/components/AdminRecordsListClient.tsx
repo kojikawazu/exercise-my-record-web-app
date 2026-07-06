@@ -10,13 +10,25 @@ import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { authFetch } from '@/lib/authFetch';
 
+/** 管理記録一覧の 1 日分サマリー。 */
 export type AdminRecordSummary = {
+  /** 記録日（`YYYY-MM-DD`）。一覧の一意キー兼詳細/編集への遷移パラメータ。 */
   date: string;
+  /** その日の筋トレセット数の合計。 */
   totalSets: number;
+  /** その日の有酸素運動の合計時間（分）。 */
   cardioMinutes: number;
+  /** その日の有酸素運動の合計距離（km）。 */
   cardioDistance: number;
 };
 
+/**
+ * 管理者向けの記録一覧クライアント。ページング付きで記録を表示し、削除・編集への導線を提供する。
+ *
+ * URL の `page` クエリを唯一の真実としてページ状態を同期し、削除後は現在ページを再取得する。
+ * 再取得結果が空かつ 2 ページ目以降なら前ページへ戻る。API がページ番号をクランプした場合は
+ * URL を補正する。
+ */
 export default function AdminRecordsListClient() {
   const router = useRouter();
   const searchParams = useSearchParams();

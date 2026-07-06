@@ -2,11 +2,17 @@ import type { Metadata } from 'next';
 import SidebarNav from '@/components/SidebarNav';
 import './globals.css';
 
+/** アプリ全体の既定メタデータ（ブラウザタブのタイトルと説明文）。 */
 export const metadata: Metadata = {
   title: 'Exercise My Record',
   description: 'フィットネス記録の一覧・詳細・管理を行うアプリ',
 };
 
+/**
+ * アプリ全体のルートレイアウト。左サイドバー（ロゴ + ナビゲーション）と本文領域の
+ * 2 カラム構成を提供し、全ページ共通の `<html>` / `<body>` とグローバル CSS を適用する。
+ * `children` はサイドバー右側の本文領域に描画する各ページの内容。
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

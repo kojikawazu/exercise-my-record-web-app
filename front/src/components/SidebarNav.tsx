@@ -3,6 +3,12 @@
 import { History, LayoutGrid } from 'lucide-react';
 import { useAdminSession } from '@/hooks/useAdminSession';
 
+/**
+ * サイドバーのナビゲーション。記録一覧への導線に加え、管理者にのみ管理者メニューを表示する。
+ *
+ * 管理者判定は {@link useAdminSession} に依存し、判定中（`isLoading`）は管理者リンクを出さない。
+ * バイパス経由（`isBypass`）でも管理者リンクを表示する。
+ */
 export default function SidebarNav() {
   const { isAdmin, isLoading, isBypass } = useAdminSession();
 

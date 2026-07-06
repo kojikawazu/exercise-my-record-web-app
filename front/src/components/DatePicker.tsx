@@ -3,10 +3,15 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+/** {@link DatePicker} の props。 */
 type DatePickerProps = {
+  /** 現在選択中の日付（`YYYY-MM-DD` 形式。空文字は未選択）。 */
   value: string;
+  /** 日付選択時に `YYYY-MM-DD` 形式の文字列を渡すコールバック。 */
   onChange: (value: string) => void;
+  /** 未選択時に表示するプレースホルダー（既定は「日付を選択」）。 */
   placeholder?: string;
+  /** `true` で操作を無効化する。 */
   disabled?: boolean;
 };
 
@@ -14,9 +19,23 @@ const WEEK_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
+/**
+ * Date をローカルタイムゾーンの `YYYY-MM-DD` 文字列へ変換する。
+ *
+ * `toISOString()` は UTC 変換で日付がずれるため、ローカルの年月日を直接組み立てる。
+ *
+ * @param date - 変換対象の日付
+ * @returns `YYYY-MM-DD` 形式の文字列
+ */
 const toLocalIso = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+/**
+ * `YYYY-MM-DD` 文字列を Date へパースする。
+ *
+ * @param value - 日付文字列（空文字・不正値は `null`）
+ * @returns 解釈できた場合は Date、それ以外は `null`
+ */
 const parseDate = (value: string) => {
   if (!value) return null;
   const [year, month, day] = value.split('-').map((part) => Number(part));
@@ -26,6 +45,15 @@ const parseDate = (value: string) => {
   return parsed;
 };
 
+/**
+ * 月間カレンダーのセル配列を組み立てる。
+ *
+ * 月初の曜日に合わせて先頭を `null`（空白セル）で埋め、以降に 1〜末日を並べる。
+ *
+ * @param year - 対象の西暦年
+ * @param month - 対象の月（0 始まり。0=1月）
+ * @returns 空白は `null`、日付は数値で並ぶセル配列
+ */
 const buildCalendar = (year: number, month: number) => {
   const first = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -36,6 +64,13 @@ const buildCalendar = (year: number, month: number) => {
   return cells;
 };
 
+/**
+ * 年ジャンプ対応の月間カレンダー型日付ピッカー。
+ *
+ * ボタン押下でカレンダーを開閉し、年・月をセレクトで切り替えて日付を選択する。選択結果は
+ * `YYYY-MM-DD`（ローカルタイム基準）で `onChange` に渡す。props の各項目は
+ * {@link DatePickerProps} を参照。
+ */
 export default function DatePicker({
   value,
   onChange,

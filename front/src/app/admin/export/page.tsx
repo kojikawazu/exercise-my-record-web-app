@@ -10,6 +10,11 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import DatePicker from '@/components/DatePicker';
 import { authFetch } from '@/lib/authFetch';
 
+/**
+ * データ出力画面。From/To の期間と出力形式（CSV / JSON）を指定して記録をエクスポートする。
+ * API から取得したデータを Blob 化し、ブラウザのダウンロードを起動する。期間未選択や取得
+ * 失敗はメッセージで通知する。（Issue #20 で削除予定、現時点では現役）
+ */
 export default function AdminExportPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');

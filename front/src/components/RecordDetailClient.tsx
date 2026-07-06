@@ -9,30 +9,53 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 
+/** 記録詳細における筋トレ 1 種目分のデータ。 */
 export type DetailWorkout = {
+  /** 種目の一意 ID（リストの key に使用）。 */
   id: string;
+  /** 種目名。 */
   name: string;
+  /** 対象部位。 */
   part: string;
+  /** セット数。 */
   sets: number;
+  /** 1 セットあたりの回数。 */
   reps: number;
+  /** 重量（kg）。 */
   weight: number;
 };
 
+/** 記録詳細における有酸素 1 件分のデータ。 */
 type CardioDetail = { type: string; minutes: number; distance: number };
 
+/** 記録詳細 API から取得する 1 日分のレスポンス形。 */
 type RecordDetailData = {
+  /** 記録日（`YYYY-MM-DD`）。 */
   date: string;
+  /** 体調メモ。未入力時は `null`。 */
   memo: string | null;
+  /** 筋トレ種目の一覧。 */
   workouts: DetailWorkout[];
+  /** 有酸素運動の一覧。 */
   cardios: CardioDetail[];
 };
 
+/** {@link RecordDetailClient} の props。 */
 type RecordDetailClientProps = {
+  /** 表示対象の記録日（`YYYY-MM-DD`）。 */
   date: string;
 };
 
+/** 再レンダーごとの参照変化を避けるための空配列（`useMemo` 依存の安定化用）。 */
 const EMPTY_WORKOUTS: DetailWorkout[] = [];
 
+/**
+ * 指定日の記録詳細を表示するクライアント。筋トレ・有酸素・メモ・推定カロリーを一覧化する。
+ *
+ * マウント時と `date` 変更時に詳細 API を取得し、404 は「見つからない」、その他失敗は
+ * 「取得失敗」を表示する。管理者（{@link useAdminSession}）にのみ編集リンクを出す。props の
+ * 各項目は {@link RecordDetailClientProps} を参照。
+ */
 export default function RecordDetailClient({ date }: RecordDetailClientProps) {
   const [detail, setDetail] = useState<RecordDetailData | null>(null);
   const [errorMessage, setErrorMessage] = useState('');

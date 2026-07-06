@@ -10,6 +10,13 @@ import {
 } from '@/hooks/useAdminSession';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+/**
+ * 管理者エリアの認証ガード兼レイアウト。管理者セッションの有無を判定し、未ログインなら
+ * ログイン画面へリダイレクトする。ログイン画面（`/admin/login`）自体、E2E バイパス有効時、
+ * および判定中ローディング表示は例外として通過・表示する。`?bypass=1` を検出した場合は
+ * バイパスフラグを保存してクエリを除去する。`children` は管理者と判定された場合に描画する
+ * 管理画面の内容。
+ */
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();

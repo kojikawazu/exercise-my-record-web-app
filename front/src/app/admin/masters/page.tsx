@@ -9,20 +9,31 @@ import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { authFetch } from '@/lib/authFetch';
 
+/** マスター管理画面のタブ定義（表示ラベルと API のマスター種別）。 */
 const masterTabs = [
   { label: '部位', type: 'body-parts' },
   { label: '種目', type: 'exercises' },
   { label: '有酸素種別', type: 'cardio-types' },
 ] as const;
 
+/** マスター種別の識別子。`masterTabs` の `type` から導出する。 */
 type MasterType = (typeof masterTabs)[number]['type'];
 
+/** マスター項目 1 件を表す。 */
 type MasterItem = {
+  /** 項目の一意 ID。 */
   id: string;
+  /** 項目の名称（一覧表示・編集対象）。 */
   name: string;
+  /** 所属するマスター種別。 */
   type: MasterType;
 };
 
+/**
+ * マスター管理画面。部位・種目・有酸素種別のタブを切り替えて項目を一覧表示し、追加・
+ * インライン編集・削除（確認ダイアログ付き）を行う。取得・追加・保存・削除は API 経由で、
+ * 名称重複（409）や各操作の失敗はステータスメッセージで通知する。
+ */
 export default function AdminMastersPage() {
   const [activeType, setActiveType] = useState<MasterType>('body-parts');
   const [items, setItems] = useState<MasterItem[]>([]);

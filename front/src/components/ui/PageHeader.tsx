@@ -6,13 +6,22 @@ const widthMap = {
   '5xl': 'max-w-5xl',
 };
 
+/** {@link PageHeader} の props。 */
 type PageHeaderProps = {
+  /** 見出し（大きく表示するページタイトル）。 */
   title: string;
+  /** 小さく上部に表示する補助ラベル（英語表記など）。省略時は非表示。 */
   subtitle?: string;
+  /** 右側に配置するアクション要素（ボタンやリンク）。 */
   action?: ReactNode;
+  /** 中央寄せコンテンツの最大幅キー（既定は `5xl`）。 */
   maxWidth?: keyof typeof widthMap;
 };
 
+/**
+ * ページ上部に固定表示するヘッダー。タイトル・補助ラベル・右側アクションを配置する。
+ * props の各項目は {@link PageHeaderProps} を参照。
+ */
 export default function PageHeader({
   title,
   subtitle,

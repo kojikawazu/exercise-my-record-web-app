@@ -12,33 +12,58 @@ import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
 import { authFetch } from '@/lib/authFetch';
 
+/** 筋トレ 1 行のフォーム入力状態。数値項目も入力途中を扱うため文字列で保持する。 */
 type WorkoutRow = {
+  /** 行を一意に識別するキー（描画・更新・削除の対象特定に使用）。 */
   id: string;
+  /** 部位（未選択は空文字）。 */
   part: string;
+  /** 種目名。 */
   name: string;
+  /** セット数（文字列。保存時に数値へ変換）。 */
   sets: string;
+  /** 回数（文字列。保存時に数値へ変換）。 */
   reps: string;
+  /** 重量 kg（文字列。保存時に数値へ変換）。 */
   weight: string;
 };
 
+/** 有酸素 1 行のフォーム入力状態。数値項目は入力途中を扱うため文字列で保持する。 */
 type CardioRow = {
+  /** 行を一意に識別するキー。 */
   id: string;
+  /** 有酸素種別。 */
   type: 'ラン' | 'ウォーク';
+  /** 時間（分。文字列で保持し保存時に数値へ変換）。 */
   minutes: string;
+  /** 距離（km。文字列で保持し保存時に数値へ変換）。 */
   distance: string;
 };
 
+/** API から取得する既存記録の詳細。フォームへプリセットするために使用する。 */
 type RecordDetail = {
+  /** 記録日（`YYYY-MM-DD`）。 */
   date: string;
+  /** 体調メモ（未入力時は `null`）。 */
   memo: string | null;
+  /** 筋トレ項目（数値はサーバー保存値のため number）。 */
   workouts: { id: string; part: string; name: string; sets: number; reps: number; weight: number }[];
+  /** 有酸素項目（数値はサーバー保存値のため number）。 */
   cardios: { type: string; minutes: number; distance: number }[];
 };
 
+/** 記録編集ページの props。動的セグメントの日付を非同期に受け取る。 */
 type PageProps = {
+  /** URL 動的セグメント。編集対象の記録日（`YYYY-MM-DD`）を含む Promise。 */
   params: Promise<{ date: string }>;
 };
 
+/**
+ * サーバー保存済みの筋トレ項目をフォーム入力行へ変換する。数値項目は文字列へ変換する。
+ *
+ * @param workout - API から取得した筋トレ 1 件（ID を保持する）
+ * @returns フォーム編集用の筋トレ行
+ */
 const toRow = (workout: RecordDetail['workouts'][number]): WorkoutRow => ({
   id: workout.id,
   part: workout.part,
@@ -48,6 +73,11 @@ const toRow = (workout: RecordDetail['workouts'][number]): WorkoutRow => ({
   weight: String(workout.weight),
 });
 
+/**
+ * 空の筋トレ入力行を生成する。取得結果が 0 件の場合の初期 1 行や行追加に使用する。
+ *
+ * @returns 各フィールドが空で新規 ID を持つ筋トレ行
+ */
 const emptyRow = (): WorkoutRow => ({
   id: crypto.randomUUID(),
   part: '',
@@ -57,6 +87,11 @@ const emptyRow = (): WorkoutRow => ({
   weight: '',
 });
 
+/**
+ * 空の有酸素入力行を生成する。行追加に使用する（種別は「ラン」を既定とする）。
+ *
+ * @returns 数値項目が空で新規 ID を持つ有酸素行
+ */
 const createCardioRow = (): CardioRow => ({
   id: crypto.randomUUID(),
   type: 'ラン',
@@ -64,6 +99,13 @@ const createCardioRow = (): CardioRow => ({
   distance: '',
 });
 
+/**
+ * 記録編集画面。URL の日付の既存記録を取得してフォームへプリセットし、記録追加と同一構成
+ * （筋トレ・有酸素・体調メモ）で編集する。日付は変更不可。フィールド単位バリデーション（保存
+ * 押下後に表示）を経て API へ更新保存し、推定消費カロリーを画面下部に表示する。保存成功後は
+ * 管理者向け記録一覧へ遷移する。`params` は編集対象の記録日を含む動的セグメント（非同期に
+ * 解決する）。
+ */
 export default function AdminRecordEditPage({ params }: PageProps) {
   const { date } = use(params);
   const router = useRouter();
