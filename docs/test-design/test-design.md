@@ -14,6 +14,7 @@
   - [3. `hooks/useRecordValidation` — フックの状態管理](#3-hooksuserecordvalidation--フックの状態管理)
   - [4. API Routes — `GET/POST /api/records`](#4-api-routes--getpost-apirecords)
   - [5. API Routes — `GET/PATCH/DELETE /api/records/[date]`](#5-api-routes--getpatchdelete-apirecordsdate)
+  - [5b. API Routes — masters / profile / admin/me / admin/export（Phase 1 追加）](#5b-api-routes--masters--profile--adminme--adminexportphase-1-追加)
   - [6. E2Eテスト — 拡充方針](#6-e2eテスト--拡充方針)
 - [テスト構成まとめ](#テスト構成まとめ)
   - [ユニットテスト (Vitest)](#ユニットテスト-vitest)
@@ -231,6 +232,24 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 | # | テストケース | 入力 | 期待結果 | 優先度 |
 |---|---|---|---|---|
 | A-1 | DB unavailable | getPrisma() が null | status 503 | High |
+
+---
+
+### 5b. API Routes — masters / profile / admin/me / admin/export（Phase 1 追加）
+
+テスト戦略 Phase 1 で、未カバーだった API Route Handler に UT を追加した。モックは外部 I/O（`@/lib/prisma` の `getPrisma`、`@/lib/adminAuth` の `requireAdmin`、`admin/me` は `@supabase/supabase-js` の `createClient`）のみ。ビジネスロジック（CSV 生成・カロリー等）は実物を検証する。
+
+| テストファイル | 対象 | 件数 | 主な正常/準正常/異常 |
+|---|---|---|---|
+| `masters/__tests__/route.test.ts` | GET / POST | 12 | 正: 一覧(name昇順)・作成 / 準: type不正400・name欠落400・重複409 / 異: 未認証401・503 |
+| `masters/[id]/__tests__/route.test.ts` | PATCH / DELETE | 9 | 正: 更新・削除 / 準: name欠落400・not found404 / 異: 未認証401・503 |
+| `profile/__tests__/route.test.ts` | GET / POST | 12 | 正: 取得・上書き(update+deleteMany)・新規create / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
+| `admin/me/__tests__/route.test.ts` | GET | 8 | 正: 管理者200(大小文字/前後空白許容) / 準: トークン欠落401・無効401・非管理者403 / 異: 認証設定不備500 |
+| `admin/export/__tests__/route.test.ts` | GET | 11 | 正: CSV横並び展開・escape・空展開・JSON / 準: from/to欠落400・format不正400・空文字400 / 異: 未認証401・403・503 |
+
+補足:
+- `admin/me` と `profile` はモジュールトップレベルの状態（env 捕捉 / `fallbackWeightKg`）に依存するため、`vi.resetModules()` + 動的 import でテスト順非依存にしている。
+- Phase 1 追加分の合計: 52 件。既存 82 件と合わせ UT/IT 合計 **134 件**（全 pass）。正常:異常（準正常+異常）比はスイート全体で概ね 1:2 以上。
 
 ---
 
