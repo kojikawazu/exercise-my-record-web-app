@@ -70,20 +70,21 @@ flowchart LR
 
 ## CI/CD パイプライン
 
-GitHub Actions による自動テスト。PR 作成時および `main` への push 時に Vitest と Playwright を実行。
+GitHub Actions による自動検査。PR 作成時および `main` への push 時に、静的検査・Vitest・Playwright を実行。
 
 - ファイル: `.github/workflows/test.yml`。
-- トリガー: `push`→`main` / `pull_request`、いずれも `docs/**` 以外の変更。
+- トリガー: `push`→`main` / `pull_request`、いずれも `front/**` / `.github/workflows/**` の変更。
 - ジョブ（並列実行）:
 
   | ジョブ | 内容 | 所要時間目安 |
   |--------|------|------------|
+  | `static-check` | ESLint（`pnpm lint`）→ 型チェック（`tsc --noEmit`）→ 本番ビルド（`next build`） | ~1 分 |
   | `unit-test` | Vitest ユニットテスト | ~30 秒 |
   | `e2e-test` | Playwright E2E テスト | ~7 分 |
 
 ### CI 固有の設定
 
-1. **Prisma クライアント生成**: `pnpm exec prisma generate`。未生成だと `@/generated/prisma/client` の Module not found → Next.js Dev Overlay が画面を覆いテスト操作をブロックする。
+1. **Prisma クライアント生成**: `pnpm exec prisma generate`。未生成だと `@/generated/prisma/client` の Module not found → `static-check` の型チェック失敗、および E2E で Next.js Dev Overlay が画面を覆いテスト操作をブロックする。`static-check` は lint/型チェック/ビルドの前に生成する。
 2. **`.env.local` の動的生成**: `E2E_BYPASS=1` / `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `DATABASE_URL`（いずれもダミー）。
 3. **Playwright タイムアウト**: テスト 60 秒（ローカル 30 秒）、webServer 起動 120 秒（CI はオンデマンドコンパイルで初回が遅いため）。
 

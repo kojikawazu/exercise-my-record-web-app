@@ -11,7 +11,19 @@ const escapeCsv = (value: string) => {
   return value;
 };
 
-const buildCsv = (records: any[]) => {
+/** CSV/JSON 出力に必要な筋トレ行の最小形（Prisma 取得結果と構造的に互換）。 */
+type ExportWorkout = { part: string; name: string; sets: number; reps: number; weight: number };
+/** CSV/JSON 出力に必要な有酸素行の最小形（Prisma 取得結果と構造的に互換）。 */
+type ExportCardio = { type: string; minutes: number; distance: number };
+/** CSV/JSON 出力に必要な 1 レコードの最小形（Prisma 取得結果と構造的に互換）。 */
+type ExportRecord = {
+  date: Date;
+  memo: string | null;
+  workouts: ExportWorkout[];
+  cardios: ExportCardio[];
+};
+
+const buildCsv = (records: ExportRecord[]) => {
   const header = [
     'date',
     'memo',
@@ -27,8 +39,8 @@ const buildCsv = (records: any[]) => {
   const rows = [header.join(',')];
 
   records.forEach((record) => {
-    const cardiosList: any[] = record.cardios ?? [];
-    const workoutsList: any[] = record.workouts ?? [];
+    const cardiosList: ExportCardio[] = record.cardios ?? [];
+    const workoutsList: ExportWorkout[] = record.workouts ?? [];
     const maxLen = Math.max(workoutsList.length, cardiosList.length, 1);
 
     for (let i = 0; i < maxLen; i++) {

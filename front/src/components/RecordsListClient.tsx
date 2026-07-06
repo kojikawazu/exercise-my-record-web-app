@@ -80,6 +80,10 @@ export default function RecordsListClient() {
   }, [router]);
 
   useEffect(() => {
+    // URL の page 変化に応じてサーバーからデータを再取得する正当な副作用。
+    // fetchRecords は開始時に setHasFetched(false) を同期実行するため set-state-in-effect が
+    // 発火するが、ここは「外部（API）とローカル state の同期」であり effect が適切。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchRecords(currentPage);
   }, [currentPage, fetchRecords]);
 
