@@ -9,10 +9,22 @@ const isE2eBypass =
   process.env.NODE_ENV !== 'production' &&
   process.env.E2E_BYPASS === '1';
 
+/** 管理者認証の結果。未認可時は呼び出し側がそのまま返せる `response` を同梱する。 */
 type AuthResult =
   | { authorized: true }
   | { authorized: false; response: NextResponse };
 
+/**
+ * 書き込み系 API の管理者認証ガード（防御の第 1 層）。
+ *
+ * `Authorization: Bearer <token>` を Supabase で検証し、ユーザーのメールが `ADMIN_EMAIL`
+ * と一致する場合のみ認可する。非本番かつ `E2E_BYPASS=1` のときは検証を丸ごとバイパスする。
+ * 未認可時はステータス付きの `NextResponse`（401=トークン無効/欠落・403=管理者以外・
+ * 500=認証設定不備）を `response` に格納して返す。
+ *
+ * @param request - 検証対象のリクエスト（`Authorization` ヘッダーを参照）
+ * @returns 認可可否。`authorized: false` の場合は返却用の `response` を含む
+ */
 export async function requireAdmin(request: Request): Promise<AuthResult> {
   if (isE2eBypass) {
     return { authorized: true };

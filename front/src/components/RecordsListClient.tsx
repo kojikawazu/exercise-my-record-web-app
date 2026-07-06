@@ -11,16 +11,30 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 
+/** 一覧サマリーに含める有酸素 1 件分のデータ（推定カロリー算定にも使う）。 */
 type CardioSummary = { type: string; minutes: number; distance: number };
 
+/** 記録一覧の 1 日分サマリー。 */
 export type RecordSummary = {
+  /** 記録日（`YYYY-MM-DD`）。一覧の一意キー兼詳細への遷移パラメータ。 */
   date: string;
+  /** その日の筋トレセット数の合計。 */
   totalSets: number;
+  /** その日の有酸素運動の合計時間（分）。 */
   cardioMinutes: number;
+  /** その日の有酸素運動の合計距離（km）。 */
   cardioDistance: number;
+  /** その日の有酸素運動の一覧（推定カロリー表示に使用）。 */
   cardios: CardioSummary[];
 };
 
+/**
+ * 一般ユーザー向けの記録一覧クライアント。ページング付きで記録と推定カロリーを表示する。
+ *
+ * URL の `page` クエリを唯一の真実としてページ状態を同期し、API がページ番号をクランプした
+ * 場合は URL を補正する。管理者（{@link useAdminSession}）には管理者メニューと記録追加への
+ * 導線を追加表示する。
+ */
 export default function RecordsListClient() {
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -54,6 +54,13 @@ export async function resolveDisplayName(
 }
 ```
 
-## Lint による強制（推奨）
+## Lint による強制（導入済み）
 
-`eslint-plugin-jsdoc` を導入し、公開シンボルへの JSDoc 欠落・`@param` / `@returns` 漏れを CI で検出する。TypeScript プロジェクトでは型ブレース系ルールを無効化する（`jsdoc/require-param-type` / `jsdoc/require-returns-type` を off）。
+`eslint-plugin-jsdoc` を導入済み（`front/eslint.config.mjs`）。有効ルールの唯一の真実は同ファイルの JSDoc ブロック。機械判定できる部分のみ強制する。
+
+- `jsdoc/no-types`（error）— 型の再掲を禁止（TS シグネチャが型の唯一の真実）。
+- `jsdoc/require-param` / `require-param-description` / `check-param-names`（error）— JSDoc ブロックを持つ関数は全引数を `@param` で説明し、名前・順序・過不足を突き合わせる（分割代入 props は展開しない）。
+- `jsdoc/require-returns` / `require-returns-description`（error）— 戻り値がある関数は `@returns` に意味を書く。**JSX を返す `.tsx` コンポーネントは除外**（`@returns …の要素` はノイズのため）。
+- `jsdoc/check-alignment` / `no-multi-asterisks`（warn）— 体裁を整える。
+
+`require-jsdoc` は行コメントを誤検知するため未採用（JSDoc ブロックの有無・質はレビューで確認する）。Prisma 自動生成コード（`src/generated/**`）は lint 対象外。

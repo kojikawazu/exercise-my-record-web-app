@@ -10,6 +10,11 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { supabase } from '@/lib/supabase';
 import { isBypassAllowed, setBypassSession, useAdminSession } from '@/hooks/useAdminSession';
 
+/**
+ * 管理者ログイン画面。Google OAuth（Supabase Auth）でのログインを提供する。既に管理者
+ * 判定済みなら管理者メニューへ、管理者でないセッションが残っている場合はサインアウトして
+ * エラーを表示する。非本番環境ではテストログイン（E2E バイパス）ボタンも表示する。
+ */
 export default function AdminLoginPage() {
   const router = useRouter();
   const { isAdmin, isLoading } = useAdminSession();

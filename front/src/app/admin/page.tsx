@@ -9,6 +9,7 @@ import { buttonClasses } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
 import { setBypassSession } from '@/hooks/useAdminSession';
 
+/** 管理者メニューに並べるカードの定義（表示ラベル・遷移先パス・アイコン）。 */
 const menuItems = [
   { label: '記録一覧', href: '/admin/records', icon: ListOrdered },
   { label: '記録追加', href: '/admin/records/new', icon: FilePlus },
@@ -17,6 +18,11 @@ const menuItems = [
   { label: 'データ出力', href: '/admin/export', icon: Upload },
 ];
 
+/**
+ * 管理者メニュー画面。記録一覧・記録追加・プロフィール・マスター管理・データ出力への
+ * 導線をカードのグリッドで表示し、右上にログアウトボタンを固定表示する。ログアウト時は
+ * E2E バイパスフラグを解除し Supabase からサインアウトしてログイン画面へ遷移する。
+ */
 export default function AdminMenuPage() {
   const router = useRouter();
 

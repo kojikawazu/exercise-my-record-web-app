@@ -1,12 +1,19 @@
 import { LoaderCircle } from 'lucide-react';
 
+/** 処理種別。既定ラベルと文字色を切り替えるためのキー。 */
 type LoadingMode = 'fetching' | 'saving' | 'deleting' | 'exporting' | 'auth';
+/** 表示形態。block=独立ブロック / inline=行内（ボタン内など）。 */
 type LoadingVariant = 'block' | 'inline';
 
+/** {@link LoadingSpinner} の props。 */
 type LoadingSpinnerProps = {
+  /** 処理種別。既定ラベル・色を決める（既定は `fetching`）。 */
   mode?: LoadingMode;
+  /** 表示テキストの明示指定。指定時は `mode` の既定ラベルより優先される。 */
   label?: string;
+  /** 表示形態。アイコンサイズと外枠スタイルを決める（既定は `block`）。 */
   variant?: LoadingVariant;
+  /** 追加の Tailwind クラス。 */
   className?: string;
 };
 
@@ -31,6 +38,12 @@ const variantClasses: Record<LoadingVariant, string> = {
   inline: 'inline-flex items-center gap-2 text-sm font-bold',
 };
 
+/**
+ * 回転アイコン付きのローディング表示。処理種別ごとに色とラベルを変える。
+ *
+ * `role="status"` / `aria-live="polite"` を付与し、状態変化をスクリーンリーダーへ通知する。
+ * props の各項目は {@link LoadingSpinnerProps} を参照。
+ */
 export default function LoadingSpinner({
   mode = 'fetching',
   label,
