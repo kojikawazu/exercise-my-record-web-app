@@ -77,7 +77,8 @@ pnpm dev   # http://localhost:3000
 | `pnpm test` | Vitest ユニットテスト（モック） |
 | `pnpm run test:it` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、要 Docker / Node 22+） |
 | `pnpm run e2e:db:up` / `e2e:db:down` | E2E 用 PostgreSQL（docker-compose）の起動 / 破棄 |
-| `pnpm run test:e2e` | Playwright E2E テスト（実 DB。事前に `e2e:db:up`、要 Docker） |
+| `pnpm run test:e2e` | Playwright E2E テスト（単機能フロー、実 DB。事前に `e2e:db:up`、要 Docker） |
+| `pnpm run test:scenario` | Playwright シナリオテスト（複数機能横断、実 DB。事前に `e2e:db:up`、要 Docker） |
 | `pnpm lint` / `pnpm format` | Lint / フォーマットチェック |
 
 ## DB マイグレーション
@@ -97,6 +98,7 @@ psql "$DATABASE_URL" -f front/prisma/migrations/20260321_cardio_multiple_rows/mi
 - **E2E（Playwright + docker-compose）**: 実 Dev サーバー + **実 PostgreSQL** で主要フローを検証（API モックなし）。`pnpm run e2e:db:up`（DB起動）→ `pnpm run test:e2e`（**要 Docker**、`*.spec.ts`）。
   - DB は `front/docker-compose.e2e.yml`。`globalSetup` で `prisma db push`、各テスト `beforeEach` で reset+seed。
   - 認証バイパスはサーバー専用フラグ `E2E_BYPASS=1`（`webServer.command` が付与）＋ クライアントの localStorage バイパス。本番ビルドでは無効。
+- **シナリオ（Playwright）**: 複数機能横断のユーザージャーニー（`front/tests/scenario/`）。E2E と同じ実 DB 基盤。`pnpm run test:scenario`（**要 Docker**）。
 - CI（GitHub Actions, `.github/workflows/test.yml`）で `unit-test` / `e2e-test` を並列実行。
 
 詳細は [`docs/08-test-specification.md`](docs/08-test-specification.md)。
