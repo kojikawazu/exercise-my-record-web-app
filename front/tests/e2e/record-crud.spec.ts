@@ -152,6 +152,8 @@ test('should edit a record and persist the change', async ({ page }) => {
   await injectAdminSession(page);
   await page.goto('/admin/records/2026-02-02/edit');
   await expect(page.getByRole('heading', { name: '記録編集' })).toBeVisible();
+  // 既存データの非同期プリフィル完了を待ってから編集する（レース回避）。
+  await expect(page.locator('textarea')).toHaveValue('体調良好');
 
   await page.locator('textarea').fill('編集後メモ');
   await page.getByRole('button', { name: '保存' }).click();

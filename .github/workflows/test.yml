@@ -164,3 +164,55 @@ jobs:
           name: playwright-report
           path: front/playwright-report/
           retention-days: 7
+
+  scenario-test:
+    name: Scenario Tests (Playwright)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: front/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Create .env.local for E2E
+        run: |
+          echo "E2E_BYPASS=1" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key" >> .env.local
+          echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy" >> .env.local
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      # シナリオも E2E と同じ実 PostgreSQL(docker-compose)基盤で実行する。
+      - name: Start E2E database (docker-compose)
+        run: pnpm run e2e:db:up
+
+      - name: Run scenario tests
+        run: pnpm run test:scenario
+        env:
+          CI: 'true'
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-scenario
+          path: front/playwright-report/
+          retention-days: 7
