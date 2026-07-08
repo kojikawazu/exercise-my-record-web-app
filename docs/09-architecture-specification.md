@@ -79,7 +79,8 @@ GitHub Actions による自動検査。PR 作成時および `main` への push 
   | ジョブ | 内容 | 所要時間目安 |
   |--------|------|------------|
   | `static-check` | ESLint（`pnpm lint`）→ 型チェック（`tsc --noEmit`）→ 本番ビルド（`next build`） | ~1 分 |
-  | `unit-test` | Vitest ユニットテスト | ~30 秒 |
+  | `unit-test` | Vitest ユニットテスト（モック） | ~30 秒 |
+  | `it-test` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、`pnpm test:it`） | ~1〜2 分 |
   | `e2e-test` | Playwright E2E テスト | ~7 分 |
 
 ### CI 固有の設定
