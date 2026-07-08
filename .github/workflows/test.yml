@@ -147,6 +147,11 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      # E2E は実 PostgreSQL(docker-compose)に対して実行する。
+      # webServer は playwright.config で DATABASE_URL を compose DB に向ける（.env.local より優先）。
+      - name: Start E2E database (docker-compose)
+        run: pnpm run e2e:db:up
+
       - name: Run E2E tests
         run: pnpm run test:e2e
         env:
