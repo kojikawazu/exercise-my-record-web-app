@@ -8,8 +8,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
-    // IT（*.it.test.ts）は vitest.it.config.ts（Testcontainers）で実行するため UT からは除外する。
-    exclude: ['tests/e2e/**', 'node_modules/**', 'src/**/*.it.test.ts'],
+    // IT（*.it.test.ts）は vitest.it.config.ts（Testcontainers）、
+    // E2E/シナリオ（Playwright）は tests/e2e・tests/scenario で実行するため UT からは除外する。
+    exclude: ['tests/e2e/**', 'tests/scenario/**', 'node_modules/**', 'src/**/*.it.test.ts'],
   },
   resolve: {
     alias: {
