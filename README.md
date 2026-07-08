@@ -75,7 +75,7 @@ pnpm dev   # http://localhost:3000
 | `pnpm dev` | ローカル開発サーバー |
 | `pnpm run build` | 本番ビルド（`prisma generate && next build`） |
 | `pnpm test` | Vitest ユニットテスト（モック） |
-| `pnpm run test:it` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、要 Docker） |
+| `pnpm run test:it` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、要 Docker / Node 22+） |
 | `pnpm run test:e2e` | Playwright E2E テスト |
 | `pnpm lint` / `pnpm format` | Lint / フォーマットチェック |
 

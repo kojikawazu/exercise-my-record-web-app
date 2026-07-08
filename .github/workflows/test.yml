@@ -93,9 +93,11 @@ jobs:
         with:
           version: 10
 
+      # Testcontainers 12 は Node 22+ の API（webidl.markAsUncloneable）に依存するため、
+      # IT ジョブのみ Node 22 を使う（README のサポート範囲「Node.js 20 以上」内）。
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: front/pnpm-lock.yaml
 

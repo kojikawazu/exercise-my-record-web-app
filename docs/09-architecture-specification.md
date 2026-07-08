@@ -88,7 +88,8 @@ GitHub Actions による自動検査。PR 作成時および `main` への push 
 1. **Prisma クライアント生成**: `pnpm exec prisma generate`。未生成だと `@/generated/prisma/client` の Module not found → `static-check` の型チェック失敗、および E2E で Next.js Dev Overlay が画面を覆いテスト操作をブロックする。`static-check` は lint/型チェック/ビルドの前に生成する。
 2. **`.env.local` の動的生成（e2e-test）**: `E2E_BYPASS=1` / `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `DATABASE_URL`（いずれもダミー）。
 3. **`static-check` の build 用ダミー env**: `next build` は静的生成時に Supabase クライアントを初期化するため、`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`（＋ `DATABASE_URL`）をダミー値で与える（未設定だと `supabaseUrl is required` でビルド失敗）。本番の実値は Vercel 側で設定。
-4. **Playwright タイムアウト**: テスト 60 秒（ローカル 30 秒）、webServer 起動 120 秒（CI はオンデマンドコンパイルで初回が遅いため）。
+4. **`it-test` の Node バージョン**: Testcontainers 12 が Node 22+ の API に依存するため、IT ジョブのみ Node 22 で実行する（他ジョブは Node 20）。
+5. **Playwright タイムアウト**: テスト 60 秒（ローカル 30 秒）、webServer 起動 120 秒（CI はオンデマンドコンパイルで初回が遅いため）。
 
 ### 構築時のトラブルシューティング記録
 
