@@ -15,6 +15,7 @@
   - [4. API Routes — `GET/POST /api/records`](#4-api-routes--getpost-apirecords)
   - [5. API Routes — `GET/PATCH/DELETE /api/records/[date]`](#5-api-routes--getpatchdelete-apirecordsdate)
   - [5b. API Routes — masters / profile / admin/me / admin/export（Phase 1 追加）](#5b-api-routes--masters--profile--adminme--adminexportphase-1-追加)
+  - [5c. 統合テスト（IT）— 実 DB（Testcontainers）（Phase 2 追加）](#5c-統合テストit--実-dbtestcontainersphase-2-追加)
   - [6. E2Eテスト — 拡充方針](#6-e2eテスト--拡充方針)
 - [テスト構成まとめ](#テスト構成まとめ)
   - [ユニットテスト (Vitest)](#ユニットテスト-vitest)
@@ -250,6 +251,24 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 補足:
 - `admin/me` と `profile` はモジュールトップレベルの状態（env 捕捉 / `fallbackWeightKg`）に依存するため、`vi.resetModules()` + 動的 import でテスト順非依存にしている。
 - Phase 1 追加分の合計: 52 件。既存 82 件と合わせ UT/IT 合計 **134 件**（全 pass）。正常:異常（準正常+異常）比はスイート全体で概ね 1:2 以上。
+
+---
+
+### 5c. 統合テスト（IT）— 実 DB（Testcontainers）（Phase 2 追加）
+
+テスト戦略 Phase 2 で、**モックを使わず実 PostgreSQL に対して** Route Handler を検証する IT レイヤーを新設した。
+
+- 基盤: `@testcontainers/postgresql`（`postgres:16-alpine`）を IT 実行で 1 コンテナ起動。`prisma db push` でスキーマ適用。
+- 設定: `front/vitest.it.config.ts`（`globalSetup` でコンテナ起動 + URL を `provide`、`setupFiles` で `DATABASE_URL` 注入 + 各テスト前 TRUNCATE）。ファイル命名 `*.it.test.ts`、コマンド `pnpm test:it`。UT（`pnpm test`）とは分離。
+- 認証は `E2E_BYPASS=1` でバイパス（認証は admin/me の UT で別途担保）。
+
+| テストファイル | 検証する実 DB 挙動 | 件数 |
+|---|---|---|
+| `records/__tests__/route.it.test.ts` | 作成→詳細往復・**同日 unique→409**・ページング(12件/10件)と日付降順・空状態・PATCH全置換・DELETE子行除去(孤児なし)・404 | 10 |
+| `profile/__tests__/route.it.test.ts` | 保存往復・**繰り返し保存で 1 行維持(上書き)**・非数値400で行なし | 3 |
+| `masters/__tests__/route.it.test.ts` | name昇順・type別スコープ・PATCH/DELETE・**複合unique(type,name)→409**・別typeなら同名可・404 | 6 |
+
+IT 合計 19 件（全 pass）。モックでは検証できない DB 制約・並び順・トランザクション的挙動を実 DB で担保する。既存のモック route テストは高速な「ハンドラ UT」として併存する。
 
 ---
 

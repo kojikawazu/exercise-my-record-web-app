@@ -74,7 +74,8 @@ pnpm dev   # http://localhost:3000
 |----------|------|
 | `pnpm dev` | ローカル開発サーバー |
 | `pnpm run build` | 本番ビルド（`prisma generate && next build`） |
-| `pnpm test` | Vitest ユニットテスト |
+| `pnpm test` | Vitest ユニットテスト（モック） |
+| `pnpm run test:it` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、要 Docker / Node 22+） |
 | `pnpm run test:e2e` | Playwright E2E テスト |
 | `pnpm lint` / `pnpm format` | Lint / フォーマットチェック |
 
@@ -90,7 +91,8 @@ psql "$DATABASE_URL" -f front/prisma/migrations/20260321_cardio_multiple_rows/mi
 
 ## テスト
 
-- **ユニット（Vitest）**: バリデーション / カロリー計算 / フック / API Routes。`pnpm test`。
+- **ユニット（Vitest）**: バリデーション / カロリー計算 / フック / API Routes（モック）。`pnpm test`。
+- **統合（Vitest + Testcontainers）**: 実 PostgreSQL に対し Prisma 経由で API Routes を検証（unique 制約 / ページング / cascade 等）。`pnpm run test:it`（**Docker 必須**、`*.it.test.ts`）。
 - **E2E（Playwright）**: 実 Dev サーバー + 認証バイパスで主要フローを検証。`pnpm run test:e2e`。
   - 認証バイパスはサーバー専用フラグ `E2E_BYPASS=1` で有効化（`playwright.config.ts` の `webServer.command` が自動付与、本番ビルドでは無効）。
 - CI（GitHub Actions, `.github/workflows/test.yml`）で `unit-test` / `e2e-test` を並列実行。
