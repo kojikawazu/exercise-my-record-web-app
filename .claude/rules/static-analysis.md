@@ -7,12 +7,9 @@ globs:
 
 使用するツールは `coding-standards.md`（ESLint + Prettier）と `typescript.md`（`tsc --noEmit` / `typescript-eslint` / `eslint-plugin-jsdoc`）で定める。本ルールは**どう運用するか**を定める。
 
-本プロジェクトの CI 上の実体は `.github/workflows/` の静的検査ジョブ（`pnpm lint` → `tsc --noEmit` → `next build`）。発火条件は `github-actions.md` に従う。
+本プロジェクトの CI 上の実体は `.github/workflows/ci.yml` の `static-check` ジョブ（`pnpm lint` → `tsc --noEmit` → `next build`）と、`.github/workflows/docs.yml` の markdown lint（`.markdownlint-cli2.jsonc`）。発火条件は `github-actions.md` に従う。
 
-> **未達の項目**（本ルール導入時点）:
->
-> - 後述「CI で必須にする」が求める **Formatter の差分ゼロ検証（`pnpm format`）が CI に入っていない**。既存コードに未整形ファイルが残っているため、一括整形と CI 追加は別途対応する（issue #87）。
-> - **markdown に対する静的検査がない**。ドキュメントのみの変更で CI が何も動かない状態のため、`github-actions.md` の発火ルールと併せて別途対応する（issue #89）。
+> **未達の項目**: 後述「CI で必須にする」が求める **Formatter の差分ゼロ検証（`pnpm format`）が CI に入っていない**。既存コードに未整形ファイルが残っているため、一括整形と CI 追加は別途対応する（issue #87）。
 
 ## 役割分担（重ねない）
 

@@ -70,11 +70,19 @@ flowchart LR
 
 ## CI/CD パイプライン
 
-GitHub Actions による自動検査。PR 作成時および `main` への push 時に、静的検査・Vitest・Playwright を実行。
+GitHub Actions による自動検査。**変更内容に関係のあるジョブだけを動かす**ため、コード用とドキュメント用にワークフローを分離している（`.claude/rules/github-actions.md`）。
 
-- ファイル: `.github/workflows/test.yml`。
-- トリガー: `push`→`main` / `pull_request`、いずれも `front/**` / `.github/workflows/**` の変更。
-- ジョブ（並列実行）:
+| ファイル | 対象 | トリガー |
+|---|---|---|
+| `.github/workflows/ci.yml` | コード（静的検査・Vitest・Playwright） | `push`→`main` / `pull_request`→`main`。`changes` ジョブでパス判定し、ドキュメントのみの変更では各ジョブを `if:` でスキップ |
+| `.github/workflows/docs.yml` | ドキュメント（markdown lint・必須ファイル存在確認） | `push`→`main` / `pull_request`→`main`、いずれも `**/*.md` 等の変更時のみ |
+
+- **パス判定は「除外リスト」方式**（`docs/**` / `**/*.md` / `.claude/**` 以外はコード変更とみなす）。許可リスト方式だと、新しいディレクトリが増えたときに黙ってテストが走らなくなるため。
+- **`ci.yml` はワークフローレベルの `paths` を使わない**。必須チェック（ブランチ保護）に設定した場合、ワークフローが起動せずチェックが pending のまま PR がマージ不能になるため。ジョブレベル `if:` によるスキップは「skipped」＝成功扱いになる。
+- 両ワークフローとも `concurrency`（連続 push で古い実行をキャンセル）と最小権限の `permissions: contents: read` を設定する。
+- markdown lint の設定は `.markdownlint-cli2.jsonc`。見た目のルールは無効化し、**壊れているもの**（言語指定のないコードフェンス・空リンク・無効な見出しアンカー・表の前後空行）のみを検出する。
+
+- `ci.yml` のジョブ（並列実行）:
 
   | ジョブ | 内容 | 所要時間目安 |
   |--------|------|------------|

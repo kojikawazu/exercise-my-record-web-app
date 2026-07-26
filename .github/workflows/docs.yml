@@ -1,0 +1,72 @@
+# ドキュメント変更向けの CI。
+#
+# ドキュメントだけの変更で「何も動かさない」状態にしないための軽量チェック。
+# テスト・ビルド・デプロイは回さない（それらは ci.yml が担当する）。
+# 必須チェック（ブランチ保護）には設定しない前提のため、ワークフローレベルの
+# paths で起動そのものを絞ってよい。詳細は .claude/rules/github-actions.md
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+      - '.markdownlint-cli2.jsonc'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+      - '.markdownlint-cli2.jsonc'
+      - '.github/workflows/docs.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 設定・対象範囲は .markdownlint-cli2.jsonc が単一の真実。
+      # 見た目のルールは無効化済みで、検出するのは「壊れているもの」のみ
+      # （言語指定のないコードフェンス・空リンク・無効な見出しアンカー等）。
+      #
+      # markdownlint-cli2-action ではなく npx でバージョンを固定して呼ぶ。
+      # action は同梱版（v0.18.1）を使うため、ローカルの npx（最新）と
+      # MD051（見出しアンカー検証）の判定が食い違い、「ローカル緑・CI 赤」になる。
+      # また action は既定 glob を設定に足すため、対象ファイル数もズレる。
+      # バージョンを上げるときは、ローカルでも同じ版で実行して差分を確認すること。
+      - name: Run markdownlint
+        run: npx --yes markdownlint-cli2@0.23.1
+
+  required-docs:
+    name: Required Docs Exist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # プロジェクトの入口となるドキュメントが消えていないことを検証する。
+      - name: Check required documents
+        run: |
+          set -euo pipefail
+          missing=0
+          for f in README.md CLAUDE.md docs/README.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::required document is missing"
+              missing=1
+            fi
+          done
+          exit "$missing"
