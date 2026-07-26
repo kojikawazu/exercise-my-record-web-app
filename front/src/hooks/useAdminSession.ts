@@ -6,9 +6,16 @@ import { supabase } from '@/lib/supabase';
 
 const BYPASS_KEY = 'e2e_admin_bypass';
 
+/**
+ * 管理者セッションの判定結果。判定中と「判定済みで非管理者」を区別するため、
+ * `isAdmin` と `isLoading` を独立させている。
+ */
 type AdminSessionState = {
+  /** 管理者として認証済みか。`isLoading` が true の間は常に false（未確定を意味しない） */
   isAdmin: boolean;
+  /** セッション判定中か。true の間は `isAdmin` の値で画面を分岐させない */
   isLoading: boolean;
+  /** E2E バイパスによる管理者扱いか。本番では常に false（`isBypassAllowed` 参照） */
   isBypass: boolean;
 };
 

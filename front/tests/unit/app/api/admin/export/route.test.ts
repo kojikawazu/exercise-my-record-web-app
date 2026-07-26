@@ -13,7 +13,12 @@ vi.mock('@/lib/adminAuth', () => ({
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
 
+/**
+ * データ出力 API のテストが Prisma のモックに返させる 1 レコード分の形。
+ * 実 Prisma の戻り値のうち、CSV / JSON 生成が参照する項目だけを持つ部分実装。
+ */
 type ExportRecord = {
+  /** 記録日。CSV では `YYYY-MM-DD` へ整形される */
   date: Date;
   memo: string | null;
   workouts: { part: string; name: string; sets: number; reps: number; weight: number }[];

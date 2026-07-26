@@ -3,6 +3,10 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql';
 
 // IT で provide/inject する値の型を宣言する。
 declare module 'vitest' {
+  /**
+   * グローバルセットアップから各テストへ `provide`/`inject` で渡す値。
+   * vitest 側の型を宣言マージで拡張するため `interface` を使う（`typescript.md` 条件 2）。
+   */
   export interface ProvidedContext {
     /** Testcontainers で起動した PostgreSQL への接続文字列。 */
     DATABASE_URL: string;

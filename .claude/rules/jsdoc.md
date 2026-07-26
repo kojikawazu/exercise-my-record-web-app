@@ -130,5 +130,27 @@ export async function resolveDisplayName(
 - `jsdoc/require-param` / `require-param-description` / `check-param-names`（error）— JSDoc ブロックを持つ関数は全引数を `@param` で説明し、名前・順序・過不足を突き合わせる（分割代入 props は展開しない）。
 - `jsdoc/require-returns` / `require-returns-description`（error）— 戻り値がある関数は `@returns` に意味を書く。**JSX を返す `.tsx` コンポーネントは除外**（`@returns …の要素` はノイズのため）。
 - `jsdoc/check-alignment` / `no-multi-asterisks`（warn）— 体裁を整える。
+- `jsdoc/require-jsdoc`（error・`contexts` 限定）— 型宣言に JSDoc を必須にする（次節）。
 
-`require-jsdoc` は行コメントを誤検知するため未採用（JSDoc ブロックの有無・質はレビューで確認する）。Prisma 自動生成コード（`src/generated/**`）は lint 対象外。
+対象は `src/**` と `tests/**` の両方（テストを `tests/` へ集約した際に対象から漏れないようにするため。`testing.md`「ESLint の対象範囲」）。
+
+### 型宣言・型メンバーの強制
+
+型定義の検出は `jsdoc/require-jsdoc` の `contexts` に AST セレクタを指定して行う（型本体 = `TSTypeAliasDeclaration` / `TSInterfaceDeclaration`、メンバー = `TSPropertySignature`）。`require: {}` を併記して**関数・クラス等の既定対象は要求しない**。
+
+**関数に対する `require-jsdoc` は引き続き未採用**（行コメントを誤検知するため）。関数の JSDoc ブロックの有無・質はレビューで確認する。上記は型宣言のみを対象にした別用途であり、この判断とは衝突しない。
+
+適用範囲は検出件数の実測に基づいて段階的に決める。
+
+| 対象 | 粒度 | 設定 |
+|---|---|---|
+| `src/**` + `tests/**` | 型本体のみ | **error** |
+| `src/types/**` | 型本体 **+ メンバー** | **error** |
+| 上記以外でのメンバー単位 | — | **未適用** |
+
+- **メンバー単位を全体に広げない**。全体に適用すると 100 件超を検出し、「書くことがない項目に埋め草コメントを付けない」方針と衝突する。`types/` は複数箇所から参照される共有型の置き場であり、**定義ファイルを開かずに使われる**ためコメントの価値が最も高い。
+- **`warn` で導入しない。** `static-analysis.md`「警告ゼロを維持し、守れないルールは有効にしない（`error` にするか、無効にするかの二択）」に従い、**`error` にできる範囲だけを対象にする**。
+- 範囲を広げるときは、**先に検出件数を計測し、`error` にできる状態にしてから**有効化する。
+- store・フック戻り値も、「戻り値の型を先に定義する」に従えば `TSPropertySignature` として同じルールで検出できる。**オブジェクトリテラルのプロパティを直接 Lint で強制しようとしない**（宣言ではないため誤検知が多く、実効性が低い）。型定義へ寄せることで強制力を得るのが本方針の要。
+
+Prisma 自動生成コード（`src/generated/**`）は lint 対象外。

@@ -31,7 +31,36 @@ const eslintConfig = defineConfig([
       // 書いた JSDoc の体裁を整える。
       "jsdoc/check-alignment": "warn",
       "jsdoc/no-multi-asterisks": "warn",
-      // require-jsdoc は // 行コメントを誤検知するため未採用。ブロックの有無・質はレビューで確認する。
+      // 型本体（type / interface の宣言）に JSDoc を必須にする。
+      // require: {} で関数・クラス等の既定対象は要求せず、contexts で型宣言だけを対象にする。
+      // 関数に対する require-jsdoc は // 行コメントを誤検知するため引き続き未採用で、
+      // 関数の JSDoc ブロックの有無・質はレビューで確認する。
+      "jsdoc/require-jsdoc": [
+        "error",
+        { require: {}, contexts: ["TSTypeAliasDeclaration", "TSInterfaceDeclaration"] },
+      ],
+    },
+  },
+  {
+    // 型メンバー（TSPropertySignature）単位の強制は types/ に限定する。
+    // 全体に広げると 100 件超を検出し、「書くことがない項目に埋め草コメントを付けない」
+    // 方針（jsdoc.md）と衝突する。types/ は複数箇所から参照される共有型の置き場であり、
+    // 定義ファイルを開かずに使われるためコメントの価値が最も高い。
+    // static-analysis.md「警告ゼロを維持し、守れないルールは有効にしない」に従い、
+    // warn で放置せず error にできる範囲だけを対象にしている（現状 0 件）。
+    files: ["src/types/**/*.ts"],
+    rules: {
+      "jsdoc/require-jsdoc": [
+        "error",
+        {
+          require: {},
+          contexts: [
+            "TSTypeAliasDeclaration",
+            "TSInterfaceDeclaration",
+            "TSPropertySignature",
+          ],
+        },
+      ],
     },
   },
   {
