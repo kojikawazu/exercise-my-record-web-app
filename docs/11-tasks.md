@@ -80,7 +80,7 @@
 | --- | --- | --- |
 | 受け入れケース策定 | 完了 | [`08-test-specification.md`](./08-test-specification.md) |
 | Playwright テスト作成 | 完了 | `front/tests/e2e` |
-| GitHub Actions CIでE2E自動化 | 完了 | `.github/workflows/test.yml` の `e2e-test` ジョブで `pnpm run test:e2e` を実行 |
+| GitHub Actions CIでE2E自動化 | 完了 | `.github/workflows/ci.yml` の `e2e-test` ジョブで `pnpm run test:e2e` を実行 |
 
 ### デプロイ
 

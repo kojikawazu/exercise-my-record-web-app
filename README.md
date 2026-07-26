@@ -1,6 +1,6 @@
 # Exercise My Record
 
-[![CI](https://github.com/kojikawazu/exercise-my-record-web-app/actions/workflows/test.yml/badge.svg)](https://github.com/kojikawazu/exercise-my-record-web-app/actions/workflows/test.yml)
+[![CI](https://github.com/kojikawazu/exercise-my-record-web-app/actions/workflows/ci.yml/badge.svg)](https://github.com/kojikawazu/exercise-my-record-web-app/actions/workflows/ci.yml)
 
 ジム通いの日々のトレーニング（筋トレ・有酸素）を「1 日 1 レコード」で記録・振り返りできるフィットネス記録 Web アプリ（MVP）。Next.js（App Router）+ Supabase + Prisma のフルスタック構成です。
 
@@ -99,7 +99,7 @@ psql "$DATABASE_URL" -f front/prisma/migrations/20260321_cardio_multiple_rows/mi
   - DB は `front/docker-compose.e2e.yml`。`globalSetup` で `prisma db push`、各テスト `beforeEach` で reset+seed。
   - 認証バイパスはサーバー専用フラグ `E2E_BYPASS=1`（`webServer.command` が付与）＋ クライアントの localStorage バイパス。本番ビルドでは無効。
 - **シナリオ（Playwright）**: 複数機能横断のユーザージャーニー（`front/tests/scenario/`）。E2E と同じ実 DB 基盤。`pnpm run test:scenario`（**要 Docker**）。
-- CI（GitHub Actions, `.github/workflows/test.yml`）で `unit-test` / `e2e-test` を並列実行。
+- CI（GitHub Actions, `.github/workflows/ci.yml`）で `static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` を並列実行。ドキュメントのみの変更ではスキップされ、代わりに `.github/workflows/docs.yml` が markdown lint を実行する。
 
 詳細は [`docs/08-test-specification.md`](docs/08-test-specification.md)。
 
