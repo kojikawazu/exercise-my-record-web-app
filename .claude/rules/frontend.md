@@ -20,7 +20,13 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - server/client 境界を明確にするためファイルを分離する:
   - `page.tsx` — サーバーコンポーネント（データ取得・SEO・props 受け渡し）
   - `client.tsx` — クライアントコンポーネント（インタラクション・状態管理）
-  - 本プロジェクトの実例: `RecordsListClient` / `RecordDetailClient` 等の `*Client` コンポーネント。
+  - 本プロジェクトの実例: `RecordsListClient` / `RecordDetailClient` / `AdminMastersClient` 等の `*Client` コンポーネント（`components/` に置く）。
+- **`page.tsx` に `'use client'` を直接書かない。** 対話が必要なら Client Component へ切り出して `page.tsx` から描画する。
+- **ページ全体を Client にする前に、Client が必要な範囲を見極める。** 画面の一部だけが対話を持つなら、**その部分だけを Client 境界に切り出す**。
+  - 実例: `app/admin/page.tsx` はメニューグリッドが静的なため Server Component のまま描画し、ログアウトのみ `AdminLogoutButton` として切り出している（結果としてページが静的プリレンダリングの対象になる）。
+- **動的セグメント（`params`）は `page.tsx` 側で `await` して解決し、値を props で渡す。** Client 側で `use(params)` しない。
+  - 実例: `app/records/[date]/page.tsx` / `app/admin/records/[date]/edit/page.tsx`。
+- **`metadata` は `page.tsx`（Server Component）に置く。** Client Component からは export できない。
 
 ## ロジック分離
 
