@@ -24,6 +24,6 @@
 | github-actions.md | `.github/workflows/**` | Actions 発火ルール（関係あるジョブだけ動かす・必須チェックと `paths-ignore` を併用しない） |
 | jsdoc.md | `front/src/**` | JSDoc（TSDoc）規約・公開シンボル/型メンバー/状態・ロジック層への必須付与 |
 | typescript.md | `front/src/**` | TypeScript 固有規約（type/interface の使い分け・型/定数の配置・any禁止・enum回避・`import type`） |
-| frontend.md | `front/src/{components,app,hooks,lib}/**` | Next.js App Router フロント設計・server/client 分離・レイヤ一方向依存・型の扱い |
+| frontend.md | `front/src/{components,app,hooks,stores,contexts,providers,constants,lib}/**` | Next.js App Router フロント設計・server/client 分離・レイヤ一方向依存・型の扱い |
 | api.md | `front/src/app/api/**` | Next.js Route Handlers（一体型 API）設計・認証・エラー方針・レスポンス整形 |
 | database.md | `front/prisma/**`, `front/src/lib/**` | Prisma 命名規約・手動マイグレーション・クエリ規約・論理削除方針 |
