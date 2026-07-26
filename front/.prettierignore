@@ -2,3 +2,11 @@
 node_modules
 pnpm-lock.yaml
 public
+
+# 生成物・実行成果物は整形対象にしない。
+# CI が `prettier --check .` で差分ゼロを検証する（.claude/rules/static-analysis.md）ため、
+# ローカルに生成物が残っているだけで検査が落ちる状態を避ける。
+src/generated
+test-results
+playwright-report
+coverage
