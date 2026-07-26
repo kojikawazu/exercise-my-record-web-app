@@ -11,6 +11,7 @@ vi.mock('@/lib/adminAuth', () => ({
 }));
 
 import { getPrisma } from '@/lib/prisma';
+import { MASTER_SELECT } from '@/types/master';
 import { requireAdmin } from '@/lib/adminAuth';
 
 const makePrisma = () => ({
@@ -43,10 +44,32 @@ describe('GET /api/masters', () => {
     const body = await res.json();
     expect(body).toHaveLength(2);
     expect(body[0]).toEqual({ id: 'm-1', type: 'body-parts', name: '胸' });
+    // select で公開列を確定していること（監査カラムを返さない）を検証する。
     expect(prisma.exerciseMaster.findMany).toHaveBeenCalledWith({
       where: { type: 'body-parts' },
       orderBy: { name: 'asc' },
+      select: MASTER_SELECT,
     });
+  });
+
+  // 準正常系: Prisma が監査カラムを返しても、レスポンスには載せない。
+  // select による絞り込みが外れた場合の保険として、詰め替え側の挙動を固定する。
+  it('should not expose audit columns even if rows carry them', async () => {
+    const prisma = makePrisma();
+    vi.mocked(prisma.exerciseMaster.findMany).mockResolvedValue([
+      {
+        id: 'm-1',
+        type: 'body-parts',
+        name: '胸',
+        createdAt: new Date('2026-01-01'),
+        updatedAt: new Date('2026-01-02'),
+      },
+    ] as never);
+    vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+    const res = await GET(new Request('http://localhost/api/masters?type=body-parts'));
+    const body = await res.json();
+    expect(Object.keys(body[0]).sort()).toEqual(['id', 'name', 'type']);
   });
 
   it('should return 400 when type is invalid', async () => {
@@ -105,6 +128,7 @@ describe('POST /api/masters', () => {
     expect(body).toEqual({ id: 'm-9', type: 'exercises', name: 'ベンチプレス' });
     expect(prisma.exerciseMaster.create).toHaveBeenCalledWith({
       data: { type: 'exercises', name: 'ベンチプレス' },
+      select: MASTER_SELECT,
     });
   });
 
@@ -120,6 +144,7 @@ describe('POST /api/masters', () => {
     expect(res.status).toBe(200);
     expect(prisma.exerciseMaster.create).toHaveBeenCalledWith({
       data: { type: 'cardio-types', name: 'ランニング' },
+      select: MASTER_SELECT,
     });
   });
 

@@ -244,8 +244,8 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 | テストファイル | 対象 | 件数 | 主な正常/準正常/異常 |
 |---|---|---|---|
-| `tests/unit/app/api/masters/route.test.ts` | GET / POST | 12 | 正: 一覧(name昇順)・作成 / 準: type不正400・name欠落400・重複409 / 異: 未認証401・503 |
-| `tests/unit/app/api/masters/[id]/route.test.ts` | PATCH / DELETE | 9 | 正: 更新・削除 / 準: name欠落400・not found404 / 異: 未認証401・503 |
+| `tests/unit/app/api/masters/route.test.ts` | GET / POST | 13 | 正: 一覧(name昇順)・作成 / 準: type不正400・name欠落400・重複409・**監査カラム非公開** / 異: 未認証401・503 |
+| `tests/unit/app/api/masters/[id]/route.test.ts` | PATCH / DELETE | 11 | 正: 更新・削除 / 準: name欠落400・not found404・**監査カラム非公開** / 異: 未認証401・503・**DB の type 不正500** |
 | `tests/unit/app/api/profile/route.test.ts` | GET / POST | 12 | 正: 取得・上書き(update+deleteMany)・新規create / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
 | `tests/unit/app/api/admin/me/route.test.ts` | GET | 8 | 正: 管理者200(大小文字/前後空白許容) / 準: トークン欠落401・無効401・非管理者403 / 異: 認証設定不備500 |
 | `tests/unit/app/api/admin/export/route.test.ts` | GET | 11 | 正: CSV横並び展開・escape・空展開・JSON / 準: from/to欠落400・format不正400・空文字400 / 異: 未認証401・403・503 |
