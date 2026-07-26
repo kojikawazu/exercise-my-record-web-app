@@ -8,16 +8,23 @@ import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { authFetch } from '@/lib/authFetch';
+import { MASTER_TYPES, type MasterType } from '@/types/master';
 
-/** マスター管理画面のタブ定義（表示ラベルと API のマスター種別）。 */
-const masterTabs = [
-  { label: '部位', type: 'body-parts' },
-  { label: '種目', type: 'exercises' },
-  { label: '有酸素種別', type: 'cardio-types' },
-] as const;
+/**
+ * マスター種別ごとの表示ラベル。**表示は UI の関心事**のため、種別の定義
+ * （`@/types/master`）とは分けてここに置く（`.claude/rules/frontend.md`「型の扱い」）。
+ */
+const MASTER_TYPE_LABELS: Record<MasterType, string> = {
+  'body-parts': '部位',
+  exercises: '種目',
+  'cardio-types': '有酸素種別',
+};
 
-/** マスター種別の識別子。`masterTabs` の `type` から導出する。 */
-type MasterType = (typeof masterTabs)[number]['type'];
+/** マスター管理画面のタブ定義。表示順は `MASTER_TYPES` の順序に従う。 */
+const masterTabs = MASTER_TYPES.map((type) => ({
+  type,
+  label: MASTER_TYPE_LABELS[type],
+}));
 
 /** マスター項目 1 件を表す。 */
 type MasterItem = {

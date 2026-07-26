@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
-
-const ALLOWED_TYPES = new Set(['body-parts', 'exercises', 'cardio-types']);
-
-const isValidType = (value: string | null): value is string =>
-  value !== null && ALLOWED_TYPES.has(value);
+import { isMasterType } from '@/types/master';
 
 /**
  * 指定種別のマスター（部位・種目・有酸素種別）を名称昇順で一覧取得する。
@@ -24,7 +20,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
-  if (!isValidType(type)) {
+  if (!isMasterType(type)) {
     return NextResponse.json({ error: 'invalid type' }, { status: 400 });
   }
 
@@ -57,7 +53,7 @@ export async function POST(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
-  if (!isValidType(type)) {
+  if (!isMasterType(type)) {
     return NextResponse.json({ error: 'invalid type' }, { status: 400 });
   }
 
