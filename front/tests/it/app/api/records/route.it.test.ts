@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { GET as listRecords, POST as createRecord } from '../route';
+import { GET as listRecords, POST as createRecord } from '@/app/api/records/route';
 import {
   GET as getDetail,
   PATCH as patchRecord,
   DELETE as deleteRecord,
-} from '../[date]/route';
+} from '@/app/api/records/[date]/route';
 import { getPrisma } from '@/lib/prisma';
 
 // 実 DB（Testcontainers の PostgreSQL）を叩く統合テスト。

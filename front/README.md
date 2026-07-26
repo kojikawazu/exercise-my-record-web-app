@@ -19,7 +19,7 @@
 
 | 種別 | 配置 |
 |------|------|
-| ユニット（Vitest） | `src/**/__tests__/`, `src/test/setup.ts` |
+| ユニット（Vitest） | `tests/unit/`, `tests/it/`, `tests/setup/` |
 | E2E（Playwright） | `tests/e2e/`（`smoke.spec.ts` / `record-crud.spec.ts`） |
 
 詳細は [`../docs/08-test-specification.md`](../docs/08-test-specification.md) を参照。

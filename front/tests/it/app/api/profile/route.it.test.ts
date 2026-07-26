@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GET as getProfile, POST as saveProfile } from '../route';
+import { GET as getProfile, POST as saveProfile } from '@/app/api/profile/route';
 import { getPrisma } from '@/lib/prisma';
 
 // 実 DB（Testcontainers）に対するプロフィール IT。

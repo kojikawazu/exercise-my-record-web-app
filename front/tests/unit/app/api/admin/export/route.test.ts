@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from '../route';
+import { GET } from '@/app/api/admin/export/route';
 
 // モック: prisma と adminAuth（外部 I/O のみ。CSV/JSON 生成ロジックは実物を検証）
 vi.mock('@/lib/prisma', () => ({

@@ -29,7 +29,7 @@ const makePrisma = (overrides: Record<string, unknown> = {}) => ({
 async function load() {
   const prismaMod = await import('@/lib/prisma');
   const authMod = await import('@/lib/adminAuth');
-  const route = await import('../route');
+  const route = await import('@/app/api/profile/route');
   const getPrisma = vi.mocked(prismaMod.getPrisma);
   const requireAdmin = vi.mocked(authMod.requireAdmin);
   // POST の既定認証は成功。個別テストで上書きする。

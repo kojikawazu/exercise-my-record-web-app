@@ -69,7 +69,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 ### 設定ファイル
 
 - `front/vitest.config.ts` — jsdom環境, パスエイリアス設定
-- `front/src/test/setup.ts` — jest-dom のマッチャー登録
+- `front/tests/setup/setup.ts` — jest-dom のマッチャー登録
 
 ---
 
@@ -79,7 +79,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ### 1. `lib/validation.ts` — 純粋バリデーション関数
 
-**テストファイル**: `front/src/lib/__tests__/validation.test.ts`
+**テストファイル**: `front/tests/unit/lib/validation.test.ts`
 
 #### 正常系
 
@@ -120,7 +120,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ### 2. `lib/calorie.ts` — カロリー計算関数
 
-**テストファイル**: `front/src/lib/__tests__/calorie.test.ts`
+**テストファイル**: `front/tests/unit/lib/calorie.test.ts`
 
 #### 正常系
 
@@ -152,7 +152,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ### 3. `hooks/useRecordValidation` — フックの状態管理
 
-**テストファイル**: `front/src/hooks/__tests__/useRecordValidation.test.ts`
+**テストファイル**: `front/tests/unit/hooks/useRecordValidation.test.ts`
 
 #### 正常系
 
@@ -174,7 +174,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ### 4. API Routes — `GET/POST /api/records`
 
-**テストファイル**: `front/src/app/api/records/__tests__/route.test.ts`
+**テストファイル**: `front/tests/unit/app/api/records/route.test.ts`
 
 モック方針: `vi.mock('@/lib/prisma')`, `vi.mock('@/lib/adminAuth')`
 
@@ -209,7 +209,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ### 5. API Routes — `GET/PATCH/DELETE /api/records/[date]`
 
-**テストファイル**: `front/src/app/api/records/[date]/__tests__/route.test.ts`
+**テストファイル**: `front/tests/unit/app/api/records/[date]/route.test.ts`
 
 #### 正常系
 
@@ -244,11 +244,11 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 | テストファイル | 対象 | 件数 | 主な正常/準正常/異常 |
 |---|---|---|---|
-| `masters/__tests__/route.test.ts` | GET / POST | 12 | 正: 一覧(name昇順)・作成 / 準: type不正400・name欠落400・重複409 / 異: 未認証401・503 |
-| `masters/[id]/__tests__/route.test.ts` | PATCH / DELETE | 9 | 正: 更新・削除 / 準: name欠落400・not found404 / 異: 未認証401・503 |
-| `profile/__tests__/route.test.ts` | GET / POST | 12 | 正: 取得・上書き(update+deleteMany)・新規create / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
-| `admin/me/__tests__/route.test.ts` | GET | 8 | 正: 管理者200(大小文字/前後空白許容) / 準: トークン欠落401・無効401・非管理者403 / 異: 認証設定不備500 |
-| `admin/export/__tests__/route.test.ts` | GET | 11 | 正: CSV横並び展開・escape・空展開・JSON / 準: from/to欠落400・format不正400・空文字400 / 異: 未認証401・403・503 |
+| `tests/unit/app/api/masters/route.test.ts` | GET / POST | 12 | 正: 一覧(name昇順)・作成 / 準: type不正400・name欠落400・重複409 / 異: 未認証401・503 |
+| `tests/unit/app/api/masters/[id]/route.test.ts` | PATCH / DELETE | 9 | 正: 更新・削除 / 準: name欠落400・not found404 / 異: 未認証401・503 |
+| `tests/unit/app/api/profile/route.test.ts` | GET / POST | 12 | 正: 取得・上書き(update+deleteMany)・新規create / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
+| `tests/unit/app/api/admin/me/route.test.ts` | GET | 8 | 正: 管理者200(大小文字/前後空白許容) / 準: トークン欠落401・無効401・非管理者403 / 異: 認証設定不備500 |
+| `tests/unit/app/api/admin/export/route.test.ts` | GET | 11 | 正: CSV横並び展開・escape・空展開・JSON / 準: from/to欠落400・format不正400・空文字400 / 異: 未認証401・403・503 |
 
 補足:
 - `admin/me` と `profile` はモジュールトップレベルの状態（env 捕捉 / `fallbackWeightKg`）に依存するため、`vi.resetModules()` + 動的 import でテスト順非依存にしている。
@@ -266,9 +266,9 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 | テストファイル | 検証する実 DB 挙動 | 件数 |
 |---|---|---|
-| `records/__tests__/route.it.test.ts` | 作成→詳細往復・**同日 unique→409**・ページング(12件/10件)と日付降順・空状態・PATCH全置換・DELETE子行除去(孤児なし)・404 | 10 |
-| `profile/__tests__/route.it.test.ts` | 保存往復・**繰り返し保存で 1 行維持(上書き)**・非数値400で行なし | 3 |
-| `masters/__tests__/route.it.test.ts` | name昇順・type別スコープ・PATCH/DELETE・**複合unique(type,name)→409**・別typeなら同名可・404 | 6 |
+| `tests/it/app/api/records/route.it.test.ts` | 作成→詳細往復・**同日 unique→409**・ページング(12件/10件)と日付降順・空状態・PATCH全置換・DELETE子行除去(孤児なし)・404 | 10 |
+| `tests/it/app/api/profile/route.it.test.ts` | 保存往復・**繰り返し保存で 1 行維持(上書き)**・非数値400で行なし | 3 |
+| `tests/it/app/api/masters/route.it.test.ts` | name昇順・type別スコープ・PATCH/DELETE・**複合unique(type,name)→409**・別typeなら同名可・404 | 6 |
 
 IT 合計 19 件（全 pass）。モックでは検証できない DB 制約・並び順・トランザクション的挙動を実 DB で担保する。既存のモック route テストは高速な「ハンドラ UT」として併存する。
 
@@ -341,11 +341,11 @@ E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。
 
 | ファイル | テスト数目安 | 優先度 |
 |---|---|---|
-| `lib/__tests__/validation.test.ts` | 15件 | High |
-| `lib/__tests__/calorie.test.ts` | 10件 | High |
-| `hooks/__tests__/useRecordValidation.test.ts` | 8件 | High |
-| `api/records/__tests__/route.test.ts` | 10件 | High |
-| `api/records/[date]/__tests__/route.test.ts` | 10件 | High |
+| `tests/unit/lib/validation.test.ts` | 15件 | High |
+| `tests/unit/lib/calorie.test.ts` | 10件 | High |
+| `tests/unit/hooks/useRecordValidation.test.ts` | 8件 | High |
+| `tests/unit/app/api/api/records/route.test.ts` | 10件 | High |
+| `tests/unit/app/api/api/records/[date]/route.test.ts` | 10件 | High |
 
 ### E2Eテスト (Playwright)
 

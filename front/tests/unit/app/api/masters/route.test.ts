@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET, POST } from '../route';
+import { GET, POST } from '@/app/api/masters/route';
 
 // モック: prisma と adminAuth（外部 I/O のみ）
 vi.mock('@/lib/prisma', () => ({

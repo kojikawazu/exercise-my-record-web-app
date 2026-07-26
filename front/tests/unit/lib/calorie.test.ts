@@ -3,7 +3,7 @@ import {
   calculateCardioCalories,
   calculateStrengthCalories,
   formatCalories,
-} from '../calorie';
+} from '@/lib/calorie';
 
 describe('calculateCardioCalories', () => {
   // --- 正常系 ---

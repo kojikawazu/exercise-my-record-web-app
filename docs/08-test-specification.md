@@ -60,7 +60,8 @@ CI 固有の追加設定（`prisma generate`、`.env.local` 動的生成、タ�
 
 ## 使用ツール
 
-- ユニット: Vitest 4（jsdom, `@testing-library/react`）。設定: `front/vitest.config.ts`, `front/src/test/setup.ts`。
+- **テストは `front/tests/` に集約する**（ソースツリー `front/src/` にテストファイルを置かない）。レベルの分離はファイル名ではなく**ディレクトリ**で行う: `tests/unit/`（UT）/ `tests/it/`（IT）/ `tests/e2e/` / `tests/scenario/` / `tests/setup/`（足場）。`tests/unit/` `tests/it/` は `src/` の構造をミラーする。詳細は `.claude/rules/testing.md`。
+- ユニット: Vitest 4（jsdom, `@testing-library/react`）。設定: `front/vitest.config.ts`（`include: tests/unit/**`）, `front/tests/setup/setup.ts`。
 - E2E: Playwright（`front/tests/e2e/`、`smoke.spec.ts` / `record-crud.spec.ts`、`--project=e2e`）。**実 PostgreSQL（`docker-compose.e2e.yml`）** に対して実 API/DB を通す（`page.route` モックは撤廃）。`globalSetup` で `prisma db push`、各テスト `beforeEach` で reset+seed、認証は `E2E_BYPASS` + localStorage バイパス。直列実行（`workers:1`）。
 - シナリオ: Playwright（`front/tests/scenario/`、`--project=scenario`）。E2E と同じ実 DB 基盤で、**複数機能横断のユーザージャーニー**を検証（`pnpm run test:scenario`）。
 - 統合(IT): Vitest + Testcontainers（`@testcontainers/postgresql`）。実 PostgreSQL に対し Prisma 経由で Route Handler を検証。ファイル命名 `*.it.test.ts`、設定 `front/vitest.it.config.ts`、コマンド `pnpm test:it`。認証は `E2E_BYPASS=1` でバイパス。

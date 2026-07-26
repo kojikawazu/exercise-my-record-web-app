@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PATCH, DELETE } from '../route';
+import { PATCH, DELETE } from '@/app/api/masters/[id]/route';
 
 // モック: prisma と adminAuth（外部 I/O のみ）
 vi.mock('@/lib/prisma', () => ({
