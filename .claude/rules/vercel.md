@@ -11,6 +11,7 @@ globs: "front/vercel.json"
 
 - Vercel プロジェクト設定の **Root Directory 直下**に置く（モノレポでフロントが `front/` なら `front/vercel.json`。リポジトリ直下ではない）。
 - 先頭に `"$schema": "https://openapi.vercel.sh/vercel.json"` を宣言する（エディタ補完とスキーマ検証を効かせるため）。
+- `ignoreCommand` は **Root Directory をカレントとして実行される**。判定スクリプトも同じく Root Directory 基準で `front/scripts/vercel-ignore-build.sh` に置き、`vercel.json` からは相対パスで参照する。
 
 ## 基本形
 
@@ -23,8 +24,43 @@ globs: "front/vercel.json"
       "main": true
     }
   },
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ':(top,exclude)docs' ':(top,exclude).claude' ':(top,exclude).github' ':(top,exclude)*.md'"
+  "ignoreCommand": "bash scripts/vercel-ignore-build.sh"
 }
+```
+
+判定ロジックは JSON の一行文字列に押し込まず、**スクリプトに切り出す**（後述「2.1 なぜスクリプトに切り出すか」）。`front/scripts/vercel-ignore-build.sh` を次の内容で置く:
+
+```bash
+#!/usr/bin/env bash
+# 終了コード 0 = ビルドをスキップ / 非 0 = ビルドを実行（Vercel の規約。直感と逆）
+set -uo pipefail
+
+# 除外パス（ビルド成果物に影響しないものだけを列挙する）
+EXCLUDES=(
+  ':(top,exclude)docs'
+  ':(top,exclude).claude'
+  ':(top,exclude).github'
+  ':(top,exclude)*.md'
+)
+
+# 比較基準は「前回"成功した"デプロイの SHA」。HEAD^ を使わない（理由は 2.2）
+BASE="${VERCEL_GIT_PREVIOUS_SHA:-}"
+
+# 基準が取れない場合は安全側 = ビルドを実行する
+#   - 初回デプロイ / Ignored Build Step 未設定 → 変数が空
+#   - shallow clone で基準コミットがローカルに存在しない → cat-file が失敗
+if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+  echo "baseline unavailable (VERCEL_GIT_PREVIOUS_SHA='${BASE}') -> build"
+  exit 1
+fi
+
+if git diff --quiet "$BASE" HEAD -- "${EXCLUDES[@]}"; then
+  echo "only ignored paths changed since ${BASE} -> skip"
+  exit 0
+fi
+
+echo "deployable changes found since ${BASE} -> build"
+exit 1
 ```
 
 ## 1. ブランチ単位のデプロイ制御（`git.deploymentEnabled`）
@@ -49,7 +85,38 @@ globs: "front/vercel.json"
 | `0` | ビルドを**スキップ**する |
 | `1`（非 0） | ビルドを**実行**する |
 
-`git diff --quiet` は「差分なし」で `0`、「差分あり」で `1` を返す。したがって上記の基本形は「**除外パス以外に差分がなければ `0` → スキップ**」と読む。条件を反転させて書かない。
+`git diff --quiet` は「差分なし」で `0`、「差分あり」で `1` を返す。したがって上記スクリプトは「**除外パス以外に差分がなければ `0` → スキップ**」と読む。条件を反転させて書かない。
+
+### 2.1 なぜスクリプトに切り出すか
+
+`vercel.json` の一行文字列は、**ローカルで実行して確かめられない**（クォートが JSON とシェルで二重にエスケープされ、pathspec の `':(top,exclude)...'` が壊れても気づけない）。スクリプトにすれば `VERCEL_GIT_PREVIOUS_SHA=<sha> bash scripts/vercel-ignore-build.sh; echo $?` で終了コードを目視できる。**デプロイ可否を決めるロジックは検証可能な場所に置く**。
+
+### 2.2 比較基準に `HEAD^` を使わない（本番凍結の原因）
+
+Vercel 公式のサンプルは `git diff --quiet HEAD^ HEAD ./` だが、**この基準をそのまま本番運用に使わない**。`HEAD^` は「直前のコミット」であって「**最後に実際にデプロイされたコミット**」ではないため、両者がずれた瞬間に変更が判定窓の外へこぼれる。
+
+| 失敗モード | 何が起きるか |
+|---|---|
+| **スキップの累積** | 一度スキップしたコミットの変更は未デプロイのまま、次回の判定窓 `HEAD^..HEAD` の外に出る。以降そのずれは自己修復せず、**本番が古いビルドのまま凍結する** |
+| **マージコミット** | `HEAD^` は第一親（main の旧先端）を指すため、判定窓が「その 1 マージ分」に限定される |
+| **複数コミットの同時反映** | Rebase and merge や直 push で N コミットが一度に載ると、評価されるのは先頭 1 コミットのみ。後方のアプリ変更は**恒久的にこぼれる** |
+
+いずれも「ビルドが落ちて気づく」形にならず、**成功したデプロイが並んでいるのに中身が古い**という形で表面化するため発見が遅れる。
+
+したがって基準は **`VERCEL_GIT_PREVIOUS_SHA`（前回"成功した"デプロイの SHA）** を使う。
+
+- この変数は [Vercel のシステム環境変数](https://vercel.com/docs/environment-variables/system-environment-variables)で、**Ignored Build Step を設定したときのみ**ビルド時に公開される。
+- スキップされたビルドは「成功したデプロイ」ではないため、スキップが続く間も基準は最後にデプロイした地点に留まる。**取りこぼしが累積しない**。
+- **変数が空、または基準コミットがローカルに存在しない場合は必ず非 0（＝ビルド実行）で終わらせる**。Vercel は既定で shallow clone するため、古い基準 SHA がフェッチされていないことがある。ここを `0` に倒すとデプロイ漏れが起きる。**迷ったらビルドする**が唯一の安全な既定。
+
+**変更後の検証（デプロイ前に必ず実施する）**:
+
+```bash
+# 除外パスだけの差分 → 0（スキップ）になること
+VERCEL_GIT_PREVIOUS_SHA=$(git rev-parse HEAD~1) bash scripts/vercel-ignore-build.sh; echo "exit=$?"
+# 基準が取れない場合 → 1（ビルド実行）になること
+VERCEL_GIT_PREVIOUS_SHA= bash scripts/vercel-ignore-build.sh; echo "exit=$?"
+```
 
 **除外パスの指定**:
 
@@ -59,8 +126,10 @@ globs: "front/vercel.json"
 
 **注意点**:
 
-- `HEAD^` を参照するため、**単一コミットしかない履歴や shallow clone では失敗し得る**。失敗（非 0 終了）時は安全側に倒れて**ビルドが実行される**ので、デプロイ漏れにはならない。
-- squash マージ運用では `HEAD^ HEAD` が「main の 1 マージコミット分の差分」を見る。PR 内の中間コミットは畳まれるため、意図した粒度で判定できる。
+- `scripts/vercel-ignore-build.sh` 自体を除外パスに入れない（判定ロジックの変更がデプロイに反映されなくなる）。
+- 除外パスの追加は**「そのパスだけが変わった状態で本番が古いままでも許容できるか」**で判断する。許容できないなら除外しない。
+- スキップされたデプロイは Vercel のダッシュボードで `Ignored` 表示になる。**アプリコードを変更した push が `Ignored` になっていたら判定ロジックのバグ**なので、除外パスを疑う前にまず基準（`VERCEL_GIT_PREVIOUS_SHA` が空になっていないか）を確認する。
+- 本番が最新コミットと一致しているかを定期的に突き合わせる（`VERCEL_GIT_COMMIT_SHA` をアプリのヘルスチェック等で公開しておくと検知できる）。ビルドスキップの失敗は**ビルド失敗として現れない**ため、能動的に見ないと気づけない。
 
 ## GitHub Actions との役割分担（重複させない）
 
