@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
-import { GET as listMasters, POST as createMaster } from '../route';
-import { PATCH as updateMaster, DELETE as deleteMaster } from '../[id]/route';
+import { GET as listMasters, POST as createMaster } from '@/app/api/masters/route';
+import { PATCH as updateMaster, DELETE as deleteMaster } from '@/app/api/masters/[id]/route';
 import { getPrisma } from '@/lib/prisma';
 
 // 実 DB（Testcontainers）に対するマスター IT。

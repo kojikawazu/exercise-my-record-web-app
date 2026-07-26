@@ -9,7 +9,10 @@ const eslintConfig = defineConfig([
   // JSDoc 規約（TSDoc スタイル）の機械的に判定できる部分を強制する。
   // 有効ルールの唯一の真実はこのブロック。方針の根拠は .claude/rules/jsdoc.md。
   {
-    files: ["src/**/*.{ts,tsx}"],
+    // tests/ も対象に含める。テストを src からここへ集約した際、対象が src/** のままだと
+    // テストコードが黙って JSDoc ルールの対象外になるため（jsdoc.md「混乱テスト」は
+    // テスト足場にも "why" を求めている）。
+    files: ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
     plugins: { jsdoc },
     // TS 前提。型は JSDoc ではなくシグネチャに委ねる。
     settings: { jsdoc: { mode: "typescript" } },
@@ -34,7 +37,7 @@ const eslintConfig = defineConfig([
   {
     // React コンポーネント（JSX を返す .tsx）は @returns を要求しない（「@returns …の要素」はノイズ）。
     // .ts のフック / lib / API では @returns 必須のまま。
-    files: ["src/**/*.tsx"],
+    files: ["src/**/*.tsx", "tests/**/*.tsx"],
     rules: {
       "jsdoc/require-returns": "off",
       "jsdoc/require-returns-description": "off",

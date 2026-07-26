@@ -24,7 +24,7 @@ const loadRoute = async (
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', env.url ?? 'https://dummy.supabase.co');
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', env.anon ?? 'dummy-anon-key');
   vi.stubEnv('ADMIN_EMAIL', env.admin ?? ADMIN_EMAIL);
-  return import('../route');
+  return import('@/app/api/admin/me/route');
 };
 
 const bearerRequest = (token?: string) =>

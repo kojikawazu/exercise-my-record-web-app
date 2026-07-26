@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET, PATCH, DELETE } from '../route';
+import { GET, PATCH, DELETE } from '@/app/api/records/[date]/route';
 
 vi.mock('@/lib/prisma', () => ({
   getPrisma: vi.fn(),

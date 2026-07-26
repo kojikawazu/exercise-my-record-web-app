@@ -32,26 +32,38 @@ globs:
 
 ## テストファイル配置
 
-**レベルによって配置方針を分ける。**
+**テストは `front/tests/` に集約する。ソースツリー（`front/src/`）にテストファイルを置かない。**
 
 | テスト種別 | 配置 | 実行コマンド |
 |---|---|---|
-| **UT / IT** | 対象コードの隣の `__tests__/` に**コロケート**する | `pnpm test` / `pnpm run test:it` |
-| **E2E / シナリオ** | `front/tests/e2e/` `front/tests/scenario/` に**集約**する | `pnpm run test:e2e` / `pnpm run test:scenario` |
+| **UT** | `front/tests/unit/` | `pnpm test` |
+| **IT** | `front/tests/it/` | `pnpm run test:it`（要 Docker） |
+| **E2E** | `front/tests/e2e/` | `pnpm run test:e2e`（要 Docker） |
+| **シナリオ** | `front/tests/scenario/` | `pnpm run test:scenario`（要 Docker） |
+| **テスト足場** | `front/tests/setup/` | — |
 
 ```text
 front/
-├── src/
-│   ├── lib/__tests__/validation.test.ts              # UT
-│   ├── hooks/__tests__/useRecordValidation.test.ts   # UT
-│   └── app/api/records/__tests__/
-│       ├── route.test.ts                             # UT
-│       └── route.it.test.ts                          # IT（実 DB）
+├── src/                       # プロダクションコードのみ
 └── tests/
+    ├── unit/                  # src の構造をミラーする
+    │   ├── lib/validation.test.ts
+    │   ├── hooks/useRecordValidation.test.ts
+    │   ├── types/master.test.ts
+    │   └── app/api/records/route.test.ts
+    ├── it/                    # 実 DB（Testcontainers）
+    │   └── app/api/records/route.it.test.ts
     ├── e2e/
-    └── scenario/
+    ├── scenario/
+    └── setup/                 # setup.ts / it-setup.ts / it-global-setup.ts
 ```
 
-- **UT / IT をコロケートする理由**: 対象と 1:1 で対応し、実装を変えたときに直すべきテストが同じディレクトリにあるため追跡漏れが起きにくい。App Router では Route Handler とテストが離れると対応関係が読めなくなる。
-- **E2E / シナリオを集約する理由**: 特定のソースファイルに紐づかず、**複数機能を横断する**ため、コロケート先が決まらない。
-- **IT は `.it.test.ts` の命名で区別する**（`vitest.it.config.ts` が対象を切り分けるため）。UT の実行に実 DB を要求しない。
+- **集約する理由**: ソースツリーにテストが混ざらないため、プロダクションコードの一覧性が保たれる。E2E・シナリオは特定のソースファイルに紐づかず**複数機能を横断する**ため、そもそもコロケート先が決まらない。全レベルを同じ軸で配置すると、レベル間の移動（UT → IT への昇格など）も素直になる。
+- **`tests/unit/` `tests/it/` は `src/` の構造をミラーする**（例: `src/app/api/records/route.ts` → `tests/unit/app/api/records/route.test.ts`）。対象との対応関係は**パスで表現する**。
+- **レベルの分離はディレクトリで行う**（ファイル名ではない）。`vitest.config.ts` は `tests/unit/**`、`vitest.it.config.ts` は `tests/it/**` を `include` する。
+- IT のファイル名に残している `.it.` は、**実 DB を要求するテストであることを一覧上でも示すため**。設定の切り分けはディレクトリが担う。
+- **テストからソースへの import は `@/` エイリアスを使う**（`front/src/` を指す）。集約により相対パスでは辿れないため。
+
+### ESLint の対象範囲
+
+`front/eslint.config.mjs` の JSDoc ブロックは `src/**` と `tests/**` の両方を対象にする。テストを `src/` の外へ出したことで対象から漏れないようにするため（`jsdoc.md`「混乱テスト」はテスト足場にも "why" を求めている）。

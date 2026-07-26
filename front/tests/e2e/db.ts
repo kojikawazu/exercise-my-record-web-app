@@ -69,7 +69,11 @@ export const seedBaseline = async (): Promise<void> => {
   });
 };
 
-/** 指定日付の（子行なし）レコードをまとめて作成する（ページング検証用）。 */
+/**
+ * 指定日付の（子行なし）レコードをまとめて作成する（ページング検証用）。
+ *
+ * @param dates - 作成対象の日付（`YYYY-MM-DD`）。重複を含めない
+ */
 export const seedRecordsForDates = async (dates: string[]): Promise<void> => {
   const db = getClient();
   for (const date of dates) {
