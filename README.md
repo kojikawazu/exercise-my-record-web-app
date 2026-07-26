@@ -79,7 +79,8 @@ pnpm dev   # http://localhost:3000
 | `pnpm run e2e:db:up` / `e2e:db:down` | E2E 用 PostgreSQL（docker-compose）の起動 / 破棄 |
 | `pnpm run test:e2e` | Playwright E2E テスト（単機能フロー、実 DB。事前に `e2e:db:up`、要 Docker） |
 | `pnpm run test:scenario` | Playwright シナリオテスト（複数機能横断、実 DB。事前に `e2e:db:up`、要 Docker） |
-| `pnpm lint` / `pnpm format` | Lint / フォーマットチェック |
+| `pnpm lint` / `pnpm format` | Lint / フォーマットチェック（いずれも CI 必須。`format` は差分ゼロを検証するのみ） |
+| `pnpm run format:fix` | Prettier で自動整形（`pnpm format` が落ちたら手元でこれを実行する） |
 
 ## DB マイグレーション
 

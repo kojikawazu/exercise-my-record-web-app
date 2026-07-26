@@ -86,7 +86,7 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
 
   | ジョブ | 内容 | 所要時間目安 |
   |--------|------|------------|
-  | `static-check` | ESLint（`pnpm lint`）→ 型チェック（`tsc --noEmit`）→ 本番ビルド（`next build`） | ~1 分 |
+  | `static-check` | フォーマット検証（`pnpm format` = `prettier --check`）→ ESLint（`pnpm lint`）→ 型チェック（`tsc --noEmit`）→ 本番ビルド（`next build`） | ~1 分 |
   | `unit-test` | Vitest ユニットテスト（モック） | ~30 秒 |
   | `it-test` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、`pnpm test:it`） | ~1〜2 分 |
   | `e2e-test` | Playwright E2E テスト（単機能フロー、実 DB、`--project=e2e`） | ~7 分 |

@@ -69,6 +69,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm exec prisma generate
 
+      # Formatter は差分ゼロを検証する（--check）。CI が自動整形してコミットし返さない
+      # （.claude/rules/static-analysis.md）。
+      - name: Format check (Prettier)
+        run: pnpm format
+
       - name: Lint (ESLint)
         run: pnpm lint
 
