@@ -40,7 +40,6 @@
 - 記録追加: 画面を開け、筋トレ行を追加/削除でき、有酸素を入力して保存できる。同日保存はエラー通知。
 - 記録編集/削除: 既存レコードを編集/削除できる。
 - マスター管理: 初期マスター表示、部位/種目/有酸素種別の追加/削除/名称変更。
-- データ出力（Issue #20 で削除予定）: CSV/JSON 選択、From/To 期間指定、出力実行。
 
 ## E2E テスト環境の仕組み（DB なしで動作）
 
@@ -55,7 +54,7 @@ CI 固有の追加設定（`prisma generate`、`.env.local` 動的生成、タ�
 
 ## カバレッジ目標
 
-- ユニットテスト: バリデーション/カロリー/フック/API（records / masters / masters[id] / profile / admin/me / admin/export）を網羅。UT/IT 合計 134 件（目安件数・内訳は test-design 参照）。
+- ユニットテスト: バリデーション/カロリー/フック/API（records / masters / masters[id] / profile / admin/me）を網羅。UT/IT 合計 136 件（目安件数・内訳は test-design 参照）。
 <!-- 定量カバレッジ目標（行・分岐）は未確定 -->
 
 ## 使用ツール

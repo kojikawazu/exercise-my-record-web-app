@@ -41,7 +41,6 @@
 | `/api/masters` | POST |
 | `/api/masters/:id` | PATCH, DELETE |
 | `/api/profile` | POST |
-| `/api/admin/export` | GET（Issue #20 で削除予定） |
 
 ## RLS ポリシー（防御の第 2 層）
 

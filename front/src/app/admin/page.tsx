@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { FilePlus, Folder, ListOrdered, Upload, User } from 'lucide-react';
+import { FilePlus, Folder, ListOrdered, User } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import AdminLogoutButton from '@/components/AdminLogoutButton';
@@ -11,7 +11,6 @@ const menuItems = [
   { label: '記録追加', href: '/admin/records/new', icon: FilePlus },
   { label: 'プロフィール', href: '/admin/profile', icon: User },
   { label: 'マスター管理', href: '/admin/masters', icon: Folder },
-  { label: 'データ出力', href: '/admin/export', icon: Upload },
 ];
 
 /** 管理者メニューページのメタデータ（ブラウザタブのタイトル）。 */
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * 管理者メニュー画面。記録一覧・記録追加・プロフィール・マスター管理・データ出力への
+ * 管理者メニュー画面。記録一覧・記録追加・プロフィール・マスター管理への
  * 導線をカードのグリッドで表示し、右上にログアウトボタンを固定表示する。
  *
  * グリッドは静的なので Server Component のまま描画し、対話を伴うログアウトのみ

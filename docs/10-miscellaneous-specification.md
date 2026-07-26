@@ -34,4 +34,3 @@
 ## 付録
 
 - METs 係数は暫定値であり、今後調整の可能性がある（カロリー算定式は [`03-functional-specification.md`](./03-functional-specification.md)）。
-- データ出力（CSV/JSON）機能は Issue #20 で削除予定（現時点ではコード上は現役）。
