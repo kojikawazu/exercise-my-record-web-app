@@ -11,6 +11,7 @@ vi.mock('@/lib/adminAuth', () => ({
 }));
 
 import { getPrisma } from '@/lib/prisma';
+import { MASTER_SELECT } from '@/types/master';
 import { requireAdmin } from '@/lib/adminAuth';
 import type { NextRequest } from 'next/server';
 
@@ -51,10 +52,54 @@ describe('PATCH /api/masters/[id]', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ id: 'm-1', type: 'body-parts', name: '大胸筋' });
+    // select で公開列を確定していること（監査カラムを返さない）を検証する。
     expect(prisma.exerciseMaster.update).toHaveBeenCalledWith({
       where: { id: 'm-1' },
       data: { name: '大胸筋' },
+      select: MASTER_SELECT,
     });
+  });
+
+  // 準正常系: Prisma が監査カラムを返しても、レスポンスには載せない。
+  // select による絞り込みが外れた場合の保険として、詰め替え側の挙動を固定する。
+  it('should not expose audit columns even if the row carries them', async () => {
+    const prisma = makePrisma();
+    vi.mocked(prisma.exerciseMaster.update).mockResolvedValue({
+      id: 'm-1',
+      type: 'body-parts',
+      name: '大胸筋',
+      createdAt: new Date('2026-01-01'),
+      updatedAt: new Date('2026-01-02'),
+    } as never);
+    vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+    const req = new Request('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: '大胸筋' }),
+    });
+    const res = await PATCH(req as NextRequest, makeContext('m-1'));
+    const body = await res.json();
+    expect(Object.keys(body).sort()).toEqual(['id', 'name', 'type']);
+  });
+
+  // 異常系: DB の type は制約なしの String 列のため、想定外の値が入り得る。
+  // union として偽らず 500 で落とすことを固定する。
+  it('should return 500 when the stored type is not a known master type', async () => {
+    const prisma = makePrisma();
+    vi.mocked(prisma.exerciseMaster.update).mockResolvedValue({
+      id: 'm-1',
+      type: 'unknown-type',
+      name: '大胸筋',
+    } as never);
+    vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+    const req = new Request('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: '大胸筋' }),
+    });
+    const res = await PATCH(req as NextRequest, makeContext('m-1'));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: 'invalid master type in database' });
   });
 
   it('should return 400 when name is blank after trimming', async () => {

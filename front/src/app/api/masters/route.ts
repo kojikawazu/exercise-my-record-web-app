@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
-import { isMasterType } from '@/types/master';
+import { MASTER_SELECT, isMasterType, type MasterResponse } from '@/types/master';
 
 /**
  * 指定種別のマスター（部位・種目・有酸素種別）を名称昇順で一覧取得する。
@@ -24,12 +24,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'invalid type' }, { status: 400 });
   }
 
+  // select で公開列を確定する。スキーマにカラムが増えても自動公開されない
+  // （.claude/rules/api.md「レスポンス整形」）。
   const masters = await prisma.exerciseMaster.findMany({
     where: { type },
     orderBy: { name: 'asc' },
+    select: MASTER_SELECT,
   });
 
-  return NextResponse.json(masters);
+  // DB の type は制約なしの String 列のため Prisma の戻り値は MasterType に狭まらない。
+  // ここでは where で絞り込んだ検証済みの type を使うので、返す値は必ずその種別になる。
+  const result: MasterResponse[] = masters.map(({ id, name }) => ({ id, name, type }));
+
+  return NextResponse.json(result);
 }
 
 /**
@@ -66,8 +73,11 @@ export async function POST(request: Request) {
   try {
     const master = await prisma.exerciseMaster.create({
       data: { type, name },
+      select: MASTER_SELECT,
     });
-    return NextResponse.json(master);
+    // GET と同じ理由で、検証済みの type を使って組み立てる。
+    const result: MasterResponse = { id: master.id, name: master.name, type };
+    return NextResponse.json(result);
   } catch {
     return NextResponse.json({ error: 'duplicate' }, { status: 409 });
   }

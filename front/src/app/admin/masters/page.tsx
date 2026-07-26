@@ -8,7 +8,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { authFetch } from '@/lib/authFetch';
-import { MASTER_TYPES, type MasterType } from '@/types/master';
+import { MASTER_TYPES, type MasterResponse, type MasterType } from '@/types/master';
 
 /**
  * マスター種別ごとの表示ラベル。**表示は UI の関心事**のため、種別の定義
@@ -26,16 +26,6 @@ const masterTabs = MASTER_TYPES.map((type) => ({
   label: MASTER_TYPE_LABELS[type],
 }));
 
-/** マスター項目 1 件を表す。 */
-type MasterItem = {
-  /** 項目の一意 ID。 */
-  id: string;
-  /** 項目の名称（一覧表示・編集対象）。 */
-  name: string;
-  /** 所属するマスター種別。 */
-  type: MasterType;
-};
-
 /**
  * マスター管理画面。部位・種目・有酸素種別のタブを切り替えて項目を一覧表示し、追加・
  * インライン編集・削除（確認ダイアログ付き）を行う。取得・追加・保存・削除は API 経由で、
@@ -43,7 +33,7 @@ type MasterItem = {
  */
 export default function AdminMastersPage() {
   const [activeType, setActiveType] = useState<MasterType>('body-parts');
-  const [items, setItems] = useState<MasterItem[]>([]);
+  const [items, setItems] = useState<MasterResponse[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
@@ -68,7 +58,7 @@ export default function AdminMastersPage() {
         setLoading(false);
         return;
       }
-      const data = (await res.json()) as MasterItem[];
+      const data = (await res.json()) as MasterResponse[];
       setItems(data);
       setLoading(false);
     };
@@ -98,7 +88,7 @@ export default function AdminMastersPage() {
         return;
       }
 
-      const created = (await res.json()) as MasterItem;
+      const created = (await res.json()) as MasterResponse;
       setItems((prev) => [created, ...prev]);
       setInputValue('');
     } finally {
@@ -106,7 +96,7 @@ export default function AdminMastersPage() {
     }
   };
 
-  const handleEdit = (item: MasterItem) => {
+  const handleEdit = (item: MasterResponse) => {
     setEditingId(item.id);
     setEditingValue(item.name);
   };

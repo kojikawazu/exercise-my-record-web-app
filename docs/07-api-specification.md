@@ -96,6 +96,8 @@
 ### マスター管理
 
 - `GET /masters?type=body-parts|exercises|cardio-types` / `POST /masters?type=...` / `PATCH /masters/:id` / `DELETE /masters/:id`。
+- レスポンス（`DELETE` を除く）は **`{ id, name, type }` のみ**。`createdAt` / `updatedAt` は公開しない（`.claude/rules/api.md`「レスポンス整形」）。契約型は `front/src/types/master.ts` の `MasterResponse` で、Route Handler と画面が共有する。
+- `PATCH` は、DB に保存されている `type` が既知の種別でない場合に 500 `{ error: "invalid master type in database" }` を返す（`type` は制約なしの `String` 列のため）。
 
 ### プロフィール
 

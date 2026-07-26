@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
+import { MASTER_SELECT, isMasterType, type MasterResponse } from '@/types/master';
 
 /** マスター編集・削除ハンドラーのルートコンテキスト。`params` に対象マスターの `id` を含む。 */
 type RouteContext = {
@@ -38,8 +39,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const updated = await prisma.exerciseMaster.update({
       where: { id },
       data: { name },
+      select: MASTER_SELECT,
     });
-    return NextResponse.json(updated);
+
+    // DB の type は制約なしの String 列で、更新対象の種別はリクエストから分からない。
+    // 想定外の値が保存されていた場合に union として偽らず、500 で落とす。
+    if (!isMasterType(updated.type)) {
+      return NextResponse.json({ error: 'invalid master type in database' }, { status: 500 });
+    }
+
+    const result: MasterResponse = { id: updated.id, name: updated.name, type: updated.type };
+    return NextResponse.json(result);
   } catch {
     return NextResponse.json({ error: 'not found or duplicate' }, { status: 404 });
   }
