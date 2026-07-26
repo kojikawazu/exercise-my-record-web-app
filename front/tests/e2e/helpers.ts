@@ -30,8 +30,14 @@ export const selectDate = async (page: Page, dateStr: string) => {
 
   const popup = page.locator('.absolute.top-full');
   await popup.locator('select').nth(0).selectOption(String(year));
-  await popup.locator('select').nth(1).selectOption(String(month - 1));
-  await popup.getByRole('button', { name: String(day), exact: true }).first().click();
+  await popup
+    .locator('select')
+    .nth(1)
+    .selectOption(String(month - 1));
+  await popup
+    .getByRole('button', { name: String(day), exact: true })
+    .first()
+    .click();
 };
 
 // ---------------------------------------------------------------------------

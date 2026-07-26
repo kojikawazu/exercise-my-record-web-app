@@ -1,9 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-  injectAdminSession,
-  selectDate,
-  resetAndSeedBaseline,
-} from '../e2e/helpers';
+import { injectAdminSession, selectDate, resetAndSeedBaseline } from '../e2e/helpers';
 
 // シナリオ: 管理者による記録の一気通貫ライフサイクル。
 // 追加 → 一覧で確認 → 詳細 → 編集 → 詳細で反映確認 → 削除 → 一覧から消滅、を

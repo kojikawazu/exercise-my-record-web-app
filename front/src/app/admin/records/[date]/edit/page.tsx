@@ -47,7 +47,14 @@ type RecordDetail = {
   /** 体調メモ（未入力時は `null`）。 */
   memo: string | null;
   /** 筋トレ項目（数値はサーバー保存値のため number）。 */
-  workouts: { id: string; part: string; name: string; sets: number; reps: number; weight: number }[];
+  workouts: {
+    id: string;
+    part: string;
+    name: string;
+    sets: number;
+    reps: number;
+    weight: number;
+  }[];
   /** 有酸素項目（数値はサーバー保存値のため number）。 */
   cardios: { type: string; minutes: number; distance: number }[];
 };
@@ -128,12 +135,14 @@ export default function AdminRecordEditPage({ params }: PageProps) {
       setWorkouts(data.workouts.length ? data.workouts.map(toRow) : [emptyRow()]);
       setMemo(data.memo ?? '');
       if (data.cardios?.length) {
-        setCardios(data.cardios.map((c) => ({
-          id: crypto.randomUUID(),
-          type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as 'ラン' | 'ウォーク',
-          minutes: String(c.minutes),
-          distance: String(c.distance),
-        })));
+        setCardios(
+          data.cardios.map((c) => ({
+            id: crypto.randomUUID(),
+            type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as 'ラン' | 'ウォーク',
+            minutes: String(c.minutes),
+            distance: String(c.distance),
+          })),
+        );
       }
       setLoading(false);
     };
@@ -149,9 +158,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
   );
 
   const updateWorkout = (id: string, field: keyof WorkoutRow, value: string) => {
-    setWorkouts((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
-    );
+    setWorkouts((prev) => prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
 
   const addRow = () => setWorkouts((prev) => [...prev, emptyRow()]);
@@ -159,13 +166,10 @@ export default function AdminRecordEditPage({ params }: PageProps) {
     setWorkouts((prev) => (prev.length === 1 ? prev : prev.filter((row) => row.id !== id)));
 
   const updateCardio = (id: string, field: keyof CardioRow, value: string) => {
-    setCardios((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
-    );
+    setCardios((prev) => prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
   const addCardioRow = () => setCardios((prev) => [...prev, createCardioRow()]);
-  const removeCardioRow = (id: string) =>
-    setCardios((prev) => prev.filter((row) => row.id !== id));
+  const removeCardioRow = (id: string) => setCardios((prev) => prev.filter((row) => row.id !== id));
 
   const handleSave = async () => {
     setSubmitted(true);
@@ -279,7 +283,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         <option value="腹">腹</option>
                       </select>
                       {displayErrors.workouts[row.id]?.part ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].part}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.workouts[row.id].part}
+                        </p>
                       ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400 md:col-span-2">
@@ -292,7 +298,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         onChange={(event) => updateWorkout(row.id, 'name', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.name ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].name}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.workouts[row.id].name}
+                        </p>
                       ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
@@ -305,7 +313,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         onChange={(event) => updateWorkout(row.id, 'sets', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.sets ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].sets}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.workouts[row.id].sets}
+                        </p>
                       ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
@@ -318,7 +328,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         onChange={(event) => updateWorkout(row.id, 'reps', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.reps ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].reps}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.workouts[row.id].reps}
+                        </p>
                       ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
@@ -331,7 +343,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         onChange={(event) => updateWorkout(row.id, 'weight', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.weight ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.workouts[row.id].weight}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.workouts[row.id].weight}
+                        </p>
                       ) : null}
                     </label>
                   </div>
@@ -371,9 +385,7 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                       <select
                         className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
                         value={row.type}
-                        onChange={(event) =>
-                          updateCardio(row.id, 'type', event.target.value)
-                        }
+                        onChange={(event) => updateCardio(row.id, 'type', event.target.value)}
                       >
                         <option value="ラン">ラン</option>
                         <option value="ウォーク">ウォーク</option>
@@ -389,7 +401,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         onChange={(event) => updateCardio(row.id, 'minutes', event.target.value)}
                       />
                       {displayErrors.cardios[row.id]?.minutes ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.cardios[row.id].minutes}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.cardios[row.id].minutes}
+                        </p>
                       ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
@@ -402,7 +416,9 @@ export default function AdminRecordEditPage({ params }: PageProps) {
                         onChange={(event) => updateCardio(row.id, 'distance', event.target.value)}
                       />
                       {displayErrors.cardios[row.id]?.distance ? (
-                        <p className="mt-1 text-xs text-red-500">{displayErrors.cardios[row.id].distance}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.cardios[row.id].distance}
+                        </p>
                       ) : null}
                     </label>
                   </div>

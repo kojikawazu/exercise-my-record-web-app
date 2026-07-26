@@ -12,7 +12,9 @@ test.beforeEach(async () => {
   await resetAndSeedBaseline();
 });
 
-test('changing profile weight updates the estimated calories on the detail page', async ({ page }) => {
+test('changing profile weight updates the estimated calories on the detail page', async ({
+  page,
+}) => {
   await injectAdminSession(page);
 
   // 体重を 100kg に設定

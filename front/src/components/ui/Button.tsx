@@ -7,7 +7,8 @@ const base = 'rounded-full px-4 py-2 text-sm font-bold transition inline-flex it
 
 const variants: Record<ButtonVariant, string> = {
   primary: 'af-button shadow-lg',
-  outline: 'border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white',
+  outline:
+    'border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white',
   pink: 'bg-[color:var(--accent-pink)] text-white shadow-lg shadow-pink-100 hover:opacity-90',
   danger: 'border border-[#a94040] text-[#a94040] hover:bg-[#a94040] hover:text-white',
 };
@@ -20,8 +21,7 @@ const variants: Record<ButtonVariant, string> = {
  * @param variant - 適用する見た目バリアント（既定は `primary`）
  * @returns 共通クラスとバリアント別クラスを連結した文字列
  */
-export const buttonClasses = (variant: ButtonVariant = 'primary') =>
-  `${base} ${variants[variant]}`;
+export const buttonClasses = (variant: ButtonVariant = 'primary') => `${base} ${variants[variant]}`;
 
 /** {@link Button} の props。標準の button 属性に見た目バリアントを加えたもの。 */
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

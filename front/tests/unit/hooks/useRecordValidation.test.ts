@@ -22,9 +22,7 @@ describe('useRecordValidation', () => {
   // --- 正常系 ---
 
   it('should initialize with submitted=false and empty displayErrors', () => {
-    const { result } = renderHook(() =>
-      useRecordValidation('', [validWorkout], []),
-    );
+    const { result } = renderHook(() => useRecordValidation('', [validWorkout], []));
     expect(result.current.submitted).toBe(false);
     expect(result.current.displayErrors).toEqual({ workouts: {}, cardios: {} });
   });
@@ -37,9 +35,7 @@ describe('useRecordValidation', () => {
   });
 
   it('should expose errors in displayErrors after setSubmitted(true)', () => {
-    const { result } = renderHook(() =>
-      useRecordValidation('', [validWorkout], []),
-    );
+    const { result } = renderHook(() => useRecordValidation('', [validWorkout], []));
     act(() => {
       result.current.setSubmitted(true);
     });
@@ -49,25 +45,19 @@ describe('useRecordValidation', () => {
   // --- 準正常系 ---
 
   it('should hide errors in displayErrors before submission even if rawErrors exist', () => {
-    const { result } = renderHook(() =>
-      useRecordValidation('', [validWorkout], []),
-    );
+    const { result } = renderHook(() => useRecordValidation('', [validWorkout], []));
     expect(result.current.rawErrors.date).toBe('日付を選択してください');
     expect(result.current.displayErrors.date).toBeUndefined();
   });
 
   it('should return hasErrors=true when date is missing', () => {
-    const { result } = renderHook(() =>
-      useRecordValidation('', [validWorkout], []),
-    );
+    const { result } = renderHook(() => useRecordValidation('', [validWorkout], []));
     expect(result.current.hasErrors).toBe(true);
   });
 
   it('should reactively update rawErrors when inputs change', () => {
     let date = '';
-    const { result, rerender } = renderHook(() =>
-      useRecordValidation(date, [validWorkout], []),
-    );
+    const { result, rerender } = renderHook(() => useRecordValidation(date, [validWorkout], []));
     expect(result.current.rawErrors.date).toBe('日付を選択してください');
 
     date = '2026-01-01';
@@ -78,9 +68,7 @@ describe('useRecordValidation', () => {
   // --- 異常系 ---
 
   it('should handle empty workouts array without throwing', () => {
-    const { result } = renderHook(() =>
-      useRecordValidation('2026-01-01', [], []),
-    );
+    const { result } = renderHook(() => useRecordValidation('2026-01-01', [], []));
     expect(result.current.hasErrors).toBe(false);
     expect(result.current.rawErrors.workouts).toEqual({});
   });

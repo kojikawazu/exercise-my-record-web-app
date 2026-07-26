@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #f9fafb;
@@ -8,7 +8,7 @@
   --accent-strong: #432472;
   --accent-pink: #eb008b;
   --muted: #6b7280;
-  --font-body: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 @theme inline {

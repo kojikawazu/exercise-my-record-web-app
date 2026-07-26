@@ -86,7 +86,10 @@ describe('GET /api/records/[date]', () => {
 describe('PATCH /api/records/[date]', () => {
   it('should return 503 when database is unavailable', async () => {
     vi.mocked(getPrisma).mockReturnValue(null);
-    const req = new Request('http://localhost', { method: 'PATCH', body: JSON.stringify({ memo: 'ok' }) });
+    const req = new Request('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ memo: 'ok' }),
+    });
     const res = await PATCH(req, makeContext('2026-01-01'));
     expect(res.status).toBe(503);
   });
@@ -96,7 +99,10 @@ describe('PATCH /api/records/[date]', () => {
     vi.mocked(prisma.exerciseRecord.findUnique).mockResolvedValue(null);
     vi.mocked(getPrisma).mockReturnValue(prisma as never);
 
-    const req = new Request('http://localhost', { method: 'PATCH', body: JSON.stringify({ memo: 'ok' }) });
+    const req = new Request('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ memo: 'ok' }),
+    });
     const res = await PATCH(req, makeContext('2099-01-01'));
     expect(res.status).toBe(404);
   });
@@ -120,7 +126,10 @@ describe('PATCH /api/records/[date]', () => {
     const prisma = makePrisma();
     vi.mocked(getPrisma).mockReturnValue(prisma as never);
 
-    const req = new Request('http://localhost', { method: 'PATCH', body: JSON.stringify({ memo: 'ok' }) });
+    const req = new Request('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ memo: 'ok' }),
+    });
     const res = await PATCH(req, makeContext('2026-01-01'));
     expect(res.status).toBe(401);
   });

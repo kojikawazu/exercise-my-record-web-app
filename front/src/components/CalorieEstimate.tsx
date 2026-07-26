@@ -30,10 +30,7 @@ type CalorieEstimateProps = {
  * プロフィール API から体重を取得し、筋トレ + 有酸素の合計を算定する。体重未取得の間は
  * `-- kcal` を表示する。props の各項目は {@link CalorieEstimateProps} を参照。
  */
-export default function CalorieEstimate({
-  totalSets,
-  cardios,
-}: CalorieEstimateProps) {
+export default function CalorieEstimate({ totalSets, cardios }: CalorieEstimateProps) {
   const [weightKg, setWeightKg] = useState<number | null>(null);
 
   useEffect(() => {

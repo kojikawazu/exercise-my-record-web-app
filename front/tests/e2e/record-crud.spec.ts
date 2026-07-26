@@ -18,7 +18,9 @@ test.beforeEach(async () => {
 // 認証ガード
 // ---------------------------------------------------------------------------
 
-test('should redirect to /admin/login when accessing admin page without login', async ({ page }) => {
+test('should redirect to /admin/login when accessing admin page without login', async ({
+  page,
+}) => {
   await page.goto('/admin/records/new');
   await expect(page).toHaveURL(/\/admin\/login/);
 });
@@ -179,7 +181,9 @@ test('should add and remove multiple cardio rows', async ({ page }) => {
   const cardioSelects = page.locator('select').filter({ hasText: 'ラン' });
   await expect(cardioSelects).toHaveCount(2);
 
-  const cardioRows = page.locator('.rounded-2xl').filter({ has: page.locator('option[value="ウォーク"]') });
+  const cardioRows = page
+    .locator('.rounded-2xl')
+    .filter({ has: page.locator('option[value="ウォーク"]') });
   await cardioRows.last().getByRole('button', { name: '削除' }).click();
   await expect(cardioSelects).toHaveCount(1);
 });
@@ -197,7 +201,11 @@ test('should delete a record from the admin list', async ({ page }) => {
   await expect(page.getByText('2026-02-02')).toBeVisible();
 
   // 2026-02-02 のカード内の削除ボタンを押す。
-  const card = page.locator('div').filter({ hasText: '2026-02-02' }).filter({ has: page.getByRole('button', { name: '削除' }) }).last();
+  const card = page
+    .locator('div')
+    .filter({ hasText: '2026-02-02' })
+    .filter({ has: page.getByRole('button', { name: '削除' }) })
+    .last();
   await card.getByRole('button', { name: '削除' }).click();
 
   // 実 DB から消え、一覧から 2026-02-02 が消える（2026-01-15 は残る）。

@@ -158,7 +158,10 @@ describe('IT: PATCH/DELETE /api/records/[date] (実 DB)', () => {
   it('should delete a record and cascade-remove its workouts/cardios', async () => {
     await createRecord(createRequest(sampleBody('2026-06-01')));
 
-    const del = await deleteRecord(new Request('http://localhost', { method: 'DELETE' }), makeContext('2026-06-01'));
+    const del = await deleteRecord(
+      new Request('http://localhost', { method: 'DELETE' }),
+      makeContext('2026-06-01'),
+    );
     expect(del.status).toBe(200);
     expect(await del.json()).toEqual({ ok: true });
 
@@ -172,13 +175,19 @@ describe('IT: PATCH/DELETE /api/records/[date] (実 DB)', () => {
   // --- 準正常系 ---
 
   it('should return 404 when patching a non-existent date', async () => {
-    const req = new Request('http://localhost', { method: 'PATCH', body: JSON.stringify({ memo: 'x' }) });
+    const req = new Request('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ memo: 'x' }),
+    });
     const res = await patchRecord(req, makeContext('2099-01-01'));
     expect(res.status).toBe(404);
   });
 
   it('should return 404 when deleting a non-existent date', async () => {
-    const res = await deleteRecord(new Request('http://localhost', { method: 'DELETE' }), makeContext('2099-01-01'));
+    const res = await deleteRecord(
+      new Request('http://localhost', { method: 'DELETE' }),
+      makeContext('2099-01-01'),
+    );
     expect(res.status).toBe(404);
   });
 });

@@ -26,11 +26,7 @@ export const cardioMets: Record<string, number> = {
  * @param type - 有酸素種別。`cardioMets` に無い値は消費カロリー 0 とみなす
  * @returns 推定消費カロリー（kcal、丸め前の実数）
  */
-export const calculateCardioCalories = (
-  weightKg: number,
-  minutes: number,
-  type: CardioType,
-) => {
+export const calculateCardioCalories = (weightKg: number, minutes: number, type: CardioType) => {
   const mets = cardioMets[type] ?? 0;
   const hours = minutes / 60;
   return mets * weightKg * hours;

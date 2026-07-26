@@ -1,7 +1,7 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-import jsdoc from "eslint-plugin-jsdoc";
+import { defineConfig, globalIgnores } from 'eslint/config';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTs from 'eslint-config-next/typescript';
+import jsdoc from 'eslint-plugin-jsdoc';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -12,32 +12,32 @@ const eslintConfig = defineConfig([
     // tests/ も対象に含める。テストを src からここへ集約した際、対象が src/** のままだと
     // テストコードが黙って JSDoc ルールの対象外になるため（jsdoc.md「混乱テスト」は
     // テスト足場にも "why" を求めている）。
-    files: ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
     plugins: { jsdoc },
     // TS 前提。型は JSDoc ではなくシグネチャに委ねる。
-    settings: { jsdoc: { mode: "typescript" } },
+    settings: { jsdoc: { mode: 'typescript' } },
     rules: {
       // 型の再掲を禁止（TS シグネチャが型の唯一の真実）。
-      "jsdoc/no-types": "error",
+      'jsdoc/no-types': 'error',
       // JSDoc ブロックを持つ関数は全引数を @param で説明する。
       // 分割代入 props は型（XxxProps）が真実なので props.x 単位には展開しない。
-      "jsdoc/require-param": ["error", { checkDestructured: false, checkDestructuredRoots: false }],
-      "jsdoc/require-param-description": "error",
+      'jsdoc/require-param': ['error', { checkDestructured: false, checkDestructuredRoots: false }],
+      'jsdoc/require-param-description': 'error',
       // @param 名と実引数名を突き合わせる（名前ズレ・順序・過不足を検出）。
-      "jsdoc/check-param-names": "error",
+      'jsdoc/check-param-names': 'error',
       // 返り値がある関数は @returns に意味を書く（.tsx コンポーネントは後続ブロックで除外）。
-      "jsdoc/require-returns": "error",
-      "jsdoc/require-returns-description": "error",
+      'jsdoc/require-returns': 'error',
+      'jsdoc/require-returns-description': 'error',
       // 書いた JSDoc の体裁を整える。
-      "jsdoc/check-alignment": "warn",
-      "jsdoc/no-multi-asterisks": "warn",
+      'jsdoc/check-alignment': 'warn',
+      'jsdoc/no-multi-asterisks': 'warn',
       // 型本体（type / interface の宣言）に JSDoc を必須にする。
       // require: {} で関数・クラス等の既定対象は要求せず、contexts で型宣言だけを対象にする。
       // 関数に対する require-jsdoc は // 行コメントを誤検知するため引き続き未採用で、
       // 関数の JSDoc ブロックの有無・質はレビューで確認する。
-      "jsdoc/require-jsdoc": [
-        "error",
-        { require: {}, contexts: ["TSTypeAliasDeclaration", "TSInterfaceDeclaration"] },
+      'jsdoc/require-jsdoc': [
+        'error',
+        { require: {}, contexts: ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'] },
       ],
     },
   },
@@ -48,17 +48,13 @@ const eslintConfig = defineConfig([
     // 定義ファイルを開かずに使われるためコメントの価値が最も高い。
     // static-analysis.md「警告ゼロを維持し、守れないルールは有効にしない」に従い、
     // warn で放置せず error にできる範囲だけを対象にしている（現状 0 件）。
-    files: ["src/types/**/*.ts"],
+    files: ['src/types/**/*.ts'],
     rules: {
-      "jsdoc/require-jsdoc": [
-        "error",
+      'jsdoc/require-jsdoc': [
+        'error',
         {
           require: {},
-          contexts: [
-            "TSTypeAliasDeclaration",
-            "TSInterfaceDeclaration",
-            "TSPropertySignature",
-          ],
+          contexts: ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration', 'TSPropertySignature'],
         },
       ],
     },
@@ -66,22 +62,22 @@ const eslintConfig = defineConfig([
   {
     // React コンポーネント（JSX を返す .tsx）は @returns を要求しない（「@returns …の要素」はノイズ）。
     // .ts のフック / lib / API では @returns 必須のまま。
-    files: ["src/**/*.tsx", "tests/**/*.tsx"],
+    files: ['src/**/*.tsx', 'tests/**/*.tsx'],
     rules: {
-      "jsdoc/require-returns": "off",
-      "jsdoc/require-returns-description": "off",
+      'jsdoc/require-returns': 'off',
+      'jsdoc/require-returns-description': 'off',
     },
   },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
     // Prisma 自動生成コード（.gitignore 済みのビルド成果物）は lint 対象外にする。
     // JSDoc/型ルール等が生成コードを誤検知するため除外する。
-    "src/generated/**",
+    'src/generated/**',
   ]),
 ]);
 

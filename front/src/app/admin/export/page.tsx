@@ -29,9 +29,7 @@ export default function AdminExportPage() {
     }
     setStatus('loading');
     setMessage('');
-    const res = await authFetch(
-      `/api/admin/export?from=${fromDate}&to=${toDate}&format=${format}`,
-    );
+    const res = await authFetch(`/api/admin/export?from=${fromDate}&to=${toDate}&format=${format}`);
     if (!res.ok) {
       setStatus('idle');
       setMessage('エクスポートに失敗しました。');
@@ -120,9 +118,7 @@ export default function AdminExportPage() {
           </div>
         </Card>
 
-        {message ? (
-          <p className="mt-4 text-sm font-bold text-gray-500">{message}</p>
-        ) : null}
+        {message ? <p className="mt-4 text-sm font-bold text-gray-500">{message}</p> : null}
 
         <div className="mt-8 flex justify-end">
           <button
