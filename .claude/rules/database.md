@@ -9,6 +9,7 @@ globs: "front/prisma/**,front/src/lib/**"
 
 - テーブル名（モデル名）: PascalCase・単数形（例: `ExerciseRecord`, `ExerciseWorkout`）— Prisma の規約に従う。
 - カラム名（フィールド名）: camelCase（例: `recordId`, `createdAt`）— Prisma の規約に従う。
+- DB 上のテーブル名: `@@map()` で snake_case・複数形にマッピング可（例: `@@map("exercise_records")`）。**本プロジェクトは未使用**（モデル名がそのままテーブル名）。既存モデルに後付けすると DB 側の改名が必要になるため、採用するなら新規モデルからか、マイグレーションで一括して行う。
 - 本アプリが使用するのは `Exercise*` 系モデルのみ（`Report` / `ReportTag` / `VideoEntry` 等は共有スキーマの名残で対象外）。
 
 ## 主キー・共通フィールド

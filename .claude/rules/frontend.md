@@ -27,6 +27,10 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - **クライアントコンポーネント**のロジックは**カスタムフック**（`hooks/`）に切り出す。コンポーネントは UI 描画に専念する。
   - 実例: 入力バリデーションは `hooks/useRecordValidation.ts`（状態管理）と `lib/validation.ts`（純粋関数）に分離。
 - **サーバーコンポーネント**のデータ取得は `page.tsx` や `lib/` 内のサーバー関数で行う（hooks は使用しない）。
+- 状態の種類で手段を分ける:
+  - **サーバー状態**（API データ）: React Query / SWR
+  - **クライアント状態**（UI 状態）: ローカル state、複雑なら Zustand 等（`stores/`）
+- **現状**: サーバー状態管理ライブラリは未導入。admin 配下は `useEffect` + `lib/authFetch.ts` の `authFetch()` で取得している。**新規に別のライブラリを混在させない**。導入する場合は上記の分類に従い、`useEffect` での手動取得を置き換える形で一括して行う。
 
 ## 状態管理・Context
 
