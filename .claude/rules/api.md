@@ -21,8 +21,7 @@ src/app/api/
 ├── masters/[id]/route.ts     # マスター編集(PATCH) / 削除(DELETE)
 ├── profile/route.ts          # 体重取得(GET) / 保存(POST)
 └── admin/
-    ├── me/route.ts           # 管理者判定
-    └── export/route.ts       # データ出力（Issue #20 で削除予定）
+    └── me/route.ts           # 管理者判定
 ```
 
 ## 型定義

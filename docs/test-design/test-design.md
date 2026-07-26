@@ -14,7 +14,7 @@
   - [3. `hooks/useRecordValidation` — フックの状態管理](#3-hooksuserecordvalidation--フックの状態管理)
   - [4. API Routes — `GET/POST /api/records`](#4-api-routes--getpost-apirecords)
   - [5. API Routes — `GET/PATCH/DELETE /api/records/[date]`](#5-api-routes--getpatchdelete-apirecordsdate)
-  - [5b. API Routes — masters / profile / admin/me / admin/export（Phase 1 追加）](#5b-api-routes--masters--profile--adminme--adminexportphase-1-追加)
+  - [5b. API Routes — masters / profile / admin/me（Phase 1 追加）](#5b-api-routes--masters--profile--adminmephase-1-追加)
   - [5c. 統合テスト（IT）— 実 DB（Testcontainers）（Phase 2 追加）](#5c-統合テストit-実-dbtestcontainersphase-2-追加)
   - [5d. E2E — 実 DB（docker-compose）化（Phase 3）](#5d-e2e--実-dbdocker-compose化phase-3)
   - [5e. シナリオテスト — 複数機能横断（Phase 4）](#5e-シナリオテスト--複数機能横断phase-4)
@@ -238,7 +238,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ---
 
-### 5b. API Routes — masters / profile / admin/me / admin/export（Phase 1 追加）
+### 5b. API Routes — masters / profile / admin/me（Phase 1 追加）
 
 テスト戦略 Phase 1 で、未カバーだった API Route Handler に UT を追加した。モックは外部 I/O（`@/lib/prisma` の `getPrisma`、`@/lib/adminAuth` の `requireAdmin`、`admin/me` は `@supabase/supabase-js` の `createClient`）のみ。ビジネスロジック（CSV 生成・カロリー等）は実物を検証する。
 
@@ -248,11 +248,10 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 | `tests/unit/app/api/masters/[id]/route.test.ts` | PATCH / DELETE | 11 | 正: 更新・削除 / 準: name欠落400・not found404・**監査カラム非公開** / 異: 未認証401・503・**DB の type 不正500** |
 | `tests/unit/app/api/profile/route.test.ts` | GET / POST | 12 | 正: 取得・上書き(update+deleteMany)・新規create / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
 | `tests/unit/app/api/admin/me/route.test.ts` | GET | 8 | 正: 管理者200(大小文字/前後空白許容) / 準: トークン欠落401・無効401・非管理者403 / 異: 認証設定不備500 |
-| `tests/unit/app/api/admin/export/route.test.ts` | GET | 11 | 正: CSV横並び展開・escape・空展開・JSON / 準: from/to欠落400・format不正400・空文字400 / 異: 未認証401・403・503 |
 
 補足:
 - `admin/me` と `profile` はモジュールトップレベルの状態（env 捕捉 / `fallbackWeightKg`）に依存するため、`vi.resetModules()` + 動的 import でテスト順非依存にしている。
-- Phase 1 追加分の合計: 52 件。既存 82 件と合わせ UT/IT 合計 **134 件**（全 pass）。正常:異常（準正常+異常）比はスイート全体で概ね 1:2 以上。
+- UT/IT 合計 **136 件**（全 pass）。Issue #20 でデータ出力機能を削除したため、admin/export の 11 件は対象外。正常:異常（準正常+異常）比はスイート全体で概ね 1:2 以上。
 
 ---
 

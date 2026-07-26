@@ -16,7 +16,6 @@
   - [GET /admin/me](#get-adminme)
   - [マスター管理](#マスター管理)
   - [プロフィール](#プロフィール)
-  - [GET /admin/export（Issue #20 で削除予定、現時点では現役）](#get-adminexportissue-20-で削除予定現時点では現役)
 - [エラーレスポンス](#エラーレスポンス)
 - [バリデーション方針](#バリデーション方針)
 
@@ -45,7 +44,6 @@
 | DELETE | `/masters/:id` | マスター削除 | 必須 |
 | GET | `/profile` | 体重取得 | 不要 |
 | POST | `/profile` | 体重保存 | 必須 |
-| GET | `/admin/export?from&to&format` | データ出力 ※ Issue #20 で削除予定 | 必須 |
 
 ## 認証方式
 
@@ -102,10 +100,6 @@
 ### プロフィール
 
 - `GET /profile`（体重取得） / `POST /profile`（体重保存）。暫定: `/api/profile` はフロントの仮実装で使用（本番は Supabase 想定）。
-
-### GET /admin/export（Issue #20 で削除予定、現時点では現役）
-
-- 用途: データ出力（管理者のみ）。クエリ: `from=YYYY-MM-DD`, `to=YYYY-MM-DD`, `format=csv|json`。実装: `/api/admin/export`。
 
 ## エラーレスポンス
 
