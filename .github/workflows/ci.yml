@@ -1,20 +1,50 @@
+# コード変更向けの CI。
+#
+# ドキュメント（*.md / docs/ / .claude/）だけの変更ではテストを回さない。
+# ただし「ワークフローレベルの paths で起動そのものを止める」方式は採らない
+# — 必須チェック（ブランチ保護）に設定した瞬間、ワークフローが起動せず
+# チェックが pending のまま PR がマージ不能になるため。
+# 代わりに changes ジョブで判定し、各ジョブを if: でスキップする（skipped は成功扱い）。
+# 詳細は .claude/rules/github-actions.md
 name: CI
 
 on:
   push:
     branches:
       - main
-    paths:
-      - '.github/workflows/**'
-      - 'front/**'
   pull_request:
-    paths:
-      - '.github/workflows/**'
-      - 'front/**'
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 判定は「除外リスト」で書く。対象リストで書くと、新しいディレクトリが
+      # 増えたときに黙ってテストが走らなくなるため、安全側に倒す。
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - '!(docs/**|**/*.md|.claude/**|.markdownlint-cli2.jsonc|LICENSE)'
+
   static-check:
     name: Static Checks (lint / typecheck / build)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -57,6 +87,8 @@ jobs:
 
   unit-test:
     name: Unit Tests (Vitest)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -82,6 +114,8 @@ jobs:
 
   it-test:
     name: Integration Tests (Testcontainers)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -114,6 +148,8 @@ jobs:
 
   e2e-test:
     name: E2E Tests (Playwright)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -167,6 +203,8 @@ jobs:
 
   scenario-test:
     name: Scenario Tests (Playwright)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:

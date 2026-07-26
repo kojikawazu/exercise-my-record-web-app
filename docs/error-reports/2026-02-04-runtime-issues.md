@@ -11,6 +11,7 @@
 - 現状の修正状況と再発防止のための対応を記載。
 
 ## 不具合一覧
+
 | ID | 症状 | 影響 | 原因 | 対応状況 |
 | --- | --- | --- | --- | --- |
 | ER-2026-02-04-01 | `/api/records` が `503 database unavailable` | CRUD 全般が無効化され、一覧/詳細が取得不可 | Prisma Client が `engine type "client"` で生成されており、`adapter` 必須だった | `@prisma/adapter-pg` + `pg` を導入し `PrismaClient({ adapter })` で初期化するよう変更 |

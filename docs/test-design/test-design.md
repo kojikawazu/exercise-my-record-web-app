@@ -15,7 +15,7 @@
   - [4. API Routes — `GET/POST /api/records`](#4-api-routes--getpost-apirecords)
   - [5. API Routes — `GET/PATCH/DELETE /api/records/[date]`](#5-api-routes--getpatchdelete-apirecordsdate)
   - [5b. API Routes — masters / profile / admin/me / admin/export（Phase 1 追加）](#5b-api-routes--masters--profile--adminme--adminexportphase-1-追加)
-  - [5c. 統合テスト（IT）— 実 DB（Testcontainers）（Phase 2 追加）](#5c-統合テストit--実-dbtestcontainersphase-2-追加)
+  - [5c. 統合テスト（IT）— 実 DB（Testcontainers）（Phase 2 追加）](#5c-統合テストit-実-dbtestcontainersphase-2-追加)
   - [5d. E2E — 実 DB（docker-compose）化（Phase 3）](#5d-e2e--実-dbdocker-compose化phase-3)
   - [5e. シナリオテスト — 複数機能横断（Phase 4）](#5e-シナリオテスト--複数機能横断phase-4)
   - [6. E2Eテスト — 拡充方針（旧・モック時代の記録）](#6-e2eテスト--拡充方針旧モック時代の記録)

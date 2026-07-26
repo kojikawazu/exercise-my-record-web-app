@@ -65,4 +65,4 @@ CI 固有の追加設定（`prisma generate`、`.env.local` 動的生成、タ�
 - シナリオ: Playwright（`front/tests/scenario/`、`--project=scenario`）。E2E と同じ実 DB 基盤で、**複数機能横断のユーザージャーニー**を検証（`pnpm run test:scenario`）。
 - 統合(IT): Vitest + Testcontainers（`@testcontainers/postgresql`）。実 PostgreSQL に対し Prisma 経由で Route Handler を検証。ファイル命名 `*.it.test.ts`、設定 `front/vitest.it.config.ts`、コマンド `pnpm test:it`。認証は `E2E_BYPASS=1` でバイパス。
 - 静的検査: ESLint（`eslint-plugin-jsdoc` 含む）+ `tsc --noEmit` + `next build`。CI の `static-check` ジョブで実行。
-- CI: GitHub Actions（`.github/workflows/test.yml`、`static-check` / `unit-test` / `it-test` / `e2e-test` ジョブを並列実行）。
+- CI: GitHub Actions（`.github/workflows/ci.yml`、`static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` ジョブを並列実行）。ドキュメントのみの変更ではスキップされる（`.claude/rules/github-actions.md`）。
