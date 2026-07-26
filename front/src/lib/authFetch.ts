@@ -10,10 +10,7 @@ import { supabase } from '@/lib/supabase';
  * @param options - `fetch` に渡すオプション。既存の `headers` は保持したうえで認証ヘッダーを追加する
  * @returns `fetch` のレスポンス
  */
-export async function authFetch(
-  url: string,
-  options: RequestInit = {},
-): Promise<Response> {
+export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
 
   const { data } = await supabase.auth.getSession();

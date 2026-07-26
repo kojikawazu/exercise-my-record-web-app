@@ -41,35 +41,38 @@ export default function AdminRecordsListClient() {
 
   const currentPage = Number(searchParams.get('page') ?? 1) || 1;
 
-  const fetchRecords = useCallback(async (p: number) => {
-    setHasFetched(false);
-    try {
-      const res = await fetch(`/api/records?page=${p}`);
-      if (!res.ok) {
+  const fetchRecords = useCallback(
+    async (p: number) => {
+      setHasFetched(false);
+      try {
+        const res = await fetch(`/api/records?page=${p}`);
+        if (!res.ok) {
+          setError('記録の取得に失敗しました。');
+          setRecords([]);
+          setHasFetched(true);
+          return;
+        }
+        const data = (await res.json()) as {
+          records: AdminRecordSummary[];
+          page: number;
+          totalPages: number;
+        };
+        setRecords(data.records);
+        setPage(data.page);
+        setTotalPages(data.totalPages);
+        setHasFetched(true);
+
+        if (data.page !== p) {
+          router.replace(`/admin/records?page=${data.page}`);
+        }
+      } catch {
         setError('記録の取得に失敗しました。');
         setRecords([]);
         setHasFetched(true);
-        return;
       }
-      const data = (await res.json()) as {
-        records: AdminRecordSummary[];
-        page: number;
-        totalPages: number;
-      };
-      setRecords(data.records);
-      setPage(data.page);
-      setTotalPages(data.totalPages);
-      setHasFetched(true);
-
-      if (data.page !== p) {
-        router.replace(`/admin/records?page=${data.page}`);
-      }
-    } catch {
-      setError('記録の取得に失敗しました。');
-      setRecords([]);
-      setHasFetched(true);
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   useEffect(() => {
     // URL の page 変化に応じてサーバーからデータを再取得する正当な副作用。
@@ -154,59 +157,62 @@ export default function AdminRecordsListClient() {
               </p>
             </Card>
           ) : null}
-          {records.length > 0 && records.map((record) => (
-            <Card key={record.date} className="p-6 md:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">日付</p>
-                  <h2 className="text-2xl font-black text-gray-900">{record.date}</h2>
+          {records.length > 0 &&
+            records.map((record) => (
+              <Card key={record.date} className="p-6 md:p-8">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      日付
+                    </p>
+                    <h2 className="text-2xl font-black text-gray-900">{record.date}</h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Link href={`/records/${record.date}`} className={buttonClasses('outline')}>
+                      詳細を見る
+                    </Link>
+                    <Link
+                      href={`/admin/records/${record.date}/edit`}
+                      className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
+                    >
+                      編集
+                    </Link>
+                    <button
+                      type="button"
+                      className={buttonClasses('danger')}
+                      onClick={() => handleDelete(record.date)}
+                      disabled={deletingDate === record.date}
+                    >
+                      {deletingDate === record.date ? (
+                        <LoadingSpinner mode="deleting" variant="inline" className="text-inherit" />
+                      ) : (
+                        '削除'
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Link href={`/records/${record.date}`} className={buttonClasses('outline')}>
-                    詳細を見る
-                  </Link>
-                  <Link
-                    href={`/admin/records/${record.date}/edit`}
-                    className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
-                  >
-                    編集
-                  </Link>
-                  <button
-                    type="button"
-                    className={buttonClasses('danger')}
-                    onClick={() => handleDelete(record.date)}
-                    disabled={deletingDate === record.date}
-                  >
-                    {deletingDate === record.date ? (
-                      <LoadingSpinner mode="deleting" variant="inline" className="text-inherit" />
-                    ) : (
-                      '削除'
-                    )}
-                  </button>
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl bg-gray-50 p-4 text-center">
+                    <p className="text-[10px] font-black uppercase text-gray-400">合計セット数</p>
+                    <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
+                      {record.totalSets}セット
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-gray-50 p-4 text-center">
+                    <p className="text-[10px] font-black uppercase text-gray-400">有酸素合計時間</p>
+                    <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
+                      {record.cardioMinutes}分
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-gray-50 p-4 text-center">
+                    <p className="text-[10px] font-black uppercase text-gray-400">有酸素合計距離</p>
+                    <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
+                      {record.cardioDistance}km
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-6 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl bg-gray-50 p-4 text-center">
-                  <p className="text-[10px] font-black uppercase text-gray-400">合計セット数</p>
-                  <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
-                    {record.totalSets}セット
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-4 text-center">
-                  <p className="text-[10px] font-black uppercase text-gray-400">有酸素合計時間</p>
-                  <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
-                    {record.cardioMinutes}分
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-4 text-center">
-                  <p className="text-[10px] font-black uppercase text-gray-400">有酸素合計距離</p>
-                  <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
-                    {record.cardioDistance}km
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
 
           {hasFetched && totalPages > 1 ? (
             <div className="mt-8 flex items-center justify-center gap-4">

@@ -47,37 +47,40 @@ export default function RecordsListClient() {
 
   const currentPage = Number(searchParams.get('page') ?? 1) || 1;
 
-  const fetchRecords = useCallback(async (p: number) => {
-    setHasFetched(false);
-    try {
-      const res = await fetch(`/api/records?page=${p}`);
-      if (!res.ok) {
+  const fetchRecords = useCallback(
+    async (p: number) => {
+      setHasFetched(false);
+      try {
+        const res = await fetch(`/api/records?page=${p}`);
+        if (!res.ok) {
+          setErrorMessage('記録の取得に失敗しました。');
+          setRecords([]);
+          setHasFetched(true);
+          return;
+        }
+        const data = (await res.json()) as {
+          records: RecordSummary[];
+          page: number;
+          totalPages: number;
+        };
+        setErrorMessage('');
+        setRecords(data.records);
+        setPage(data.page);
+        setTotalPages(data.totalPages);
+        setHasFetched(true);
+
+        // Correct URL if API clamped the page
+        if (data.page !== p) {
+          router.replace(data.page === 1 ? '/' : `/?page=${data.page}`);
+        }
+      } catch {
         setErrorMessage('記録の取得に失敗しました。');
         setRecords([]);
         setHasFetched(true);
-        return;
       }
-      const data = (await res.json()) as {
-        records: RecordSummary[];
-        page: number;
-        totalPages: number;
-      };
-      setErrorMessage('');
-      setRecords(data.records);
-      setPage(data.page);
-      setTotalPages(data.totalPages);
-      setHasFetched(true);
-
-      // Correct URL if API clamped the page
-      if (data.page !== p) {
-        router.replace(data.page === 1 ? '/' : `/?page=${data.page}`);
-      }
-    } catch {
-      setErrorMessage('記録の取得に失敗しました。');
-      setRecords([]);
-      setHasFetched(true);
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   useEffect(() => {
     // URL の page 変化に応じてサーバーからデータを再取得する正当な副作用。
@@ -181,7 +184,9 @@ export default function RecordsListClient() {
                   <CalorieEstimate
                     totalSets={record.totalSets}
                     cardios={(record.cardios ?? []).map((c) => ({
-                      type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as import('@/lib/calorie').CardioType,
+                      type: (c.type === 'ウォーク'
+                        ? 'ウォーク'
+                        : 'ラン') as import('@/lib/calorie').CardioType,
                       minutes: c.minutes,
                     }))}
                   />

@@ -194,7 +194,14 @@ describe('computeErrors', () => {
   });
 
   it('should only report errors for the invalid workout row when multiple rows exist', () => {
-    const workout2 = { id: 'w2', part: '', name: 'スクワット', sets: '3', reps: '10', weight: '80' };
+    const workout2 = {
+      id: 'w2',
+      part: '',
+      name: 'スクワット',
+      sets: '3',
+      reps: '10',
+      weight: '80',
+    };
     const errors = computeErrors('2026-01-01', [validWorkout, workout2], []);
     expect(errors.workouts['w1']).toBeUndefined();
     expect(errors.workouts['w2'].part).toBe('部位を選択してください');

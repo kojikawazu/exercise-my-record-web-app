@@ -45,21 +45,19 @@ export async function GET(_request: Request, context: RouteContext) {
         reps: number;
         weight: number;
       }) => ({
-      id: workout.id,
-      part: workout.part,
-      name: workout.name,
-      sets: workout.sets,
-      reps: workout.reps,
-      weight: workout.weight,
-    }),
-    ),
-    cardios: record.cardios.map(
-      (c: { type: string; minutes: number; distance: number }) => ({
-        type: c.type,
-        minutes: c.minutes,
-        distance: c.distance,
+        id: workout.id,
+        part: workout.part,
+        name: workout.name,
+        sets: workout.sets,
+        reps: workout.reps,
+        weight: workout.weight,
       }),
     ),
+    cardios: record.cardios.map((c: { type: string; minutes: number; distance: number }) => ({
+      type: c.type,
+      minutes: c.minutes,
+      distance: c.distance,
+    })),
   });
 }
 
@@ -141,8 +139,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return NextResponse.json({ id: updated.id });
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     console.error('PATCH /api/records/:date error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

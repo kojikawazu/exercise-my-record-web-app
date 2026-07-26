@@ -41,16 +41,16 @@ export async function GET(request: Request) {
       workouts: { sets: number }[];
       cardios: { type: string; minutes: number; distance: number }[];
     }) => ({
-    date: record.date.toISOString().slice(0, 10),
-    totalSets: record.workouts.reduce((sum, workout) => sum + workout.sets, 0),
-    cardioMinutes: record.cardios.reduce((sum, c) => sum + c.minutes, 0),
-    cardioDistance: record.cardios.reduce((sum, c) => sum + c.distance, 0),
-    cardios: record.cardios.map((c) => ({
-      type: c.type,
-      minutes: c.minutes,
-      distance: c.distance,
-    })),
-  }),
+      date: record.date.toISOString().slice(0, 10),
+      totalSets: record.workouts.reduce((sum, workout) => sum + workout.sets, 0),
+      cardioMinutes: record.cardios.reduce((sum, c) => sum + c.minutes, 0),
+      cardioDistance: record.cardios.reduce((sum, c) => sum + c.distance, 0),
+      cardios: record.cardios.map((c) => ({
+        type: c.type,
+        minutes: c.minutes,
+        distance: c.distance,
+      })),
+    }),
   );
 
   return NextResponse.json({ records: result, totalCount, page, totalPages });
@@ -128,8 +128,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: record.id });
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     console.error('POST /api/records error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

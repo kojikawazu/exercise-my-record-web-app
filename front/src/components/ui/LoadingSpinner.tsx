@@ -34,7 +34,8 @@ const modeClasses: Record<LoadingMode, string> = {
 };
 
 const variantClasses: Record<LoadingVariant, string> = {
-  block: 'flex items-center justify-center gap-2 rounded-2xl bg-gray-50 px-4 py-3 text-sm font-bold',
+  block:
+    'flex items-center justify-center gap-2 rounded-2xl bg-gray-50 px-4 py-3 text-sm font-bold',
   inline: 'inline-flex items-center gap-2 text-sm font-bold',
 };
 

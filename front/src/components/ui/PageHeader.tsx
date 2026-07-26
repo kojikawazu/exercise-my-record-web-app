@@ -22,24 +22,19 @@ type PageHeaderProps = {
  * ページ上部に固定表示するヘッダー。タイトル・補助ラベル・右側アクションを配置する。
  * props の各項目は {@link PageHeaderProps} を参照。
  */
-export default function PageHeader({
-  title,
-  subtitle,
-  action,
-  maxWidth = '5xl',
-}: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, action, maxWidth = '5xl' }: PageHeaderProps) {
   return (
     <div className="sticky top-0 z-10 border-b bg-white/80 px-6 py-4 backdrop-blur">
-      <div className={`mx-auto flex ${widthMap[maxWidth]} flex-wrap items-center justify-between gap-4`}>
+      <div
+        className={`mx-auto flex ${widthMap[maxWidth]} flex-wrap items-center justify-between gap-4`}
+      >
         <div>
           {subtitle ? (
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               {subtitle}
             </p>
           ) : null}
-          <h1 className="text-2xl font-black tracking-tight text-[color:var(--accent)]">
-            {title}
-          </h1>
+          <h1 className="text-2xl font-black tracking-tight text-[color:var(--accent)]">{title}</h1>
         </div>
         {action}
       </div>

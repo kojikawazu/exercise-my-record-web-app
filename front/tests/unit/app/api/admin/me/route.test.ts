@@ -17,9 +17,7 @@ const ADMIN_EMAIL = 'admin@example.com';
  *
  * @returns 再評価した route モジュール（`GET` を含む）
  */
-const loadRoute = async (
-  env: { url?: string; anon?: string; admin?: string } = {},
-) => {
+const loadRoute = async (env: { url?: string; anon?: string; admin?: string } = {}) => {
   vi.resetModules();
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', env.url ?? 'https://dummy.supabase.co');
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', env.anon ?? 'dummy-anon-key');
@@ -53,7 +51,10 @@ describe('GET /api/admin/me', () => {
   });
 
   it('should match ADMIN_EMAIL case-insensitively and trimming whitespace', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { email: '  ADMIN@Example.com ' } }, error: null });
+    mockGetUser.mockResolvedValue({
+      data: { user: { email: '  ADMIN@Example.com ' } },
+      error: null,
+    });
     const { GET } = await loadRoute();
 
     const res = await GET(bearerRequest('valid-token'));

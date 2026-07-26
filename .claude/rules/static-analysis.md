@@ -7,9 +7,10 @@ globs:
 
 使用するツールは `coding-standards.md`（ESLint + Prettier）と `typescript.md`（`tsc --noEmit` / `typescript-eslint` / `eslint-plugin-jsdoc`）で定める。本ルールは**どう運用するか**を定める。
 
-本プロジェクトの CI 上の実体は `.github/workflows/ci.yml` の `static-check` ジョブ（`pnpm lint` → `tsc --noEmit` → `next build`）と、`.github/workflows/docs.yml` の markdown lint（`.markdownlint-cli2.jsonc`）。発火条件は `github-actions.md` に従う。
+本プロジェクトの CI 上の実体は `.github/workflows/ci.yml` の `static-check` ジョブ（`pnpm format` → `pnpm lint` → `tsc --noEmit` → `next build`）と、`.github/workflows/docs.yml` の markdown lint（`.markdownlint-cli2.jsonc`）。発火条件は `github-actions.md` に従う。
 
-> **未達の項目**: 後述「CI で必須にする」が求める **Formatter の差分ゼロ検証（`pnpm format`）が CI に入っていない**。既存コードに未整形ファイルが残っているため、一括整形と CI 追加は別途対応する（issue #87）。
+- Formatter の設定は `front/.prettierrc`、対象外は `front/.prettierignore`（生成物・実行成果物を除外する）。
+- `pnpm format` は `prettier --check .`（差分ゼロの検証のみ）。修正は `pnpm run format:fix` を手元で実行する。
 
 ## 役割分担（重ねない）
 

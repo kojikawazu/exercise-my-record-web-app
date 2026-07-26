@@ -1,10 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-  injectAdminSession,
-  resetDb,
-  resetAndSeedBaseline,
-  seedRecordsForDates,
-} from './helpers';
+import { injectAdminSession, resetDb, resetAndSeedBaseline, seedRecordsForDates } from './helpers';
 
 // 実 DB（docker-compose.e2e.yml）に seed したデータで主要画面の描画を検証する。
 

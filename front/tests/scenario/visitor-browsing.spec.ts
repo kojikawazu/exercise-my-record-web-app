@@ -1,9 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-  resetDb,
-  seedBaseline,
-  seedRecordsForDates,
-} from '../e2e/helpers';
+import { resetDb, seedBaseline, seedRecordsForDates } from '../e2e/helpers';
 
 // シナリオ: 一般訪問者（非管理者）の閲覧回遊。
 // 一覧 → ページング → 詳細（カロリー表示）を辿り、管理者操作が一切出ないことを確認する。
@@ -17,7 +13,9 @@ test.beforeEach(async () => {
   );
 });
 
-test('a visitor browses the list, paginates, and opens a detail without admin controls', async ({ page }) => {
+test('a visitor browses the list, paginates, and opens a detail without admin controls', async ({
+  page,
+}) => {
   // 1) 一覧: 管理者ログイン導線はあるが、管理者専用（記録追加）は出ない
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '記録一覧' })).toBeVisible();

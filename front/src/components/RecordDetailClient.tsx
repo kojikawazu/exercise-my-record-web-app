@@ -95,10 +95,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
   const cardios = detail?.cardios ?? [];
   const memo = detail?.memo ?? '';
 
-  const totalSets = useMemo(
-    () => workouts.reduce((sum, item) => sum + item.sets, 0),
-    [workouts],
-  );
+  const totalSets = useMemo(() => workouts.reduce((sum, item) => sum + item.sets, 0), [workouts]);
 
   return (
     <main className="min-h-screen pb-16">
@@ -128,7 +125,9 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
               <Card className="p-6 md:p-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">日付</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      日付
+                    </p>
                     <h2 className="text-2xl font-black text-gray-900">{detail?.date ?? date}</h2>
                   </div>
                   {isAdmin ? (
@@ -146,7 +145,9 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
                 <CalorieEstimate
                   totalSets={totalSets}
                   cardios={cardios.map((c) => ({
-                    type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as import('@/lib/calorie').CardioType,
+                    type: (c.type === 'ウォーク'
+                      ? 'ウォーク'
+                      : 'ラン') as import('@/lib/calorie').CardioType,
                     minutes: c.minutes,
                   }))}
                 />

@@ -52,7 +52,10 @@ describe('IT: /api/masters (実 DB)', () => {
     expect(patched.status).toBe(200);
     expect((await patched.json()).name).toBe('スクワット');
 
-    const del = await deleteMaster(new NextRequest('http://localhost', { method: 'DELETE' }), makeContext(created.id));
+    const del = await deleteMaster(
+      new NextRequest('http://localhost', { method: 'DELETE' }),
+      makeContext(created.id),
+    );
     expect(del.status).toBe(200);
 
     const prisma = getPrisma()!;
@@ -87,7 +90,10 @@ describe('IT: /api/masters (実 DB)', () => {
   // --- 異常系 ---
 
   it('should return 404 when updating a non-existent master id', async () => {
-    const req = new NextRequest('http://localhost', { method: 'PATCH', body: JSON.stringify({ name: 'x' }) });
+    const req = new NextRequest('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: 'x' }),
+    });
     const res = await updateMaster(req, makeContext('nonexistent-id'));
     expect(res.status).toBe(404);
   });

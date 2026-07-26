@@ -51,7 +51,11 @@ describe('GET /api/records', () => {
     const prisma = makePrisma();
     vi.mocked(prisma.exerciseRecord.count).mockResolvedValue(2);
     vi.mocked(prisma.exerciseRecord.findMany).mockResolvedValue([
-      { date: new Date('2026-01-02'), workouts: [{ sets: 3 }], cardios: [{ type: 'ラン', minutes: 30, distance: 5 }] },
+      {
+        date: new Date('2026-01-02'),
+        workouts: [{ sets: 3 }],
+        cardios: [{ type: 'ラン', minutes: 30, distance: 5 }],
+      },
       { date: new Date('2026-01-01'), workouts: [{ sets: 5 }], cardios: [] },
     ] as never);
     vi.mocked(getPrisma).mockReturnValue(prisma as never);

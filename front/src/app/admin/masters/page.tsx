@@ -283,7 +283,11 @@ export default function AdminMastersPage() {
                           disabled={deletingId === item.id}
                         >
                           {deletingId === item.id ? (
-                            <LoadingSpinner mode="deleting" variant="inline" className="text-inherit" />
+                            <LoadingSpinner
+                              mode="deleting"
+                              variant="inline"
+                              className="text-inherit"
+                            />
                           ) : (
                             <>
                               <Trash2 size={14} />

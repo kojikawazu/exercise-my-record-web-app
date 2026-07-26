@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  calculateCardioCalories,
-  calculateStrengthCalories,
-  formatCalories,
-} from '@/lib/calorie';
+import { calculateCardioCalories, calculateStrengthCalories, formatCalories } from '@/lib/calorie';
 
 describe('calculateCardioCalories', () => {
   // --- 正常系 ---

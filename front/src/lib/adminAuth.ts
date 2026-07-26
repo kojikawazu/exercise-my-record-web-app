@@ -5,14 +5,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() ?? '';
 
-const isE2eBypass =
-  process.env.NODE_ENV !== 'production' &&
-  process.env.E2E_BYPASS === '1';
+const isE2eBypass = process.env.NODE_ENV !== 'production' && process.env.E2E_BYPASS === '1';
 
 /** 管理者認証の結果。未認可時は呼び出し側がそのまま返せる `response` を同梱する。 */
-type AuthResult =
-  | { authorized: true }
-  | { authorized: false; response: NextResponse };
+type AuthResult = { authorized: true } | { authorized: false; response: NextResponse };
 
 /**
  * 書き込み系 API の管理者認証ガード（防御の第 1 層）。
@@ -33,10 +29,7 @@ export async function requireAdmin(request: Request): Promise<AuthResult> {
   if (!supabaseUrl || !supabaseAnonKey || !adminEmail) {
     return {
       authorized: false,
-      response: NextResponse.json(
-        { error: 'admin auth is not configured' },
-        { status: 500 },
-      ),
+      response: NextResponse.json({ error: 'admin auth is not configured' }, { status: 500 }),
     };
   }
 

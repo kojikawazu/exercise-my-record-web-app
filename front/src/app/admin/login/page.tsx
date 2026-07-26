@@ -91,9 +91,7 @@ export default function AdminLoginPage() {
 
       <section className="mx-auto max-w-xl px-6 pt-8">
         <Card className="p-8 text-center">
-          <p className="text-sm font-bold text-gray-500">
-            Google アカウントでログインしてください
-          </p>
+          <p className="text-sm font-bold text-gray-500">Google アカウントでログインしてください</p>
           <button
             type="button"
             className={`mt-6 ${buttonClasses('primary')} flex items-center gap-2 rounded-2xl px-6 py-3 text-sm`}
