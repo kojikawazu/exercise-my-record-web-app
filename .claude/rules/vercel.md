@@ -19,6 +19,7 @@ globs: "front/vercel.json"
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
+      "**": false,
       "main": true
     }
   },
@@ -28,10 +29,14 @@ globs: "front/vercel.json"
 
 ## 1. ブランチ単位のデプロイ制御（`git.deploymentEnabled`）
 
-- **デプロイを許可するブランチを明示列挙する**。列挙しないブランチは Vercel 側でデプロイが発火しない。
+**`deploymentEnabled` は許可リストではなく拒否リストである**。[公式ドキュメント](https://vercel.com/docs/project-configuration/git-configuration)に `Unspecified branches default to true` と明記されており、**列挙しなかったブランチはデプロイが発火する**。`{"main": true}` だけ書いても何も止まらず、全ブランチの Preview デプロイが走り続ける（設定したつもりで効いていない、最も気づきにくい失敗）。
+
+- **まず `"**": false` で全ブランチを止め、そのうえで許可するブランチを `true` で上書きする**。ブランチが複数のパターンにマッチした場合、**1 つでも `true` があればデプロイされる**（OR 判定。記述順や最長一致ではない）ため、この 2 行で「`main` のみ発火」が成立する。
+- ワイルドカードは **minimatch** で評価され、`*` は `/` を跨がない。`feat/xxx` のような**スラッシュを含むブランチ名を使う運用では `"*": false` では素通りする**ので、必ず `**` を使う。
 - 既定では**本番ブランチ（`main`）のみ `true`** にする。作業ブランチの push ごとに Preview デプロイを積み上げない（ビルド時間とデプロイ枠の浪費を防ぐ）。
-- Preview 環境が必要な場合（レビューで実物を確認したい等）は、対象ブランチを**明示的に追加**する。「とりあえず全ブランチ許可」にしない。
+- Preview 環境が必要な場合（レビューで実物を確認したい等）は、対象ブランチを**明示的に追加**する（例: `"release/**": true`）。「とりあえず全ブランチ許可」にしない。
 - `"main": false` のように**本番ブランチを無効化しない**（デプロイ手段が失われる）。
+- 全ブランチを完全に止めたい場合のみ、オブジェクトではなく `"deploymentEnabled": false` と書く（`main` も含めて発火しなくなる点に注意）。
 
 ## 2. ビルドスキップ（`ignoreCommand`）
 
