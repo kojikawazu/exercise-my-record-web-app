@@ -23,6 +23,18 @@ globs: "front/prisma/**,front/src/lib/**"
 - 主キーは `cuid()` を使用する（本プロジェクトの既存モデルに合わせる）。
 - リレーションは Cascade 削除を明示する（例: `ExerciseRecord` 削除時に子の `ExerciseWorkout` / `ExerciseCardio` を削除）。
 
+## 監査列
+
+監査列（`createdAt` / `updatedAt` / `deletedAt`）は **Prisma の機構で自動設定する**。アプリケーションコードで値を組み立てない。
+
+- **手動代入を禁止**する。`data: { updatedAt: new Date() }` のように Route Handler・`lib/` で監査列へ値を書かない（`updatedAt` の手動指定は `@updatedAt` の自動更新を上書きしてしまう）。
+- 日時は**スキーマ側で宣言**する: `createdAt DateTime @default(now())` / `updatedAt DateTime @updatedAt`。
+- `createdAt` は**更新しない**。更新系の `data` に `createdAt` を含めない。
+- 参照（`orderBy: { createdAt: 'desc' }` 等）は問題ない。禁止するのは**書き込み**。
+- 論理削除を採用する場合、`deletedAt` も削除ヘルパー経由で設定する。呼び出し側で `deletedAt: new Date()` を書かない（下記「論理削除」参照）。
+- 操作ユーザー（`createdBy` / `updatedBy`）は現状のスキーマに存在しない。追加する場合は Prisma Client Extension（`$extends` の query フック）でリクエストコンテキストから自動注入し、各ハンドラーで個別に詰めない。
+- **例外**: シードデータ・テストで日時を固定したい場合のみ明示指定を許容する。本番コードパスには持ち込まない。
+
 ## 論理削除
 
 - **本プロジェクトは物理削除を採用**する（`ExerciseRecord` 削除時は Cascade で子も削除）。記録の復元要件がないため、`deletedAt` は持たない。

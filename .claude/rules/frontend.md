@@ -1,6 +1,6 @@
 ---
 description: Next.js (App Router) フロントエンド設計・コンポーネント規約
-globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/stores/**,front/src/contexts/**,front/src/providers/**,front/src/constants/**,front/src/lib/**"
+globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/stores/**,front/src/contexts/**,front/src/providers/**,front/src/constants/**,front/src/validation/**,front/src/repositories/**,front/src/lib/**"
 ---
 
 # フロントエンドルール（Next.js App Router）
@@ -53,23 +53,40 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - 置き場所は**参照範囲**で決める。1 ファイルに閉じる型（props 型等）はコロケーション、2 箇所以上から参照される型は `types/` へ集約する。詳細は `typescript.md`「型定義の配置」に従う。
 - `type` / `interface` は型本体・各メンバーともにコメント必須（`jsdoc.md`）。
 - **共通定数は `constants/` に集約する**（判断軸は型と同じ「参照範囲」。マジックナンバー・マジック文字列を直接書かない）。ただし union の元になる定数は、導出される型と**同じファイルに同居**させる。環境変数は `constants/` に置かない。詳細は `typescript.md`「定数の配置」に従う。
-- **現状**: `types/` `constants/` ディレクトリは未作成。型は `lib/validation.ts` 等にコロケーションされている。**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
+- **現状**: `types/` は作成済み（`types/master.ts`）。`constants/` は未作成で、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
+
+## ディレクトリの役割分担
+
+`types/` `constants/` `validation/` `repositories/` は**それぞれ独立したディレクトリ**として `src/` 直下に置く。いずれも**単一ファイルにまとめない**（`src/types.ts` / `lib/validation.ts` のような形は禁止。ドメイン単位でファイルを分ける）。詳細は `typescript.md`「型定義の配置」「定数の配置」「スキーマバリデーション」に従う。
+
+| ディレクトリ | 置くもの | 置かないもの |
+|---|---|---|
+| `types/` | 2 箇所以上から参照される型 | 値・ロジック |
+| `constants/` | 全環境で不変な値 | 環境変数・型を導出する定数（`types/` 側へ） |
+| `validation/` | 入力検証（Zod 導入時は `schemas/`） | 検証を伴わない型定義（`types/` へ） |
+| `repositories/` | **API アクセス**（`fetch` / `authFetch` の呼び出し） | UI・画面都合の整形・業務判断 |
+| `lib/` | **通信を持たない純粋ユーティリティ**（日付整形・カロリー算定等）、サーバー専用クライアント（`prisma` / `supabase`） | 画面からの API アクセス（`repositories/` へ）・定数・型 |
+
+- **画面から API を叩くコードを書いてよいのは `repositories/` だけ。** コンポーネント・hooks から `fetch` / `authFetch` を直接呼ばない。呼び出し口を 1 箇所に閉じることで、認証ヘッダ・エラー処理・リトライの実装が散らばらない。
+- ディレクトリ名は**複数形で統一**する（`types` / `constants` / `repositories`）。
+- **現状は `repositories/` 未作成**で、9 ファイルが `authFetch` / `fetch` を直接呼んでいる。移行は issue #111 で対応する。
 
 ## レイヤ依存の一方向ルール
 
 **依存は上位から下位への一方向のみ**。下位レイヤが上位レイヤを import してはならない。
 
 ```text
-app  →  components  →  hooks  →  lib（API クライアント・サーバー関数）  →  types / constants
-（ルーティング・合成）（表示） （ロジック）        （通信・純粋関数）              （最下層）
+app  →  components  →  hooks  →  repositories  →  lib / validation  →  types / constants
+（ルーティング・合成）（表示） （ロジック） （API アクセス）  （純粋関数・検証）      （最下層）
 ```
 
 | レイヤ | import してよい | import 禁止 |
 |---|---|---|
-| `app/` | `components/`, `hooks/`, `lib/`, `types/`, `constants/` | （なし。app は誰からも参照されない） |
-| `components/` | 下位の `components/`, `hooks/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む） |
-| `hooks/` | `lib/`, `types/`, `constants/` | **`app/`**, **`components/`**（JSX を返さない） |
-| `lib/` | `types/`, `constants/` | **`app/`**, **`components/`**, **`hooks/`** |
+| `app/` | `components/`, `hooks/`, `repositories/`, `lib/`, `validation/`, `types/`, `constants/` | （なし。app は誰からも参照されない） |
+| `components/` | 下位の `components/`, `hooks/`, `lib/`, `types/`, `constants/` | **`app/`**（ページ固有の型・定数を含む）, **`repositories/`**（データ取得は `hooks/` 経由か Server Component で行う） |
+| `hooks/` | `repositories/`, `lib/`, `validation/`, `types/`, `constants/` | **`app/`**, **`components/`**（JSX を返さない） |
+| `repositories/` | `lib/`, `validation/`, `types/`, `constants/` | **`app/`**, **`components/`**, **`hooks/`** |
+| `lib/` `validation/` | `types/`, `constants/` | 上位レイヤすべて |
 | `types/` `constants/` | （原則どこにも依存しない） | 上位レイヤすべて |
 
 - **`components/` 内も一方向**にする。汎用度の高いものほど下位に置き、下位は上位を import しない。
@@ -122,15 +139,17 @@ front/src/
 │   └── api/                # Route Handlers（api.md 参照）
 ├── components/             # 設計選択に従う
 ├── hooks/                  # クライアントロジック（useXxx）
-├── lib/                    # サーバー関数・純粋関数・ユーティリティ
+├── repositories/           # API アクセス（fetch/authFetch はここだけ。未作成 — issue #111）
+├── validation/             # 入力検証（Zod 導入時は schemas/。未作成 — issue #111）
+├── lib/                    # 純粋関数・サーバー専用クライアント（prisma / supabase）
 ├── generated/              # Prisma 自動生成（lint・編集対象外）
 ├── constants/              # 共通定数（環境変数は置かない。未作成 — 必要時に作る）
-└── types/                  # 型定義（未作成 — 2 箇所目の参照が出た時点で作る）
+└── types/                  # 型定義（types/master.ts）
 ```
 
 ## バリデーション
 
-- 入力検証は `lib/validation.ts` の**純粋関数**に集約し、状態管理は `hooks/useRecordValidation.ts` が担う（ロジック分離の実例）。検証ライブラリの導入方針は `typescript.md`「スキーマバリデーション」に従う。
+- 入力検証は**純粋関数**に集約し、状態管理は `hooks/useRecordValidation.ts` が担う（ロジック分離の実例）。置き場所は `validation/`（現状は `lib/validation.ts`。移行は issue #111）。検証ライブラリの導入方針は `typescript.md`「スキーマバリデーション」に従う。
 - **クライアント検証は UX のためのものであり、セキュリティ担保ではない**。Route Handler でも必ず検証する（信頼境界が違うため、この重複は**必要**な重複 — `duplication.md`）。
 - 同じ入力ルールなら、**制約値を定数として共有する**（検証の実装は両側に置いても、上限値等の数値を二重に書かない）。
 
