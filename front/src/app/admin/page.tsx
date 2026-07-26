@@ -1,13 +1,9 @@
-'use client';
-
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { FilePlus, Folder, ListOrdered, LogOut, Upload, User } from 'lucide-react';
+import { FilePlus, Folder, ListOrdered, Upload, User } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
-import { buttonClasses } from '@/components/ui/Button';
-import { supabase } from '@/lib/supabase';
-import { setBypassSession } from '@/hooks/useAdminSession';
+import AdminLogoutButton from '@/components/AdminLogoutButton';
 
 /** 管理者メニューに並べるカードの定義（表示ラベル・遷移先パス・アイコン）。 */
 const menuItems = [
@@ -18,36 +14,26 @@ const menuItems = [
   { label: 'データ出力', href: '/admin/export', icon: Upload },
 ];
 
+/** 管理者メニューページのメタデータ（ブラウザタブのタイトル）。 */
+export const metadata: Metadata = {
+  title: '管理者メニュー',
+};
+
 /**
  * 管理者メニュー画面。記録一覧・記録追加・プロフィール・マスター管理・データ出力への
- * 導線をカードのグリッドで表示し、右上にログアウトボタンを固定表示する。ログアウト時は
- * E2E バイパスフラグを解除し Supabase からサインアウトしてログイン画面へ遷移する。
+ * 導線をカードのグリッドで表示し、右上にログアウトボタンを固定表示する。
+ *
+ * グリッドは静的なので Server Component のまま描画し、対話を伴うログアウトのみ
+ * `AdminLogoutButton` として Client 境界に切り出している。
  */
-export default function AdminMenuPage() {
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    setBypassSession(false);
-    await supabase.auth.signOut();
-    router.replace('/admin/login');
-  };
-
+export default function Page() {
   return (
     <main className="min-h-screen pb-16">
       <PageHeader
         title="管理者メニュー"
         subtitle="Admin"
         maxWidth="4xl"
-        action={
-          <button
-            type="button"
-            onClick={handleLogout}
-            className={`${buttonClasses('outline')} flex items-center gap-2`}
-          >
-            <LogOut size={16} />
-            ログアウト
-          </button>
-        }
+        action={<AdminLogoutButton />}
       />
 
       <section className="mx-auto max-w-4xl px-6 pt-8">
