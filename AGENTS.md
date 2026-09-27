@@ -29,6 +29,12 @@
 - コミットメッセージ: `feat:`, `fix:`, `docs:`
 - PR要件: 目的/変更点/テスト結果/スクリーンショット（必要時）
 
+## ルール
+- ルール本文の正本は `.claude/rules/`。一覧は `CLAUDE.md` の Rules テーブルを参照する。
+- 常に適用するルール:
+  - `.claude/rules/production-data.md` : 本番データの保護。本番 Supabase に対する書き込み系の操作（MCP の `execute_sql` / `apply_migration` を含む）を行わない
+  - `.claude/rules/testing.md` の「テスト用 DB の接続先（破壊防止）」: テストは `DATABASE_URL` を参照しない
+
 ## Codex Skills（グローバル運用）
 - Skills は原則グローバル（例: `~/.codex/skills/`）で管理し、プロジェクト固有の手順はスキル内に明記します。
 - 本リポジトリで使用すべきスキルが決まったら、ここに一覧と使い方（例: 「変更前に必ず参照」）を追記してください。

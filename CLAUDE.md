@@ -14,7 +14,8 @@
 | documentation.md | 全体 | ドキュメント更新ルール |
 | git.md | 全体 | GitHub Flow・ブランチ命名・push 禁止物 |
 | github-issue.md | 全体 | GitHub issue 運用（ブランチと対で起票・open/close で進捗管理） |
-| testing.md | 全体 | テスト分類・原則・テストツール・テストファイル配置（`front/tests/` に集約） |
+| testing.md | 全体 | テスト分類・原則・テストツール・テストファイル配置（`front/tests/` に集約）・テスト用 DB の接続先ガード |
+| production-data.md | 全体 | 本番データの保護（本番 DB への破壊的操作の禁止・環境分離・AI エージェントへの制約・例外手順） |
 | coding-standards.md | 全体 | コーディング規約（TypeScript strict・pnpm・ESLint/Prettier） |
 | error-handling.md | 全体 | エラーハンドリング方針（バリデーション・HTTPステータス・ログ） |
 | security.md | 全体 | セキュリティ設計方針（認証・通信・インジェクション対策・シークレット） |
