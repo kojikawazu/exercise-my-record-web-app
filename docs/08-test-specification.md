@@ -52,6 +52,16 @@ E2E テストは実データベースを使わない設計。
 
 CI 固有の追加設定（`prisma generate`、`.env.local` 動的生成、タイムアウト延長）と構築時のトラブルシュート記録は [`09-architecture-specification.md`](./09-architecture-specification.md) を参照。
 
+## テスト DB の接続先ガード
+
+IT / E2E の seed・`TRUNCATE`・`prisma db push --accept-data-loss` は全データを消すため、接続先が本番を指すと本番データが消える（`.claude/rules/testing.md`「テスト用 DB の接続先（破壊防止）」、#116）。
+
+- 接続先の解決は `front/tests/setup/test-database-url.ts` に集約する。E2E（`playwright.config.ts` / `global-setup.ts` / `db.ts`）と IT（`it-global-setup.ts`）はすべてここを通す。
+- 上書きはテスト専用の `TEST_DATABASE_URL` のみ（既定 `postgresql://e2e:e2e@localhost:5433/e2e`）。`DATABASE_URL` は参照しない。
+- ホストが `localhost` / `127.0.0.1` / `::1` 以外なら、接続前に例外を投げる。メッセージにはホスト名と復旧手順（`pnpm run e2e:db:up`、既定 URL）を含め、資格情報は含めない。
+- E2E の `webServer` は `reuseExistingServer: false`。手元の `pnpm dev`（`.env` = 本番 DB）を再利用させない。
+- ガード自体は UT（`tests/unit/setup/test-database-url.test.ts`、14 件）で検証する。
+
 ## カバレッジ目標
 
 - ユニットテスト: バリデーション/カロリー/フック/API（records / masters / masters[id] / profile / admin/me）を網羅。UT/IT 合計 136 件（目安件数・内訳は test-design 参照）。

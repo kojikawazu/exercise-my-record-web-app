@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { E2E_DATABASE_URL } from './db-url';
+import { resolveTestDatabaseUrl } from '../setup/test-database-url';
 import { disconnectDb } from './db';
 
 /**
@@ -12,9 +12,11 @@ import { disconnectDb } from './db';
  * @returns Playwright の globalTeardown 相当（Prisma 接続の後始末）
  */
 export default async function globalSetup() {
+  // `db push --accept-data-loss` の前に接続先を検証する（ローカル以外なら throw）。
+  const databaseUrl = resolveTestDatabaseUrl();
   execSync('pnpm exec prisma db push --skip-generate --accept-data-loss', {
     cwd: process.cwd(),
-    env: { ...process.env, DATABASE_URL: E2E_DATABASE_URL },
+    env: { ...process.env, DATABASE_URL: databaseUrl },
     stdio: 'inherit',
   });
 
