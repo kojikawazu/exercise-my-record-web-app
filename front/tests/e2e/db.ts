@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../src/generated/prisma/client';
-import { E2E_DATABASE_URL } from './db-url';
+import { resolveTestDatabaseUrl } from '../setup/test-database-url';
 
 // E2E の seed / reset 用 Prisma クライアント（実 DB に接続）。
 // アプリ本体の getPrisma() とは別接続だが同一 DB を操作する。
@@ -10,7 +10,7 @@ let prisma: PrismaClient | null = null;
 
 const getClient = (): PrismaClient => {
   if (!prisma) {
-    const pool = new Pool({ connectionString: E2E_DATABASE_URL });
+    const pool = new Pool({ connectionString: resolveTestDatabaseUrl() });
     prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
   }
   return prisma;

@@ -287,6 +287,28 @@ E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。
 
 ---
 
+### 5d-2. テスト DB の接続先ガード（#116）
+
+`front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。
+
+| 分類 | ケース | 期待結果 |
+|---|---|---|
+| 正常系 | `TEST_DATABASE_URL` 未設定 | 既定 `postgresql://e2e:e2e@localhost:5433/e2e` |
+| 正常系 | `TEST_DATABASE_URL` がローカル（127.0.0.1） | その値を返す |
+| 正常系 | `localhost` / `127.0.0.1` / `[::1]` の URL | 同じ URL を返す（3 件） |
+| 準正常系 | `DATABASE_URL` に本番 URL（`TEST_DATABASE_URL` なし） | 参照せず既定値を返す |
+| 準正常系 | `TEST_DATABASE_URL` が空文字 | 既定値を返す |
+| 準正常系 | `TEST_DATABASE_URL` がリモート | ホスト名入りで throw |
+| 準正常系 | リモートホスト | throw（「ローカルではありません」） |
+| 準正常系 | `localhost.example.com` | throw（前方一致で通さない） |
+| 準正常系 | 失敗メッセージ | 起動コマンドと既定 URL を含む |
+| 準正常系 | 失敗メッセージ | パスワードを含まない |
+| 異常系 | URL として不正な値 / 空文字 | throw（「URL として解釈できません」、2 件） |
+
+合計 14 件（正常 5 : 準正常・異常 9）。
+
+---
+
 ### 5e. シナリオテスト — 複数機能横断（Phase 4）
 
 テスト戦略 Phase 4 で、単機能フローの E2E とは別に **複数機能をまたぐユーザージャーニー** を検証するシナリオ層を新設した。

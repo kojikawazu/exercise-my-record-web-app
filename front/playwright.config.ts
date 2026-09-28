@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
-import { E2E_DATABASE_URL } from './tests/e2e/db-url';
+import { resolveTestDatabaseUrl } from './tests/setup/test-database-url';
+
+// 接続先はローカル以外なら設定の読み込み時点で throw する（本番データ保護）。
+const testDatabaseUrl = resolveTestDatabaseUrl();
 
 export default defineConfig({
   timeout: process.env.CI ? 60_000 : 30_000,
@@ -16,9 +19,11 @@ export default defineConfig({
   webServer: {
     // dev サーバーを E2E 用 DB（docker-compose.e2e.yml）へ接続する。
     // シェルで設定した DATABASE_URL は .env より優先される。
-    command: `E2E_BYPASS=1 DATABASE_URL=${E2E_DATABASE_URL} pnpm dev`,
+    command: `E2E_BYPASS=1 DATABASE_URL=${testDatabaseUrl} pnpm dev`,
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    // 既存サーバーを再利用しない。手元の `pnpm dev` は .env（本番 DB）に接続しているため、
+    // 再利用すると画面からの作成・削除が本番に対して実行される。3000 番が使用中なら起動に失敗して止まる。
+    reuseExistingServer: false,
     timeout: 120_000,
   },
   projects: [

@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { assertLocalDatabaseUrl } from './test-database-url';
 
 // IT で provide/inject する値の型を宣言する。
 declare module 'vitest' {
@@ -30,7 +31,9 @@ type SetupContext = {
  */
 export default async function setup({ provide }: SetupContext) {
   const container = await new PostgreSqlContainer('postgres:16-alpine').start();
-  const databaseUrl = container.getConnectionUri();
+  // Testcontainers の URL は常にローカルだが、既存 DB への差し替え等で外部を指した場合に
+  // `db push --accept-data-loss` と各テストの TRUNCATE より前で止めるため、共通ガードを通す。
+  const databaseUrl = assertLocalDatabaseUrl(container.getConnectionUri());
 
   // スキーマをコンテナへ反映（クライアント再生成はスキップ）。
   execSync('pnpm exec prisma db push --skip-generate --accept-data-loss', {

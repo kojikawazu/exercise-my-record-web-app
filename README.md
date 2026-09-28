@@ -98,6 +98,7 @@ psql "$DATABASE_URL" -f front/prisma/migrations/20260321_cardio_multiple_rows/mi
 - **E2E（Playwright + docker-compose）**: 実 Dev サーバー + **実 PostgreSQL** で主要フローを検証（API モックなし）。`pnpm run e2e:db:up`（DB起動）→ `pnpm run test:e2e`（**要 Docker**、`*.spec.ts`）。
   - DB は `front/docker-compose.e2e.yml`。`globalSetup` で `prisma db push`、各テスト `beforeEach` で reset+seed。
   - 認証バイパスはサーバー専用フラグ `E2E_BYPASS=1`（`webServer.command` が付与）＋ クライアントの localStorage バイパス。本番ビルドでは無効。
+- **テスト DB の接続先ガード**: IT / E2E の接続先は `front/tests/setup/test-database-url.ts` で解決し、`localhost` / `127.0.0.1` / `::1` 以外なら seed・`db push` の前に中断する。`DATABASE_URL`（`.env`）は参照しない。接続先を変える場合はテスト専用の `TEST_DATABASE_URL` を使う（既定 `postgresql://e2e:e2e@localhost:5433/e2e`）。E2E は既存の dev サーバーを再利用しないため、`localhost:3000` を空けてから実行する。
 - **シナリオ（Playwright）**: 複数機能横断のユーザージャーニー（`front/tests/scenario/`）。E2E と同じ実 DB 基盤。`pnpm run test:scenario`（**要 Docker**）。
 - CI（GitHub Actions, `.github/workflows/ci.yml`）で `static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` を並列実行。ドキュメントのみの変更ではスキップされ、代わりに `.github/workflows/docs.yml` が markdown lint を実行する。
 
