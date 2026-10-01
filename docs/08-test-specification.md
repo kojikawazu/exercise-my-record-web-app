@@ -59,8 +59,9 @@ IT / E2E の seed・`TRUNCATE`・`prisma db push --accept-data-loss` は全デ�
 - 接続先の解決は `front/tests/setup/test-database-url.ts` に集約する。E2E（`playwright.config.ts` / `global-setup.ts` / `db.ts`）と IT（`it-global-setup.ts`）はすべてここを通す。
 - 上書きはテスト専用の `TEST_DATABASE_URL` のみ（既定 `postgresql://e2e:e2e@localhost:5433/e2e`）。`DATABASE_URL` は参照しない。
 - ホストが `localhost` / `127.0.0.1` / `::1` 以外なら、接続前に例外を投げる。メッセージにはホスト名と復旧手順（`pnpm run e2e:db:up`、既定 URL）を含め、資格情報は含めない。
-- E2E の `webServer` は `reuseExistingServer: false`。手元の `pnpm dev`（`.env` = 本番 DB）を再利用させない。
+- E2E の `webServer` は `reuseExistingServer: false`。手元の `pnpm dev`（E2E 用以外の DB に接続）を再利用させない。
 - ガード自体は UT（`tests/unit/setup/test-database-url.test.ts`、14 件）で検証する。
+- ローカル判定の allowlist は `front/src/lib/localDatabaseUrl.ts` の `checkLocalDatabaseUrl` に集約し、`next dev` 起動時のガード（`assertDevDatabaseUrl`、#125）と共有する。UT は `tests/unit/lib/localDatabaseUrl.test.ts`（15 件）。
 
 ## カバレッジ目標
 
