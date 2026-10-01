@@ -4,3 +4,6 @@ front/test-results/
 .claude/worktrees/
 .claude/plugins/
 .claude/todos/
+
+# 本番 DB のダンプ（本番データを含む。docs/04「バックアップ・復旧」）
+*.dump

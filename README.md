@@ -43,7 +43,10 @@
 
 - Node.js 20 以上
 - pnpm（`npm i -g pnpm` または corepack）
-- Supabase プロジェクト（DB と Google OAuth プロバイダを設定）
+- Docker（ローカル Supabase・テスト用 DB の起動に使用）
+- Supabase CLI（`brew install supabase/tap/supabase`）
+
+> **ローカル開発は本番 DB に接続しない。** 開発・動作確認はローカル Supabase（`supabase start`）を使う。`pnpm dev` は `DATABASE_URL` がローカル以外を指していると起動を中断する（`front/src/lib/localDatabaseUrl.ts`。方針は `.claude/rules/production-data.md`）。
 
 ### セットアップ
 
@@ -52,16 +55,19 @@
 cd front
 pnpm install
 
-# 2. 環境変数の設定（.env.example をコピーして値を埋める）
-cp .env.example .env.local
-#   必須: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY / DATABASE_URL / ADMIN_EMAIL
-#   ※ Google OAuth のキーは Supabase ダッシュボード側で設定（アプリの env では不要）
+# 2. ローカル Supabase の起動（初回はイメージ取得に数分かかる）
+pnpm run dev:db:up   # = supabase start（Studio: http://127.0.0.1:54323）
 
-# 3. DB マイグレーションの適用（初回 / スキーマ変更時。詳細は下記）
-psql "$DATABASE_URL" -f prisma/migrations/20260321_cardio_multiple_rows/migration.sql
-psql "$DATABASE_URL" -f prisma/migrations/20260322_exercise_rls_policies/migration.sql
+# 3. 環境変数の設定（.env.example の既定値はローカル Supabase 向け）
+cp .env.example .env
+supabase status -o env | grep ANON_KEY   # NEXT_PUBLIC_SUPABASE_ANON_KEY に設定
+#   ADMIN_EMAIL も設定する。管理画面の書き込みを試す場合は E2E_BYPASS=1 を有効にし、
+#   管理ログイン画面の「テストログイン」を使う（ローカルには Google OAuth を設定していない）
 
-# 4. 開発サーバー起動
+# 4. スキーマの適用（初回 / schema.prisma 変更時）
+pnpm run dev:db:push   # 接続先はローカル Supabase に固定（.env の DATABASE_URL は読まない）
+
+# 5. 開発サーバー起動
 pnpm dev   # http://localhost:3000
 ```
 
@@ -71,7 +77,9 @@ pnpm dev   # http://localhost:3000
 
 | コマンド | 内容 |
 |----------|------|
-| `pnpm dev` | ローカル開発サーバー |
+| `pnpm dev` | ローカル開発サーバー（`DATABASE_URL` がローカル以外なら起動を中断） |
+| `pnpm run dev:db:up` / `dev:db:down` | ローカル Supabase（`supabase start` / `supabase stop`）の起動 / 停止 |
+| `pnpm run dev:db:push` | ローカル Supabase へ `schema.prisma` を反映（`prisma db push`。接続先はローカル固定） |
 | `pnpm run build` | 本番ビルド（`prisma generate && next build`） |
 | `pnpm test` | Vitest ユニットテスト（モック） |
 | `pnpm run test:it` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、要 Docker / Node 22+） |
@@ -86,10 +94,19 @@ pnpm dev   # http://localhost:3000
 - スキーマ変更時は `front/prisma/migrations/` に SQL を配置する。
 - **マイグレーションは自動適用されない。** `pnpm run build` は `prisma generate` のみ実行する。
 - デプロイ前に Supabase SQL Editor または `psql` で**手動適用**すること。
+- 本番に適用する前に、ローカル Supabase で同じ SQL を流して結果を確かめる。
 
 ```bash
-psql "$DATABASE_URL" -f front/prisma/migrations/20260321_cardio_multiple_rows/migration.sql
+# ローカル Supabase で事前確認
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f front/prisma/migrations/<name>/migration.sql
+
+# 本番へ適用（接続情報は自動で読み込まれない front/.env.prod に PROD_DATABASE_URL として置き、必要なときだけ読み込む）
+set -a; source front/.env.prod; set +a
+psql "$PROD_DATABASE_URL" -f front/prisma/migrations/<name>/migration.sql
 ```
+
+- 本番の接続情報を `front/.env`（`DATABASE_URL`）に置かない。`.env.production` / `.env.production.local` も `next build` / `next start` が自動で読むため使わない。
+- ローカル Supabase のスキーマは `migrations/` ではなく `pnpm run dev:db:push`（`schema.prisma` から生成）で作る。`migrations/` は本番への差分 SQL のみで、初期スキーマを含まないため。
 
 ## テスト
 

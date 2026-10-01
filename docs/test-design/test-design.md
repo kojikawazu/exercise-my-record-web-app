@@ -307,6 +307,27 @@ E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。
 
 合計 14 件（正常 5 : 準正常・異常 9）。
 
+### 5d-3. ローカル DB 判定と `next dev` 起動ガード（#125）
+
+`front/src/lib/localDatabaseUrl.ts` の UT（`tests/unit/lib/localDatabaseUrl.test.ts`）。allowlist 判定（`checkLocalDatabaseUrl`）は 5d-2 のテスト DB ガードと共有し、`next dev` が本番 DB に接続したまま起動しないことを保証する（`assertDevDatabaseUrl`）。
+
+| 分類 | 対象 | ケース | 期待結果 |
+|---|---|---|---|
+| 正常系 | check | `localhost` / `127.0.0.1` / `[::1]` の URL | `{ ok: true }`（3 件） |
+| 準正常系 | check | リモートホスト | `reason: 'remote'` とホスト名 |
+| 準正常系 | check | `localhost.example.com` | `reason: 'remote'`（前方一致で通さない） |
+| 異常系 | check | URL として不正な値 / 空文字 | `reason: 'invalid'`（2 件） |
+| 正常系 | dev | ローカル Supabase（`127.0.0.1:54322`） | throw しない |
+| 正常系 | dev | `DATABASE_URL` 未設定（503 フォールバック） | throw しない |
+| 準正常系 | dev | `DATABASE_URL` が空文字 | throw しない |
+| 準正常系 | dev | 本番 URL | ホスト名入りで throw |
+| 準正常系 | dev | `PROD_DATABASE_URL` に本番 URL（`DATABASE_URL` はローカル） | 参照せず throw しない |
+| 準正常系 | dev | 失敗メッセージ | 起動コマンド `pnpm run dev:db:up` を含む |
+| 準正常系 | dev | 失敗メッセージ | パスワードを含まない |
+| 異常系 | dev | URL として不正な値 | throw（「URL として解釈できません」） |
+
+合計 15 件（正常 5 : 準正常・異常 10）。
+
 ---
 
 ### 5e. シナリオテスト — 複数機能横断（Phase 4）

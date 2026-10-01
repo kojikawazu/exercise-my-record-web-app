@@ -2,6 +2,8 @@
 // seed・TRUNCATE・`prisma db push --accept-data-loss` はテーブルを全消去するため、
 // 接続先がローカル以外を指していたら**接続する前に**失敗させる。
 
+import { checkLocalDatabaseUrl } from '@/lib/localDatabaseUrl';
+
 /** 上書きに使うテスト専用の環境変数名。本番用の `DATABASE_URL` とは必ず別名にする。 */
 const TEST_DATABASE_URL_ENV = 'TEST_DATABASE_URL';
 
@@ -12,13 +14,8 @@ export const DEFAULT_TEST_DATABASE_URL = 'postgresql://e2e:e2e@localhost:5433/e2
 const TEST_DB_UP_COMMAND = 'pnpm run e2e:db:up';
 
 /**
- * 接続を許可するホスト。WHATWG URL は IPv6 の `hostname` を角括弧付き（`[::1]`）で返すため、
- * 両方の表記を列挙する。
- */
-const ALLOWED_HOSTS: readonly string[] = ['localhost', '127.0.0.1', '::1', '[::1]'];
-
-/**
  * 接続文字列がローカルホストを指していることを検証する。seed / migrate / TRUNCATE の前に呼ぶ。
+ * 判定（allowlist）は `checkLocalDatabaseUrl` に委ね、ここではテスト向けの案内文だけを組み立てる。
  *
  * @param url - 検証する接続文字列
  * @returns 検証済みの接続文字列（引数と同じ値）
@@ -26,26 +23,22 @@ const ALLOWED_HOSTS: readonly string[] = ['localhost', '127.0.0.1', '::1', '[::1
  *   メッセージには解決されたホスト名と復旧手順を含める（接続文字列全体は資格情報を含むため出さない）
  */
 export function assertLocalDatabaseUrl(url: string): string {
-  let host: string;
-  try {
-    host = new URL(url).hostname;
-  } catch {
+  const result = checkLocalDatabaseUrl(url);
+  if (result.ok) return url;
+
+  if (result.reason === 'invalid') {
     throw new Error(
       `[test-db-guard] テスト DB の接続先を URL として解釈できません。` +
         `${TEST_DATABASE_URL_ENV} を確認してください（既定: ${DEFAULT_TEST_DATABASE_URL}）。`,
     );
   }
 
-  if (!ALLOWED_HOSTS.includes(host)) {
-    throw new Error(
-      `[test-db-guard] テスト DB の接続先がローカルではありません（host: ${host}）。` +
-        `本番データ保護のため中断します。` +
-        `テスト DB を \`${TEST_DB_UP_COMMAND}\` で起動し、${TEST_DATABASE_URL_ENV} を未設定にするか` +
-        ` ${DEFAULT_TEST_DATABASE_URL} を指定してください。`,
-    );
-  }
-
-  return url;
+  throw new Error(
+    `[test-db-guard] テスト DB の接続先がローカルではありません（host: ${result.host}）。` +
+      `本番データ保護のため中断します。` +
+      `テスト DB を \`${TEST_DB_UP_COMMAND}\` で起動し、${TEST_DATABASE_URL_ENV} を未設定にするか` +
+      ` ${DEFAULT_TEST_DATABASE_URL} を指定してください。`,
+  );
 }
 
 /**

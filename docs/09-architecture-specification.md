@@ -63,6 +63,21 @@ flowchart LR
 | `DATABASE_URL` | Prisma 接続文字列（未設定時は API がフォールバック） |
 | `ADMIN_EMAIL` | 管理者判定（[`06-security-specification.md`](./06-security-specification.md)） |
 
+### 環境の分離
+
+本番 DB を手元の既定の接続先にしない（`.claude/rules/production-data.md`）。用途ごとに接続先を分ける。
+
+| 用途 | 接続先 | 設定場所 |
+|------|--------|----------|
+| ローカル開発・動作確認 | ローカル Supabase（`supabase start`。API `127.0.0.1:54321` / DB `127.0.0.1:54322`。設定は `front/supabase/config.toml`） | `front/.env` |
+| IT | Testcontainers の PostgreSQL | `front/tests/setup/it-global-setup.ts` |
+| E2E / シナリオ | `front/docker-compose.e2e.yml` の PostgreSQL（`localhost:5433`） | `TEST_DATABASE_URL`（既定値あり） |
+| 本番 | Supabase 本番プロジェクト | Vercel の環境変数。手動マイグレーション用の接続情報は自動では読み込まれない `front/.env.prod` に `PROD_DATABASE_URL` などの別変数名で置く |
+
+- `next dev` は `DATABASE_URL` がローカル（`localhost` / `127.0.0.1` / `::1`）以外を指していると起動を中断する（`front/next.config.ts` → `src/lib/localDatabaseUrl.ts`）。テスト DB のガードも同じ allowlist を使う。
+- ローカル Supabase のスキーマは `pnpm run dev:db:push`（`prisma db push`）で `schema.prisma` から作る。`prisma/migrations/` は本番への差分 SQL のみで、初期スキーマを含まないため。RLS は Prisma（`postgres` ロール）がバイパスするため、ローカルでは適用しない。
+- ローカル Supabase には Google OAuth を設定していない。管理画面の書き込みは `E2E_BYPASS=1` と「テストログイン」で行う。
+
 ## デプロイ方針
 
 - `main` ブランチから本番反映。GitHub Flow（`.claude/rules/git.md`）。

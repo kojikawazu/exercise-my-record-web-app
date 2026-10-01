@@ -21,8 +21,8 @@ export default defineConfig({
     // シェルで設定した DATABASE_URL は .env より優先される。
     command: `E2E_BYPASS=1 DATABASE_URL=${testDatabaseUrl} pnpm dev`,
     url: 'http://localhost:3000',
-    // 既存サーバーを再利用しない。手元の `pnpm dev` は .env（本番 DB）に接続しているため、
-    // 再利用すると画面からの作成・削除が本番に対して実行される。3000 番が使用中なら起動に失敗して止まる。
+    // 既存サーバーを再利用しない。手元の `pnpm dev` は E2E 用 DB 以外（ローカル Supabase 等）に接続しているため、
+    // 再利用すると画面からの作成・削除がその DB に対して実行される。3000 番が使用中なら起動に失敗して止まる。
     reuseExistingServer: false,
     timeout: 120_000,
   },
