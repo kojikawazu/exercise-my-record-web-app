@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, POST } from '@/app/api/records/route';
 
 // モック: prisma と adminAuth
@@ -180,5 +180,68 @@ describe('POST /api/records', () => {
     expect(body).toHaveProperty('id', 'rec-1');
     expect(prisma.exerciseWorkout.create).toHaveBeenCalledOnce();
     expect(prisma.exerciseCardio.create).toHaveBeenCalledOnce();
+  });
+
+  describe('when the database throws during creation', () => {
+    // Prisma の例外メッセージが含み得る内部情報（テーブル名・制約名）を模した文言
+    const internalMessage =
+      'Unique constraint failed on the constraint: `ExerciseWorkout_recordId_fkey`';
+
+    const postValidRecord = () =>
+      POST(
+        new Request('http://localhost/api/records', {
+          method: 'POST',
+          body: JSON.stringify({
+            date: '2026-01-01',
+            workouts: [{ part: '胸', name: 'ベンチプレス', sets: 3, reps: 10, weight: 60 }],
+          }),
+        }),
+      );
+
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      vi.mocked(console.error).mockRestore();
+    });
+
+    it('should return 500 with a fixed message instead of the raw exception message', async () => {
+      const prisma = makePrisma({
+        exerciseWorkout: { create: vi.fn().mockRejectedValue(new Error(internalMessage)) },
+      });
+      vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+      const res = await postValidRecord();
+      expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(body).toEqual({ error: 'failed to create record' });
+      expect(JSON.stringify(body)).not.toContain('ExerciseWorkout_recordId_fkey');
+    });
+
+    it('should log the original error object for server-side investigation', async () => {
+      const thrown = new Error(internalMessage);
+      const prisma = makePrisma({
+        exerciseWorkout: { create: vi.fn().mockRejectedValue(thrown) },
+      });
+      vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+      await postValidRecord();
+      expect(console.error).toHaveBeenCalledWith('POST /api/records error:', thrown);
+    });
+
+    it('should return the same fixed message when a non-Error value is thrown', async () => {
+      const prisma = makePrisma({
+        exerciseRecord: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockRejectedValue('connection refused at db.internal:5432'),
+        },
+      });
+      vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+      const res = await postValidRecord();
+      expect(res.status).toBe(500);
+      expect(await res.json()).toEqual({ error: 'failed to create record' });
+    });
   });
 });

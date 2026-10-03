@@ -139,9 +139,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return NextResponse.json({ id: updated.id });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('PATCH /api/records/:date error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    // 例外の生メッセージは Prisma のテーブル名・制約名等を含み得るため、クライアントには返さずログにのみ残す
+    console.error('PATCH /api/records/:date error:', error);
+    return NextResponse.json({ error: 'failed to update record' }, { status: 500 });
   }
 }
 

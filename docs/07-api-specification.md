@@ -110,6 +110,7 @@
 | 403 | — | 管理者以外 |
 | 404 | — | 対象日付の記録が存在しない |
 | 409 | `{ "error": "duplicate date" }` | 同日重複（POST） |
+| 500 | `{ "error": "failed to create record" }` / `{ "error": "failed to update record" }` | 記録の作成（POST）/ 更新（PATCH）中の想定外エラー。例外の生メッセージは返さず、サーバーログにのみ残す |
 | 503 | `{ "error": "database unavailable" }` | DB 接続不可（`getPrisma()` が null） |
 
 ## バリデーション方針
