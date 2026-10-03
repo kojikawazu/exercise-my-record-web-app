@@ -43,7 +43,7 @@ flowchart LR
 | 層 | 役割 | records の実装（#142） |
 |---|---|---|
 | `components/` | 描画・画面遷移・表示文言 | `RecordsListClient` / `AdminRecordsListClient` / `RecordDetailClient` / `AdminRecordNewClient` / `AdminRecordEditClient` |
-| `hooks/` | 取得状態の管理・フォーム値 → API 本文の変換 | `useRecordList` / `useRecordDetail` / `useRecordMutations`、記録フォームの選択肢は `useMasters`（#6） |
+| `hooks/` | 取得状態の管理・フォーム値 → API 本文の変換 | `useRecordList` / `useRecordDetail` / `useRecordMutations`、記録フォームの選択肢は `useMasters`（#6）、前回の記録のコピーは `useLatestRecord`（#26） |
 | `repositories/` | `fetch` / `authFetch` の呼び出しと、結果の `ApiResult`（`{ ok, data } \| { ok: false, status }`）への詰め替え | `repositories/record.ts`、`repositories/master.ts`（GET のみ。#6）。失敗の詰め替えは `repositories/request.ts` に集約 |
 | `types/` | API 契約型（Route Handler とフロントで共有） | `types/record.ts` / `types/apiResult.ts` |
 

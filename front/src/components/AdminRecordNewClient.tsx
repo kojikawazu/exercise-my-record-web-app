@@ -13,22 +13,9 @@ import { useRecordValidation } from '@/hooks/useRecordValidation';
 import { useTodayLocalIso } from '@/hooks/useTodayLocalIso';
 import { useRecordMutations } from '@/hooks/useRecordMutations';
 import { useMasters } from '@/hooks/useMasters';
-import { withCurrentOption } from '@/lib/recordForm';
+import { useLatestRecord } from '@/hooks/useLatestRecord';
+import { createWorkoutRow, isFormBlank, toFormRows, withCurrentOption } from '@/lib/recordForm';
 import type { CardioRow, WorkoutRow } from '@/types/recordForm';
-
-/**
- * 空の筋トレ入力行を生成する。行追加および初期表示（最少 1 行）に使用する。
- *
- * @returns 各フィールドが空で新規 ID を持つ筋トレ行
- */
-const createRow = (): WorkoutRow => ({
-  id: crypto.randomUUID(),
-  part: '',
-  name: '',
-  sets: '',
-  reps: '',
-  weight: '',
-});
 
 /**
  * 空の有酸素入力行を生成する。行追加に使用する。
@@ -55,13 +42,19 @@ export default function AdminRecordNewClient() {
   const [pickedDate, setDate] = useState<string | null>(null);
   const date = pickedDate ?? today;
   const [memo, setMemo] = useState('');
-  const [workouts, setWorkouts] = useState<WorkoutRow[]>([createRow()]);
+  const [workouts, setWorkouts] = useState<WorkoutRow[]>([createWorkoutRow()]);
   const [cardios, setCardios] = useState<CardioRow[]>([]);
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [notice, setNotice] = useState('');
   const { bodyParts, exercises, cardioTypes, status: mastersStatus } = useMasters();
   // 種目名の <input list> と <datalist> を結ぶ ID
   const exerciseListId = useId();
+  const { latestDate, status: latestStatus, loadLatest } = useLatestRecord();
+  const [copying, setCopying] = useState(false);
+  // コピー操作の結果表示（成功は案内、失敗はエラー）。次の操作で消す
+  const [copyMessage, setCopyMessage] = useState<{ tone: 'info' | 'error'; text: string } | null>(
+    null,
+  );
 
   const { displayErrors, hasErrors, setSubmitted } = useRecordValidation(date, workouts, cardios);
   const { create } = useRecordMutations();
@@ -75,7 +68,7 @@ export default function AdminRecordNewClient() {
     setWorkouts((prev) => prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
 
-  const addRow = () => setWorkouts((prev) => [...prev, createRow()]);
+  const addRow = () => setWorkouts((prev) => [...prev, createWorkoutRow()]);
   const removeRow = (id: string) =>
     setWorkouts((prev) => (prev.length === 1 ? prev : prev.filter((row) => row.id !== id)));
 
@@ -84,6 +77,28 @@ export default function AdminRecordNewClient() {
   };
   const addCardioRow = () => setCardios((prev) => [...prev, createCardioRow(cardioTypes[0] ?? '')]);
   const removeCardioRow = (id: string) => setCardios((prev) => prev.filter((row) => row.id !== id));
+
+  // 最新の記録の筋トレ・有酸素をフォームへ流し込む。日付・メモはコピーしない
+  const handleCopyLatest = async () => {
+    setCopyMessage(null);
+    if (
+      !isFormBlank(workouts, cardios) &&
+      !confirm('入力中の筋トレ・有酸素を前回の記録で置き換えます。よろしいですか？')
+    ) {
+      return;
+    }
+    setCopying(true);
+    const result = await loadLatest();
+    setCopying(false);
+    if (!result.ok) {
+      setCopyMessage({ tone: 'error', text: '前回の記録を取得できませんでした。' });
+      return;
+    }
+    const rows = toFormRows(result.data);
+    setWorkouts(rows.workouts);
+    setCardios(rows.cardios);
+    setCopyMessage({ tone: 'info', text: `${result.data.date} の記録をコピーしました。` });
+  };
 
   const handleSave = async () => {
     setSubmitted(true);
@@ -139,6 +154,31 @@ export default function AdminRecordNewClient() {
             {displayErrors.date ? (
               <p className="mt-1 text-xs text-red-500">{displayErrors.date}</p>
             ) : null}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                className={buttonClasses('outline')}
+                onClick={handleCopyLatest}
+                disabled={latestStatus !== 'ready' || copying}
+              >
+                {latestDate ? `前回の記録をコピー（${latestDate}）` : '前回の記録をコピー'}
+              </button>
+              {latestStatus === 'empty' ? (
+                <p className="text-xs font-bold text-gray-400">コピーできる記録がありません。</p>
+              ) : null}
+              {latestStatus === 'error' ? (
+                <p className="text-xs font-bold text-red-500">前回の記録を取得できませんでした。</p>
+              ) : null}
+              {copyMessage ? (
+                <p
+                  className={`text-xs font-bold ${
+                    copyMessage.tone === 'error' ? 'text-red-500' : 'text-gray-500'
+                  }`}
+                >
+                  {copyMessage.text}
+                </p>
+              ) : null}
+            </div>
           </Card>
 
           <Card className="p-6 md:p-8">
