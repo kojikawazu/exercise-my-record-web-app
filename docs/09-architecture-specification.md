@@ -40,7 +40,7 @@ flowchart LR
 
 | 区分 | 採用 |
 |------|------|
-| フレームワーク | Next.js 16.1.6（App Router, Turbopack）/ React 19.2 |
+| フレームワーク | Next.js 16.3.8（App Router, Turbopack）/ React 19.2 |
 | 言語 | TypeScript 5 |
 | スタイリング | Tailwind CSS v4 / lucide-react |
 | ORM | Prisma v6（`@prisma/client`, `@prisma/adapter-pg`, `pg`） |
