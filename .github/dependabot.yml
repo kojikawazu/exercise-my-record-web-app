@@ -10,8 +10,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    # action ごとに破壊的変更の確認観点が違うため、グループ化せず 1 action = 1 PR にする。
-    # 現在参照している action は 5 種類なので、上限 5 で初回の更新が出揃う。
+    # 全 action の更新を 1 PR にまとめる。更新対象がいずれも同じワークフローファイル（ci.yml 等）に
+    # あるため、action ごとに分けると 1 本マージするたびに残りが競合する（#133 の運用で判明）。
+    # 破壊的変更は、グループ PR の本文に並ぶ action ごとのリリースノートで確認する。
+    groups:
+      github-actions:
+        patterns:
+          - '*'
     open-pull-requests-limit: 5
     commit-message:
       # Conventional Commits に揃える（例: "chore(ci): bump actions/checkout from 4 to 6"）
