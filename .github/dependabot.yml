@@ -1,0 +1,18 @@
+# Dependabot 設定
+#
+# ワークフローが参照する action の版を自動で追随させる（#128）。
+# Node 20 向け action（actions/checkout@v4 等）が Node 24 で強制実行されている状態を解消し、
+# 以後の更新も手で一括置換せず、Dependabot の更新 PR をレビューしてマージする運用にする。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    # github-actions は .github/workflows/ を自動で走査するため、ルートを指定する
+    directory: /
+    schedule:
+      interval: weekly
+    # action ごとに破壊的変更の確認観点が違うため、グループ化せず 1 action = 1 PR にする。
+    # 現在参照している action は 5 種類なので、上限 5 で初回の更新が出揃う。
+    open-pull-requests-limit: 5
+    commit-message:
+      # Conventional Commits に揃える（例: "chore(ci): bump actions/checkout from 4 to 6"）
+      prefix: chore(ci)
