@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarDays, Plus } from 'lucide-react';
@@ -10,23 +10,7 @@ import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
-
-/** 一覧サマリーに含める有酸素 1 件分のデータ（推定カロリー算定にも使う）。 */
-type CardioSummary = { type: string; minutes: number; distance: number };
-
-/** 記録一覧の 1 日分サマリー。 */
-export type RecordSummary = {
-  /** 記録日（`YYYY-MM-DD`）。一覧の一意キー兼詳細への遷移パラメータ。 */
-  date: string;
-  /** その日の筋トレセット数の合計。 */
-  totalSets: number;
-  /** その日の有酸素運動の合計時間（分）。 */
-  cardioMinutes: number;
-  /** その日の有酸素運動の合計距離（km）。 */
-  cardioDistance: number;
-  /** その日の有酸素運動の一覧（推定カロリー表示に使用）。 */
-  cardios: CardioSummary[];
-};
+import { useRecordList } from '@/hooks/useRecordList';
 
 /**
  * 一般ユーザー向けの記録一覧クライアント。ページング付きで記録と推定カロリーを表示する。
@@ -38,57 +22,18 @@ export type RecordSummary = {
 export default function RecordsListClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [records, setRecords] = useState<RecordSummary[]>([]);
-  const [hasFetched, setHasFetched] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const { isAdmin } = useAdminSession();
 
   const currentPage = Number(searchParams.get('page') ?? 1) || 1;
-
-  const fetchRecords = useCallback(
-    async (p: number) => {
-      setHasFetched(false);
-      try {
-        const res = await fetch(`/api/records?page=${p}`);
-        if (!res.ok) {
-          setErrorMessage('記録の取得に失敗しました。');
-          setRecords([]);
-          setHasFetched(true);
-          return;
-        }
-        const data = (await res.json()) as {
-          records: RecordSummary[];
-          page: number;
-          totalPages: number;
-        };
-        setErrorMessage('');
-        setRecords(data.records);
-        setPage(data.page);
-        setTotalPages(data.totalPages);
-        setHasFetched(true);
-
-        // Correct URL if API clamped the page
-        if (data.page !== p) {
-          router.replace(data.page === 1 ? '/' : `/?page=${data.page}`);
-        }
-      } catch {
-        setErrorMessage('記録の取得に失敗しました。');
-        setRecords([]);
-        setHasFetched(true);
-      }
-    },
-    [router],
-  );
+  const { records, page, totalPages, hasFetched, hasError } = useRecordList(currentPage);
+  const errorMessage = hasError ? '記録の取得に失敗しました。' : '';
 
   useEffect(() => {
-    // URL の page 変化に応じてサーバーからデータを再取得する正当な副作用。
-    // fetchRecords は開始時に setHasFetched(false) を同期実行するため set-state-in-effect が
-    // 発火するが、ここは「外部（API）とローカル state の同期」であり effect が適切。
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchRecords(currentPage);
-  }, [currentPage, fetchRecords]);
+    // API がページ番号を丸めた（範囲外の page を要求した）場合は URL を補正する
+    if (hasFetched && !hasError && page !== currentPage) {
+      router.replace(page === 1 ? '/' : `/?page=${page}`);
+    }
+  }, [hasFetched, hasError, page, currentPage, router]);
 
   const goToPage = (p: number) => {
     window.scrollTo({ top: 0 });
@@ -183,7 +128,7 @@ export default function RecordsListClient() {
                 <div className="mt-4">
                   <CalorieEstimate
                     totalSets={record.totalSets}
-                    cardios={(record.cardios ?? []).map((c) => ({
+                    cardios={record.cardios.map((c) => ({
                       type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
                       minutes: c.minutes,
                     }))}

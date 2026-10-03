@@ -11,7 +11,7 @@ import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
 import { useTodayLocalIso } from '@/hooks/useTodayLocalIso';
-import { authFetch } from '@/lib/authFetch';
+import { useRecordMutations } from '@/hooks/useRecordMutations';
 import type { CardioRow, WorkoutRow } from '@/types/recordForm';
 
 /**
@@ -58,6 +58,7 @@ export default function AdminRecordNewClient() {
   const [notice, setNotice] = useState('');
 
   const { displayErrors, hasErrors, setSubmitted } = useRecordValidation(date, workouts, cardios);
+  const { create } = useRecordMutations();
 
   const totalSets = useMemo(
     () => workouts.reduce((sum, row) => sum + Number(row.sets || 0), 0),
@@ -87,37 +88,15 @@ export default function AdminRecordNewClient() {
     }
     setStatus('saving');
 
-    const cardioRows = cardios.filter((c) => c.minutes !== '' || c.distance !== '');
-    const res = await authFetch('/api/records', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        date,
-        memo: memo.trim() ? memo.trim() : null,
-        workouts: workouts.map((row) => ({
-          part: row.part,
-          name: row.name,
-          sets: Number(row.sets || 0),
-          reps: Number(row.reps || 0),
-          weight: Number(row.weight || 0),
-        })),
-        cardios: cardioRows.length
-          ? cardioRows.map((c) => ({
-              type: c.type,
-              minutes: Number(c.minutes || 0),
-              distance: Number(c.distance || 0),
-            }))
-          : null,
-      }),
-    });
+    const result = await create(date, { memo, workouts, cardios });
 
-    if (res.status === 409) {
+    if (!result.ok && result.status === 409) {
       setStatus('error');
       setNotice('同じ日付の記録が既に存在します。');
       return;
     }
 
-    if (!res.ok) {
+    if (!result.ok) {
       setStatus('error');
       setNotice('保存に失敗しました。');
       return;

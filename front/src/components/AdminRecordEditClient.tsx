@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -10,27 +10,10 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
+import { useRecordDetail } from '@/hooks/useRecordDetail';
+import { useRecordMutations } from '@/hooks/useRecordMutations';
+import type { RecordDetail, RecordWorkout } from '@/types/record';
 import type { CardioRow, WorkoutRow } from '@/types/recordForm';
-import { authFetch } from '@/lib/authFetch';
-
-/** API から取得する既存記録の詳細。フォームへプリセットするために使用する。 */
-type RecordDetail = {
-  /** 記録日（`YYYY-MM-DD`）。 */
-  date: string;
-  /** 体調メモ（未入力時は `null`）。 */
-  memo: string | null;
-  /** 筋トレ項目（数値はサーバー保存値のため number）。 */
-  workouts: {
-    id: string;
-    part: string;
-    name: string;
-    sets: number;
-    reps: number;
-    weight: number;
-  }[];
-  /** 有酸素項目（数値はサーバー保存値のため number）。 */
-  cardios: { type: string; minutes: number; distance: number }[];
-};
 
 /** 記録編集クライアントの props。 */
 type AdminRecordEditClientProps = {
@@ -44,7 +27,7 @@ type AdminRecordEditClientProps = {
  * @param workout - API から取得した筋トレ 1 件（ID を保持する）
  * @returns フォーム編集用の筋トレ行
  */
-const toRow = (workout: RecordDetail['workouts'][number]): WorkoutRow => ({
+const toRow = (workout: RecordWorkout): WorkoutRow => ({
   id: workout.id,
   part: workout.part,
   name: workout.name,
@@ -92,35 +75,28 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
   const [cardios, setCardios] = useState<CardioRow[]>([]);
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [notice, setNotice] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRecord = async () => {
-      const res = await fetch(`/api/records/${date}`);
-      if (!res.ok) {
-        setNotice('記録が見つかりません。');
-        setLoading(false);
-        return;
-      }
-      const data = (await res.json()) as RecordDetail;
-      setWorkouts(data.workouts.length ? data.workouts.map(toRow) : [emptyRow()]);
-      setMemo(data.memo ?? '');
-      if (data.cardios?.length) {
-        setCardios(
-          data.cardios.map((c) => ({
-            id: crypto.randomUUID(),
-            // 選択肢はラン / ウォークのみのため、それ以外の保存値はランとして表示する（従来の挙動）
-            type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
-            minutes: String(c.minutes),
-            distance: String(c.distance),
-          })),
-        );
-      }
-      setLoading(false);
-    };
-
-    void fetchRecord();
-  }, [date]);
+  // 取得した既存記録をフォームの初期値として流し込む（取得成功時に 1 回だけ呼ばれる）
+  const presetForm = (data: RecordDetail) => {
+    setWorkouts(data.workouts.length ? data.workouts.map(toRow) : [emptyRow()]);
+    setMemo(data.memo ?? '');
+    if (data.cardios.length) {
+      setCardios(
+        data.cardios.map((c) => ({
+          id: crypto.randomUUID(),
+          // 選択肢はラン / ウォークのみのため、それ以外の保存値はランとして表示する（従来の挙動）
+          type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
+          minutes: String(c.minutes),
+          distance: String(c.distance),
+        })),
+      );
+    }
+  };
+  const { status: loadStatus } = useRecordDetail(date, presetForm);
+  const loading = loadStatus === 'loading';
+  const loadNotice =
+    loadStatus === 'not-found' || loadStatus === 'error' ? '記録が見つかりません。' : '';
+  const { update } = useRecordMutations();
 
   const { displayErrors, hasErrors, setSubmitted } = useRecordValidation(date, workouts, cardios);
 
@@ -152,30 +128,9 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
     }
     setStatus('saving');
 
-    const cardioRows = cardios.filter((c) => c.minutes !== '' || c.distance !== '');
-    const res = await authFetch(`/api/records/${date}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        memo: memo.trim() ? memo.trim() : null,
-        workouts: workouts.map((row) => ({
-          part: row.part,
-          name: row.name,
-          sets: Number(row.sets || 0),
-          reps: Number(row.reps || 0),
-          weight: Number(row.weight || 0),
-        })),
-        cardios: cardioRows.length
-          ? cardioRows.map((c) => ({
-              type: c.type,
-              minutes: Number(c.minutes || 0),
-              distance: Number(c.distance || 0),
-            }))
-          : null,
-      }),
-    });
+    const result = await update(date, { memo, workouts, cardios });
 
-    if (!res.ok) {
+    if (!result.ok) {
       setStatus('error');
       setNotice('保存に失敗しました。');
       return;
@@ -220,7 +175,9 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
 
       <section className="mx-auto max-w-5xl px-6 pt-8">
         <div className="grid gap-8">
-          {notice ? <p className="text-sm font-bold text-red-500">{notice}</p> : null}
+          {notice || loadNotice ? (
+            <p className="text-sm font-bold text-red-500">{notice || loadNotice}</p>
+          ) : null}
           <Card className="p-6 md:p-8">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               日付

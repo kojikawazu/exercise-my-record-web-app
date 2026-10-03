@@ -32,6 +32,16 @@ export type CardioRow = {
   distance: string;
 };
 
+/** 記録フォームの保存対象（日付を除く入力値一式）。追加・編集で共用する。 */
+export type RecordFormValues = {
+  /** 体調メモ（未入力は空文字。前後の空白は保存時に除去する）。 */
+  memo: string;
+  /** 筋トレ行（最少 1 行）。 */
+  workouts: WorkoutRow[];
+  /** 有酸素行。時間・距離がともに空の行は未入力として保存しない。 */
+  cardios: CardioRow[];
+};
+
 /** 1 行内のフィールド名 → エラーメッセージの対応。エラーのないフィールドはキーを持たない。 */
 export type FieldErrors = Record<string, string>;
 

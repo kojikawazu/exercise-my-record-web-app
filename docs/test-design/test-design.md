@@ -304,6 +304,20 @@ E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。#124 で record-cru
 
 ---
 
+### 5f. records の repositories / hooks（#142）
+
+records の API アクセスを `repositories/record.ts` と hooks に移した。モックは外部 I/O（グローバル `fetch`、`authFetch` が参照する `@/lib/supabase`）のみで、hooks のテストでも repositories はモックしない（変換まで実物で通す）。fetch モックの足場は `tests/setup/fetchMock.ts`。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/repositories/record.test.ts` | 12 | 正: 一覧・詳細・作成（Bearer / JSON）・更新・削除（本文を読まない） / 準: 404・409・401・503 を `status` で返す / 異: 通信エラーは `status: 0` |
+| `tests/unit/lib/recordForm.test.ts` | 5 | 正: 数値変換・行 ID 除去 / 準: メモ trim・空は null、空数値は 0、空の有酸素行の除外、全行空なら null |
+| `tests/unit/hooks/useRecordList.test.ts` | 8 | 正: 取得・サーバーの丸め後ページ・refetch / 準: ページ切替中は直前の結果を保持・**古いレスポンスを無視** / 異: 5xx・通信エラー・refetch 失敗 |
+| `tests/unit/hooks/useRecordDetail.test.ts` | 5 | 正: 取得と `onLoaded` 1 回 / 準: 404 は not-found・**古いレスポンスを無視** / 異: 5xx・通信エラーは error |
+| `tests/unit/hooks/useRecordMutations.test.ts` | 5 | 正: 作成（date 付与）・更新・関数参照の安定 / 準: 409・404 を返す |
+
+画面の振る舞い（一覧・詳細・追加・編集・削除）は既存の E2E / シナリオで回帰を確認する。
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

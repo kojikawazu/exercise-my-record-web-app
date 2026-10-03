@@ -36,6 +36,20 @@ flowchart LR
     Auth -.セッション.-> Browser
 ```
 
+### フロントのデータアクセス
+
+画面から API への呼び出しは `components/` → `hooks/` → `repositories/` の一方向に限る（`.claude/rules/frontend.md`「レイヤ依存の一方向ルール」）。
+
+| 層 | 役割 | records の実装（#142） |
+|---|---|---|
+| `components/` | 描画・画面遷移・表示文言 | `RecordsListClient` / `AdminRecordsListClient` / `RecordDetailClient` / `AdminRecordNewClient` / `AdminRecordEditClient` |
+| `hooks/` | 取得状態の管理・フォーム値 → API 本文の変換 | `useRecordList` / `useRecordDetail` / `useRecordMutations` |
+| `repositories/` | `fetch` / `authFetch` の呼び出しと、結果の `ApiResult`（`{ ok, data } \| { ok: false, status }`）への詰め替え | `repositories/record.ts` |
+| `types/` | API 契約型（Route Handler とフロントで共有） | `types/record.ts` / `types/apiResult.ts` |
+
+- repositories は例外を投げず、失敗を `status`（通信エラーは `0`）で返す。画面は `status` で分岐する（例: 409 = 同日重複）。
+- masters / profile / admin は未移行（#143）。
+
 ## 技術スタック
 
 | 区分 | 採用 |

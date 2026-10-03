@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
@@ -8,37 +8,8 @@ import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
-
-/** 記録詳細における筋トレ 1 種目分のデータ。 */
-export type DetailWorkout = {
-  /** 種目の一意 ID（リストの key に使用）。 */
-  id: string;
-  /** 種目名。 */
-  name: string;
-  /** 対象部位。 */
-  part: string;
-  /** セット数。 */
-  sets: number;
-  /** 1 セットあたりの回数。 */
-  reps: number;
-  /** 重量（kg）。 */
-  weight: number;
-};
-
-/** 記録詳細における有酸素 1 件分のデータ。 */
-type CardioDetail = { type: string; minutes: number; distance: number };
-
-/** 記録詳細 API から取得する 1 日分のレスポンス形。 */
-type RecordDetailData = {
-  /** 記録日（`YYYY-MM-DD`）。 */
-  date: string;
-  /** 体調メモ。未入力時は `null`。 */
-  memo: string | null;
-  /** 筋トレ種目の一覧。 */
-  workouts: DetailWorkout[];
-  /** 有酸素運動の一覧。 */
-  cardios: CardioDetail[];
-};
+import { useRecordDetail } from '@/hooks/useRecordDetail';
+import type { RecordWorkout } from '@/types/record';
 
 /** {@link RecordDetailClient} の props。 */
 type RecordDetailClientProps = {
@@ -47,7 +18,7 @@ type RecordDetailClientProps = {
 };
 
 /** 再レンダーごとの参照変化を避けるための空配列（`useMemo` 依存の安定化用）。 */
-const EMPTY_WORKOUTS: DetailWorkout[] = [];
+const EMPTY_WORKOUTS: RecordWorkout[] = [];
 
 /**
  * 指定日の記録詳細を表示するクライアント。筋トレ・有酸素・メモ・推定カロリーを一覧化する。
@@ -57,39 +28,15 @@ const EMPTY_WORKOUTS: DetailWorkout[] = [];
  * 各項目は {@link RecordDetailClientProps} を参照。
  */
 export default function RecordDetailClient({ date }: RecordDetailClientProps) {
-  const [detail, setDetail] = useState<RecordDetailData | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const { detail, status } = useRecordDetail(date);
+  const isLoading = status === 'loading';
+  const errorMessage =
+    status === 'not-found'
+      ? '記録が見つかりません。'
+      : status === 'error'
+        ? '記録の取得に失敗しました。'
+        : '';
   const { isAdmin } = useAdminSession();
-
-  useEffect(() => {
-    const fetchDetail = async () => {
-      setIsLoading(true);
-      setErrorMessage('');
-      try {
-        const res = await fetch(`/api/records/${date}`);
-        if (res.status === 404) {
-          setErrorMessage('記録が見つかりません。');
-          setDetail(null);
-          return;
-        }
-        if (!res.ok) {
-          setErrorMessage('記録の取得に失敗しました。');
-          setDetail(null);
-          return;
-        }
-        const data = (await res.json()) as RecordDetailData;
-        setDetail(data);
-      } catch {
-        setErrorMessage('記録の取得に失敗しました。');
-        setDetail(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void fetchDetail();
-  }, [date]);
 
   const workouts = detail?.workouts ?? EMPTY_WORKOUTS;
   const cardios = detail?.cardios ?? [];
