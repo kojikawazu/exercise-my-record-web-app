@@ -239,6 +239,76 @@ test('should keep a saved part that has been removed from the master on the edit
 });
 
 // ---------------------------------------------------------------------------
+// 前回の記録をコピー（記録追加画面）
+// ---------------------------------------------------------------------------
+
+test('should copy workouts and cardios of the latest record and save them as a new record', async ({
+  page,
+}) => {
+  // ベースラインの最新は 2026-02-02（筋トレ 3 種目・ラン 30 分・メモ「体調良好」）。
+  await injectAdminSession(page);
+  await page.goto('/admin/records/new');
+
+  await page.getByRole('button', { name: '前回の記録をコピー（2026-02-02）' }).click();
+  await expect(page.getByText('2026-02-02 の記録をコピーしました。')).toBeVisible();
+
+  const names = page.locator('input[placeholder*="種目"]');
+  await expect(names).toHaveCount(3);
+  await expect(names.nth(0)).toHaveValue('ベンチプレス');
+  await expect(names.nth(1)).toHaveValue('デッドリフト');
+  await expect(names.nth(2)).toHaveValue('スクワット');
+  await expect(page.locator('select').nth(1)).toHaveValue('背中');
+  // 有酸素行（筋トレの部位 3 つの次の select）も入る。
+  await expect(page.locator('select').nth(3)).toHaveValue('ラン');
+  // メモはコピーしない。
+  await expect(page.locator('textarea')).toHaveValue('');
+
+  // 日付は選び直して保存でき、コピーした内容が永続化される。
+  await selectDate(page, '2026-03-01');
+  await page.getByRole('button', { name: '保存' }).click();
+  await expect(page).toHaveURL('/');
+  await page.goto('/records/2026-03-01');
+  await expect(page.getByText('デッドリフト')).toBeVisible();
+  await expect(page.getByText('体調良好')).toHaveCount(0);
+});
+
+test('should ask before overwriting the input and keep it when cancelled', async ({ page }) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/records/new');
+  const copyButton = page.getByRole('button', { name: '前回の記録をコピー（2026-02-02）' });
+  await expect(copyButton).toBeEnabled();
+
+  const names = page.locator('input[placeholder*="種目"]');
+  await names.first().fill('入力中の種目');
+
+  // キャンセル → 入力はそのまま。
+  page.once('dialog', (dialog) => {
+    expect(dialog.message()).toBe(
+      '入力中の筋トレ・有酸素を前回の記録で置き換えます。よろしいですか？',
+    );
+    void dialog.dismiss();
+  });
+  await copyButton.click();
+  await expect(names).toHaveCount(1);
+  await expect(names.first()).toHaveValue('入力中の種目');
+
+  // OK → 前回の記録で置き換わる。
+  page.once('dialog', (dialog) => void dialog.accept());
+  await copyButton.click();
+  await expect(names).toHaveCount(3);
+  await expect(names.first()).toHaveValue('ベンチプレス');
+});
+
+test('should disable the copy button when there are no records', async ({ page }) => {
+  await resetDb();
+  await injectAdminSession(page);
+  await page.goto('/admin/records/new');
+
+  await expect(page.getByText('コピーできる記録がありません。')).toBeVisible();
+  await expect(page.getByRole('button', { name: '前回の記録をコピー' })).toBeDisabled();
+});
+
+// ---------------------------------------------------------------------------
 // 有酸素複数行 UI
 // ---------------------------------------------------------------------------
 

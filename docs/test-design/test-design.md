@@ -332,6 +332,16 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 | `tests/unit/validation/record.test.ts`（S-14 / S-15） | 2 | 準: 入力のある有酸素行の種別未選択はエラー・未入力行は種別を問わない |
 | `tests/e2e/record-crud.spec.ts`（マスター連動） | 3 | 正: seed したマスターが選択肢・候補・既定値になる・マスター管理で追加した部位が選べる / 準: マスターから外した保存済みの部位が編集画面で残る |
 
+### 5h. 前回の記録をコピー（#26）
+
+記録追加画面で最新の記録の筋トレ・有酸素をフォームに流し込む。明細 → フォーム行の変換（`toFormRows`）は編集画面の初期値と共用する。モックは外部 I/O（グローバル `fetch`、`@/lib/supabase`）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/hooks/useLatestRecord.test.ts` | 6 | 正: 1 ページ目の先頭を最新とし明細を取得 / 準: 0 件は `empty`・`empty` の間は API を呼ばない・押下までに削除された（404）は失敗を返す / 異: 5xx・通信エラーは `error` |
+| `tests/unit/lib/recordForm.test.ts`（`createWorkoutRow` / `toFormRows` / `isFormBlank`） | 8 | 正: 数値の文字列化と順序・空行の生成 / 準: 行 ID を振り直す・日付とメモを含めない・筋トレ 0 件なら空行 1 行・入力の有無の判定（重量 0・数値が空の有酸素行は入力ありとみなす） |
+| `tests/e2e/record-crud.spec.ts`（前回の記録をコピー） | 3 | 正: 最新記録の 3 種目と有酸素が入り、メモは入らず、別日付で保存できる / 準: 入力済みなら確認し、キャンセルで入力を保持・OK で置換 / 記録 0 件ならボタン無効 |
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

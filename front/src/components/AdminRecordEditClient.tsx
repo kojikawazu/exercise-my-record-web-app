@@ -13,8 +13,8 @@ import { useRecordValidation } from '@/hooks/useRecordValidation';
 import { useRecordDetail } from '@/hooks/useRecordDetail';
 import { useRecordMutations } from '@/hooks/useRecordMutations';
 import { useMasters } from '@/hooks/useMasters';
-import { withCurrentOption } from '@/lib/recordForm';
-import type { RecordDetail, RecordWorkout } from '@/types/record';
+import { createWorkoutRow, toFormRows, withCurrentOption } from '@/lib/recordForm';
+import type { RecordDetail } from '@/types/record';
 import type { CardioRow, WorkoutRow } from '@/types/recordForm';
 
 /** 記録編集クライアントの props。 */
@@ -22,35 +22,6 @@ type AdminRecordEditClientProps = {
   /** 編集対象の記録日（`YYYY-MM-DD`）。Server Component 側で動的セグメントを解決済み */
   date: string;
 };
-
-/**
- * サーバー保存済みの筋トレ項目をフォーム入力行へ変換する。数値項目は文字列へ変換する。
- *
- * @param workout - API から取得した筋トレ 1 件（ID を保持する）
- * @returns フォーム編集用の筋トレ行
- */
-const toRow = (workout: RecordWorkout): WorkoutRow => ({
-  id: workout.id,
-  part: workout.part,
-  name: workout.name,
-  sets: String(workout.sets),
-  reps: String(workout.reps),
-  weight: String(workout.weight),
-});
-
-/**
- * 空の筋トレ入力行を生成する。取得結果が 0 件の場合の初期 1 行や行追加に使用する。
- *
- * @returns 各フィールドが空で新規 ID を持つ筋トレ行
- */
-const emptyRow = (): WorkoutRow => ({
-  id: crypto.randomUUID(),
-  part: '',
-  name: '',
-  sets: '',
-  reps: '',
-  weight: '',
-});
 
 /**
  * 空の有酸素入力行を生成する。行追加に使用する。
@@ -73,7 +44,7 @@ const createCardioRow = (type: string): CardioRow => ({
  */
 export default function AdminRecordEditClient({ date }: AdminRecordEditClientProps) {
   const router = useRouter();
-  const [workouts, setWorkouts] = useState<WorkoutRow[]>([emptyRow()]);
+  const [workouts, setWorkouts] = useState<WorkoutRow[]>([createWorkoutRow()]);
   const [memo, setMemo] = useState('');
   const [cardios, setCardios] = useState<CardioRow[]>([]);
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
@@ -84,18 +55,10 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
 
   // 取得した既存記録をフォームの初期値として流し込む（取得成功時に 1 回だけ呼ばれる）
   const presetForm = (data: RecordDetail) => {
-    setWorkouts(data.workouts.length ? data.workouts.map(toRow) : [emptyRow()]);
+    const rows = toFormRows(data);
+    setWorkouts(rows.workouts);
+    setCardios(rows.cardios);
     setMemo(data.memo ?? '');
-    if (data.cardios.length) {
-      setCardios(
-        data.cardios.map((c) => ({
-          id: crypto.randomUUID(),
-          type: c.type,
-          minutes: String(c.minutes),
-          distance: String(c.distance),
-        })),
-      );
-    }
   };
   const { status: loadStatus } = useRecordDetail(date, presetForm);
   const loading = loadStatus === 'loading';
@@ -114,7 +77,7 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
     setWorkouts((prev) => prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
 
-  const addRow = () => setWorkouts((prev) => [...prev, emptyRow()]);
+  const addRow = () => setWorkouts((prev) => [...prev, createWorkoutRow()]);
   const removeRow = (id: string) =>
     setWorkouts((prev) => (prev.length === 1 ? prev : prev.filter((row) => row.id !== id)));
 
