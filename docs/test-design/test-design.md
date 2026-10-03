@@ -204,6 +204,9 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 |---|---|---|---|---|
 | A-1 | DB unavailable (prisma=null) | getPrisma() が null | status 503, `{ error: 'database unavailable' }` | High |
 | A-2 | POST: body が不正 JSON | Content-Type:json + 壊れたbody | status 400 | Medium |
+| A-3 | POST: 作成中に DB 例外（#121） | 子行 create が内部情報を含む Error を throw | status 500, `{ error: 'failed to create record' }`（生メッセージを含まない） | High |
+| A-4 | POST: DB 例外時のログ（#121） | 同上 | `console.error` に例外オブジェクトそのものを渡す（スタックを残す） | High |
+| A-5 | POST: Error 以外の値が throw される（#121） | 親 create が文字列を reject | status 500, 定型メッセージ | Medium |
 
 ---
 
@@ -235,6 +238,9 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 | # | テストケース | 入力 | 期待結果 | 優先度 |
 |---|---|---|---|---|
 | A-1 | DB unavailable | getPrisma() が null | status 503 | High |
+| A-2 | PATCH: 更新中に DB 例外（#121） | 子行 create が内部情報を含む Error を throw | status 500, `{ error: 'failed to update record' }`（生メッセージを含まない） | High |
+| A-3 | PATCH: DB 例外時のログ（#121） | 親 update が Error を throw | `console.error` に例外オブジェクトそのものを渡す（スタックを残す） | High |
+| A-4 | PATCH: Error 以外の値が throw される（#121） | deleteMany が文字列を reject | status 500, 定型メッセージ | Medium |
 
 ---
 

@@ -128,8 +128,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: record.id });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('POST /api/records error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    // 例外の生メッセージは Prisma のテーブル名・制約名等を含み得るため、クライアントには返さずログにのみ残す
+    console.error('POST /api/records error:', error);
+    return NextResponse.json({ error: 'failed to create record' }, { status: 500 });
   }
 }

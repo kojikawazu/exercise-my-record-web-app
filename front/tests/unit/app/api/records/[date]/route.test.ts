@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, PATCH, DELETE } from '@/app/api/records/[date]/route';
 
 vi.mock('@/lib/prisma', () => ({
@@ -153,6 +153,64 @@ describe('PATCH /api/records/[date]', () => {
     expect(prisma.exerciseWorkout.deleteMany).toHaveBeenCalledOnce();
     expect(prisma.exerciseCardio.deleteMany).toHaveBeenCalledOnce();
     expect(prisma.exerciseWorkout.create).toHaveBeenCalledOnce();
+  });
+
+  describe('when the database throws during update', () => {
+    // Prisma の例外メッセージが含み得る内部情報（テーブル名・制約名）を模した文言
+    const internalMessage =
+      'Foreign key constraint failed on the field: `ExerciseWorkout_recordId_fkey (index)`';
+
+    const patchValidRecord = () =>
+      PATCH(
+        new Request('http://localhost', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            memo: '更新メモ',
+            workouts: [{ part: '背中', name: 'デッドリフト', sets: 3, reps: 5, weight: 100 }],
+          }),
+        }),
+        makeContext('2026-01-01'),
+      );
+
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      vi.mocked(console.error).mockRestore();
+    });
+
+    it('should return 500 with a fixed message instead of the raw exception message', async () => {
+      const prisma = makePrisma();
+      prisma.exerciseWorkout.create.mockRejectedValue(new Error(internalMessage));
+      vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+      const res = await patchValidRecord();
+      expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(body).toEqual({ error: 'failed to update record' });
+      expect(JSON.stringify(body)).not.toContain('ExerciseWorkout_recordId_fkey');
+    });
+
+    it('should log the original error object for server-side investigation', async () => {
+      const thrown = new Error(internalMessage);
+      const prisma = makePrisma();
+      prisma.exerciseRecord.update.mockRejectedValue(thrown);
+      vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+      await patchValidRecord();
+      expect(console.error).toHaveBeenCalledWith('PATCH /api/records/:date error:', thrown);
+    });
+
+    it('should return the same fixed message when a non-Error value is thrown', async () => {
+      const prisma = makePrisma();
+      prisma.exerciseWorkout.deleteMany.mockRejectedValue('connection refused at db.internal:5432');
+      vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+      const res = await patchValidRecord();
+      expect(res.status).toBe(500);
+      expect(await res.json()).toEqual({ error: 'failed to update record' });
+    });
   });
 });
 
