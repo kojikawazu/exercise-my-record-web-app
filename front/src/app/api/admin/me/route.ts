@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type { AdminMeResponse } from '@/types/admin';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -25,22 +26,22 @@ export async function GET(request: Request) {
   const accessToken = bearer?.[1];
 
   if (!accessToken) {
-    return NextResponse.json({ isAdmin: false }, { status: 401 });
+    return NextResponse.json<AdminMeResponse>({ isAdmin: false }, { status: 401 });
   }
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
   const { data, error } = await supabase.auth.getUser(accessToken);
 
   if (error || !data.user) {
-    return NextResponse.json({ isAdmin: false }, { status: 401 });
+    return NextResponse.json<AdminMeResponse>({ isAdmin: false }, { status: 401 });
   }
 
   const userEmail = data.user.email?.trim().toLowerCase() ?? '';
   const isAdmin = userEmail !== '' && userEmail === adminEmail;
 
   if (!isAdmin) {
-    return NextResponse.json({ isAdmin: false }, { status: 403 });
+    return NextResponse.json<AdminMeResponse>({ isAdmin: false }, { status: 403 });
   }
 
-  return NextResponse.json({ isAdmin: true });
+  return NextResponse.json<AdminMeResponse>({ isAdmin: true });
 }

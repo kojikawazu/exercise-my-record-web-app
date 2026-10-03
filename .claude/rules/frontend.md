@@ -36,7 +36,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - 状態の種類で手段を分ける:
   - **サーバー状態**（API データ）: React Query / SWR
   - **クライアント状態**（UI 状態）: ローカル state、複雑なら Zustand 等（`stores/`）
-- **現状**: サーバー状態管理ライブラリは未導入。admin 配下は `useEffect` + `lib/authFetch.ts` の `authFetch()` で取得している。**新規に別のライブラリを混在させない**。導入する場合は上記の分類に従い、`useEffect` での手動取得を置き換える形で一括して行う。
+- **現状**: サーバー状態管理ライブラリは未導入。取得は hooks 内の `useEffect` から `repositories/` を呼んで行っている（`authFetch()` は `repositories/` からのみ使う）。**新規に別のライブラリを混在させない**。導入する場合は上記の分類に従い、`useEffect` での手動取得を置き換える形で一括して行う。
 
 ## 状態管理・Context
 
@@ -53,7 +53,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - 置き場所は**参照範囲**で決める。1 ファイルに閉じる型（props 型等）はコロケーション、2 箇所以上から参照される型は `types/` へ集約する。詳細は `typescript.md`「型定義の配置」に従う。
 - `type` / `interface` は型本体・各メンバーともにコメント必須（`jsdoc.md`）。
 - **共通定数は `constants/` に集約する**（判断軸は型と同じ「参照範囲」。マジックナンバー・マジック文字列を直接書かない）。ただし union の元になる定数は、導出される型と**同じファイルに同居**させる。環境変数は `constants/` に置かない。詳細は `typescript.md`「定数の配置」に従う。
-- **現状**: `types/` は作成済み（`types/master.ts` / `types/record.ts` / `types/recordForm.ts` / `types/apiResult.ts`）。`constants/` は未作成で、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
+- **現状**: `types/` は作成済み（`types/master.ts` / `types/record.ts` / `types/recordForm.ts` / `types/apiResult.ts` / `types/profile.ts` / `types/admin.ts`）。`constants/` は未作成で、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
 
 ## ディレクトリの役割分担
 
@@ -69,7 +69,6 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 
 - **画面から API を叩くコードを書いてよいのは `repositories/` だけ。** コンポーネント・hooks から `fetch` / `authFetch` を直接呼ばない。呼び出し口を 1 箇所に閉じることで、認証ヘッダ・エラー処理・リトライの実装が散らばらない。
 - ディレクトリ名は**複数形で統一**する（`types` / `constants` / `repositories`）。
-- **現状**: records は移行済み（`repositories/record.ts` + `hooks/useRecordList` / `useRecordDetail` / `useRecordMutations`、#142）。masters / profile / admin の 4 ファイルが `authFetch` / `fetch` を直接呼んでおり、移行は issue #143 で対応する。
 
 ## レイヤ依存の一方向ルール
 
@@ -139,7 +138,7 @@ front/src/
 │   └── api/                # Route Handlers（api.md 参照）
 ├── components/             # 設計選択に従う
 ├── hooks/                  # クライアントロジック（useXxx）
-├── repositories/           # API アクセス（fetch/authFetch はここだけ。records は移行済み、残りは #143）
+├── repositories/           # API アクセス（fetch/authFetch はここだけ）
 ├── validation/             # 入力検証（Zod 導入時は schemas/。validation/record.ts）
 ├── lib/                    # 純粋関数・サーバー専用クライアント（prisma / supabase）
 ├── generated/              # Prisma 自動生成（lint・編集対象外）

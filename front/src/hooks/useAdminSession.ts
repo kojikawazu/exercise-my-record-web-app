@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { fetchAdminMe } from '@/repositories/admin';
 
 const BYPASS_KEY = 'e2e_admin_bypass';
 
@@ -83,29 +84,16 @@ export function useAdminSession(): AdminSessionState {
       }
 
       try {
-        const response = await fetch('/api/admin/me', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          cache: 'no-store',
-        });
-
+        const result = await fetchAdminMe(session.access_token);
         if (!mounted || currentRequestId !== requestId) return;
-        if (!response.ok) {
-          setSessionActive(false);
-          setReady(true);
-          return;
-        }
-
-        const data = (await response.json().catch(() => null)) as { isAdmin?: boolean } | null;
-        setSessionActive(Boolean(data?.isAdmin));
+        setSessionActive(result.ok && result.data.isAdmin);
       } catch {
+        // 通信エラーは fetchAdminMe が { ok: false } で返す。ここに来るのは 2xx の本文が JSON として
+        // 読めなかった場合で、判定できないため非管理者として扱う
         if (!mounted || currentRequestId !== requestId) return;
         setSessionActive(false);
       } finally {
-        if (!mounted || currentRequestId !== requestId) return;
-        setReady(true);
+        if (mounted && currentRequestId === requestId) setReady(true);
       }
     };
 
