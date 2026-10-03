@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
@@ -8,19 +8,8 @@ import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { authFetch } from '@/lib/authFetch';
-
-/** 管理記録一覧の 1 日分サマリー。 */
-export type AdminRecordSummary = {
-  /** 記録日（`YYYY-MM-DD`）。一覧の一意キー兼詳細/編集への遷移パラメータ。 */
-  date: string;
-  /** その日の筋トレセット数の合計。 */
-  totalSets: number;
-  /** その日の有酸素運動の合計時間（分）。 */
-  cardioMinutes: number;
-  /** その日の有酸素運動の合計距離（km）。 */
-  cardioDistance: number;
-};
+import { useRecordList } from '@/hooks/useRecordList';
+import { useRecordMutations } from '@/hooks/useRecordMutations';
 
 /**
  * 管理者向けの記録一覧クライアント。ページング付きで記録を表示し、削除・編集への導線を提供する。
@@ -32,55 +21,20 @@ export type AdminRecordSummary = {
 export default function AdminRecordsListClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [records, setRecords] = useState<AdminRecordSummary[]>([]);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [hasFetched, setHasFetched] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [deleteError, setDeleteError] = useState('');
 
   const currentPage = Number(searchParams.get('page') ?? 1) || 1;
-
-  const fetchRecords = useCallback(
-    async (p: number) => {
-      setHasFetched(false);
-      try {
-        const res = await fetch(`/api/records?page=${p}`);
-        if (!res.ok) {
-          setError('記録の取得に失敗しました。');
-          setRecords([]);
-          setHasFetched(true);
-          return;
-        }
-        const data = (await res.json()) as {
-          records: AdminRecordSummary[];
-          page: number;
-          totalPages: number;
-        };
-        setRecords(data.records);
-        setPage(data.page);
-        setTotalPages(data.totalPages);
-        setHasFetched(true);
-
-        if (data.page !== p) {
-          router.replace(`/admin/records?page=${data.page}`);
-        }
-      } catch {
-        setError('記録の取得に失敗しました。');
-        setRecords([]);
-        setHasFetched(true);
-      }
-    },
-    [router],
-  );
+  const { records, page, totalPages, hasFetched, hasError, refetch } = useRecordList(currentPage);
+  const { remove } = useRecordMutations();
+  const error = deleteError || (hasError ? '記録の取得に失敗しました。' : '');
 
   useEffect(() => {
-    // URL の page 変化に応じてサーバーからデータを再取得する正当な副作用。
-    // fetchRecords は開始時に setHasFetched(false) を同期実行するため set-state-in-effect が
-    // 発火するが、ここは「外部（API）とローカル state の同期」であり effect が適切。
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchRecords(currentPage);
-  }, [currentPage, fetchRecords]);
+    // API がページ番号を丸めた（範囲外の page を要求した）場合は URL を補正する
+    if (hasFetched && !hasError && page !== currentPage) {
+      router.replace(`/admin/records?page=${page}`);
+    }
+  }, [hasFetched, hasError, page, currentPage, router]);
 
   const goToPage = (p: number) => {
     window.scrollTo({ top: 0 });
@@ -90,33 +44,17 @@ export default function AdminRecordsListClient() {
   const handleDelete = async (date: string) => {
     if (!confirm('この記録を削除しますか？')) return;
     setDeletingDate(date);
-    setError('');
-    const res = await authFetch(`/api/records/${date}`, { method: 'DELETE' });
-    if (!res.ok) {
-      setError('削除に失敗しました。');
-      setDeletingDate(null);
+    setDeleteError('');
+    const result = await remove(date);
+    setDeletingDate(null);
+    if (!result.ok) {
+      setDeleteError('削除に失敗しました。');
       return;
     }
-    setDeletingDate(null);
-    // Re-fetch current page; if empty and not first page, go to previous page
-    const refetchRes = await fetch(`/api/records?page=${page}`);
-    if (refetchRes.ok) {
-      const data = (await refetchRes.json()) as {
-        records: AdminRecordSummary[];
-        page: number;
-        totalPages: number;
-      };
-      if (data.records.length === 0 && data.page > 1) {
-        goToPage(data.page - 1);
-      } else {
-        setRecords(data.records);
-        setPage(data.page);
-        setTotalPages(data.totalPages);
-        // Correct URL if API clamped the page
-        if (data.page !== page) {
-          router.replace(`/admin/records?page=${data.page}`);
-        }
-      }
+    // 現在ページを再取得し、空になった 2 ページ目以降なら前ページへ戻る
+    const data = await refetch();
+    if (data && data.records.length === 0 && data.page > 1) {
+      goToPage(data.page - 1);
     }
   };
 

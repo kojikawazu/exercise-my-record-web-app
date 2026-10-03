@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
+import type { RecordDetail, RecordIdResponse } from '@/types/record';
 
 /** 記録の詳細取得・編集・削除ハンドラーのルートコンテキスト。`params` に対象日付（`YYYY-MM-DD`）を含む。 */
 type RouteContext = {
@@ -33,7 +34,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'not found' }, { status: 404 });
   }
 
-  return NextResponse.json({
+  return NextResponse.json<RecordDetail>({
     date: record.date.toISOString().slice(0, 10),
     memo: record.memo,
     workouts: record.workouts.map(
@@ -137,7 +138,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
-    return NextResponse.json({ id: updated.id });
+    return NextResponse.json<RecordIdResponse>({ id: updated.id });
   } catch (error: unknown) {
     // 例外の生メッセージは Prisma のテーブル名・制約名等を含み得るため、クライアントには返さずログにのみ残す
     console.error('PATCH /api/records/:date error:', error);

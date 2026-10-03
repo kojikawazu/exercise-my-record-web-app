@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
+import type { RecordIdResponse, RecordListItem, RecordListResponse } from '@/types/record';
 
 const PAGE_LIMIT = 10;
 
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
     take: PAGE_LIMIT,
   });
 
-  const result = records.map(
+  const result: RecordListItem[] = records.map(
     (record: {
       date: Date;
       workouts: { sets: number }[];
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
     }),
   );
 
-  return NextResponse.json({ records: result, totalCount, page, totalPages });
+  return NextResponse.json<RecordListResponse>({ records: result, totalCount, page, totalPages });
 }
 
 /**
@@ -126,7 +127,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ id: record.id });
+    return NextResponse.json<RecordIdResponse>({ id: record.id });
   } catch (error: unknown) {
     // 例外の生メッセージは Prisma のテーブル名・制約名等を含み得るため、クライアントには返さずログにのみ残す
     console.error('POST /api/records error:', error);
