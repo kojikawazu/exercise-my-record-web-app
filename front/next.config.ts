@@ -4,6 +4,10 @@ import { assertDevDatabaseUrl } from './src/lib/localDatabaseUrl';
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // `next dev` が front/ 直下に AGENTS.md / CLAUDE.md を自動生成するのを止める。
+  // エージェント向け指示の正本はリポジトリ直下の CLAUDE.md / AGENTS.md と .claude/rules/ であり、
+  // front/ に別系統の指示を置くと正本が二重化するため（#138）。
+  agentRules: false,
 };
 
 /**
