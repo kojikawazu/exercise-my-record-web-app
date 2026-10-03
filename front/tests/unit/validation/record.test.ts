@@ -4,7 +4,7 @@ import {
   validatePositiveNumericField,
   computeErrors,
   hasAnyErrors,
-} from '@/lib/validation';
+} from '@/validation/record';
 
 // ---------------------------------------------------------------------------
 // validateNumericField

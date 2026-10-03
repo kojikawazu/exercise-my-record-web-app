@@ -49,6 +49,6 @@ src/app/api/
 - レスポンス形式: JSON（`NextResponse.json()`）。
 - 認証: 書き込み系（POST/PATCH/DELETE）は `lib/adminAuth.ts` の `requireAdmin(request)` で Bearer トークン検証 + `ADMIN_EMAIL` 一致を確認する。読み取り系（GET）は認証不要。
   - フロントからの呼び出しは `lib/authFetch.ts` の `authFetch()` で Supabase セッショントークンを自動付与する。
-- 入力バリデーションは Route Handler 内で実施する（純粋関数は `lib/validation.ts` に集約）。
+- 入力バリデーションは Route Handler 内で実施する（純粋関数は `validation/` に集約）。
 - エラー時は適切な HTTP ステータスコードで返す: 400（必須欠落・不正 JSON）/ 401（未認証）/ 403（管理者以外）/ 404（対象なし）/ 409（同日重複）/ 503（DB 接続不可）。
 - DB 接続不可時（`getPrisma()` が null）は 503 `{ error: "database unavailable" }` を返す。

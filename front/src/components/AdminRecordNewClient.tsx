@@ -12,34 +12,7 @@ import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
 import { useTodayLocalIso } from '@/hooks/useTodayLocalIso';
 import { authFetch } from '@/lib/authFetch';
-
-/** 筋トレ 1 行のフォーム入力状態。数値項目も入力途中を扱うため文字列で保持する。 */
-type WorkoutRow = {
-  /** 行を一意に識別するキー（描画・更新・削除の対象特定に使用）。 */
-  id: string;
-  /** 部位（未選択は空文字）。 */
-  part: string;
-  /** 種目名。 */
-  name: string;
-  /** セット数（文字列。保存時に数値へ変換）。 */
-  sets: string;
-  /** 回数（文字列。保存時に数値へ変換）。 */
-  reps: string;
-  /** 重量 kg（文字列。保存時に数値へ変換）。 */
-  weight: string;
-};
-
-/** 有酸素 1 行のフォーム入力状態。数値項目は入力途中を扱うため文字列で保持する。 */
-type CardioRow = {
-  /** 行を一意に識別するキー。 */
-  id: string;
-  /** 有酸素種別。 */
-  type: 'ラン' | 'ウォーク';
-  /** 時間（分。文字列で保持し保存時に数値へ変換）。 */
-  minutes: string;
-  /** 距離（km。文字列で保持し保存時に数値へ変換）。 */
-  distance: string;
-};
+import type { CardioRow, WorkoutRow } from '@/types/recordForm';
 
 /**
  * 空の筋トレ入力行を生成する。行追加および初期表示（最少 1 行）に使用する。

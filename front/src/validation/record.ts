@@ -1,30 +1,4 @@
-/** 記録フォームの筋トレ 1 行分の入力値。数値項目もフォーム都合で文字列で保持する。 */
-export type WorkoutRow = {
-  id: string;
-  part: string;
-  name: string;
-  sets: string;
-  reps: string;
-  weight: string;
-};
-
-/** 記録フォームの有酸素 1 行分の入力値。数値項目もフォーム都合で文字列で保持する。 */
-export type CardioRow = {
-  id: string;
-  type: string;
-  minutes: string;
-  distance: string;
-};
-
-/** 1 行内のフィールド名 → エラーメッセージの対応。エラーのないフィールドはキーを持たない。 */
-type FieldErrors = Record<string, string>;
-
-/** フォーム全体のバリデーション結果。行エラーは行 id をキーに保持する。 */
-export type ValidationErrors = {
-  date?: string;
-  workouts: Record<string, FieldErrors>;
-  cardios: Record<string, FieldErrors>;
-};
+import type { CardioRow, FieldErrors, ValidationErrors, WorkoutRow } from '@/types/recordForm';
 
 /**
  * 0 以上の数値入力を検証する（重量など 0 を許容する項目向け）。

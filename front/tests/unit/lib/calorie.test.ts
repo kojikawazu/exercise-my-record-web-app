@@ -35,7 +35,6 @@ describe('calculateCardioCalories', () => {
   // --- 準正常系 ---
 
   it('should return 0 for unknown cardio type (MET defaults to 0)', () => {
-    // @ts-expect-error testing unknown type
     expect(calculateCardioCalories(60, 60, 'cycling')).toBe(0);
   });
 

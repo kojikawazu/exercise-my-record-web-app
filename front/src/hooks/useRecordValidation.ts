@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react';
-import {
-  computeErrors,
-  hasAnyErrors,
-  type WorkoutRow,
-  type CardioRow,
-  type ValidationErrors,
-} from '@/lib/validation';
-
-export type { WorkoutRow, CardioRow, ValidationErrors };
+import type { CardioRow, ValidationErrors, WorkoutRow } from '@/types/recordForm';
+import { computeErrors, hasAnyErrors } from '@/validation/record';
 
 const EMPTY_ERRORS: ValidationErrors = { workouts: {}, cardios: {} };
 

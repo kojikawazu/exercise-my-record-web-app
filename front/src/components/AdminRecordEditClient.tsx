@@ -10,35 +10,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
+import type { CardioRow, WorkoutRow } from '@/types/recordForm';
 import { authFetch } from '@/lib/authFetch';
-
-/** 筋トレ 1 行のフォーム入力状態。数値項目も入力途中を扱うため文字列で保持する。 */
-type WorkoutRow = {
-  /** 行を一意に識別するキー（描画・更新・削除の対象特定に使用）。 */
-  id: string;
-  /** 部位（未選択は空文字）。 */
-  part: string;
-  /** 種目名。 */
-  name: string;
-  /** セット数（文字列。保存時に数値へ変換）。 */
-  sets: string;
-  /** 回数（文字列。保存時に数値へ変換）。 */
-  reps: string;
-  /** 重量 kg（文字列。保存時に数値へ変換）。 */
-  weight: string;
-};
-
-/** 有酸素 1 行のフォーム入力状態。数値項目は入力途中を扱うため文字列で保持する。 */
-type CardioRow = {
-  /** 行を一意に識別するキー。 */
-  id: string;
-  /** 有酸素種別。 */
-  type: 'ラン' | 'ウォーク';
-  /** 時間（分。文字列で保持し保存時に数値へ変換）。 */
-  minutes: string;
-  /** 距離（km。文字列で保持し保存時に数値へ変換）。 */
-  distance: string;
-};
 
 /** API から取得する既存記録の詳細。フォームへプリセットするために使用する。 */
 type RecordDetail = {
@@ -136,7 +109,8 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
         setCardios(
           data.cardios.map((c) => ({
             id: crypto.randomUUID(),
-            type: (c.type === 'ウォーク' ? 'ウォーク' : 'ラン') as 'ラン' | 'ウォーク',
+            // 選択肢はラン / ウォークのみのため、それ以外の保存値はランとして表示する（従来の挙動）
+            type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
             minutes: String(c.minutes),
             distance: String(c.distance),
           })),
