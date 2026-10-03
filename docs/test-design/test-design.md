@@ -289,7 +289,18 @@ IT 合計 19 件（全 pass）。モックでは検証できない DB 制約・�
 - 認証: サーバーは `E2E_BYPASS=1`、クライアントは localStorage バイパス（`injectAdminSession`）。データ API モックは全廃。
 - 検証観点は「実永続化」まで: 記録追加→一覧/詳細に反映、同日重複→エラー通知、編集→詳細に反映、削除→一覧から消える、体重 seed→プロフィール反映 等。
 
-E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。
+E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。#124 で record-crud に日付初期値のケースを 1 件追加（21 件）。
+
+---
+
+### 5e. 日付の初期値（#124）
+
+記録追加画面の日付初期値を「今日」にした。`/admin/records/new` は静的プリレンダリングされるため、初期値をサーバーで計算するとビルド時の日付（かつサーバーの UTC）が HTML に焼き込まれる。`hooks/useTodayLocalIso` は `useSyncExternalStore` でサーバー値（空文字）とクライアント値（今日）を分ける。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/lib/date.test.ts` | 4 | 正: `YYYY-MM-DD` 整形・ゼロ埋め / 準: ローカル 0 時直後・23 時台でも UTC 換算でずれない |
+| `tests/unit/hooks/useTodayLocalIso.test.tsx` | 4 | 正: クライアントで今日を返す / 準: ローカル 0 時直後でも前日にならない / 異: サーバー描画は空（ビルド時の日付を焼き込まない）・hydration で mismatch を起こさない |
 
 ---
 
@@ -380,6 +391,7 @@ E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。
 | E-6 | ページング動作 | 11件以上存在時: 次へ→page=2, 前へ→page=1 | Medium |
 | E-7 | 未ログインで管理者URL直打ち | `/admin/records/new` → `/admin/login` にリダイレクト | High |
 | E-8 | 体調メモの保存と表示 | memo 入力→保存→詳細に表示 | Medium |
+| E-9 | 日付の初期値（#124） | new を開く→ブラウザのローカル日付の今日が表示される→DatePicker で別日に変更できる。空フォーム保存で日付エラーが出ない | High |
 
 ---
 

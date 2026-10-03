@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { toLocalIso } from '@/lib/date';
 
 /** {@link DatePicker} の props。 */
 type DatePickerProps = {
@@ -16,19 +17,6 @@ type DatePickerProps = {
 };
 
 const WEEK_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
-
-const pad = (value: number) => String(value).padStart(2, '0');
-
-/**
- * Date をローカルタイムゾーンの `YYYY-MM-DD` 文字列へ変換する。
- *
- * `toISOString()` は UTC 変換で日付がずれるため、ローカルの年月日を直接組み立てる。
- *
- * @param date - 変換対象の日付
- * @returns `YYYY-MM-DD` 形式の文字列
- */
-const toLocalIso = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 /**
  * `YYYY-MM-DD` 文字列を Date へパースする。

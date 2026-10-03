@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
+import { useTodayLocalIso } from '@/hooks/useTodayLocalIso';
 import { authFetch } from '@/lib/authFetch';
 
 /** 筋トレ 1 行のフォーム入力状態。数値項目も入力途中を扱うため文字列で保持する。 */
@@ -67,13 +68,16 @@ const createCardioRow = (): CardioRow => ({
 });
 
 /**
- * 記録追加画面。日付・筋トレ（最少 1 行）・有酸素（任意）・体調メモを入力し、フィールド単位の
+ * 記録追加画面。日付（初期値はブラウザのローカル日付での今日）・筋トレ（最少 1 行）・有酸素（任意）・体調メモを入力し、フィールド単位の
  * バリデーション（保存押下後に表示）を経て API へ新規保存する。推定消費カロリーを画面下部に
  * 表示し、同日重複（409）や保存失敗は通知する。保存成功後は一覧へ遷移する。
  */
 export default function AdminRecordNewClient() {
   const router = useRouter();
-  const [date, setDate] = useState('');
+  const today = useTodayLocalIso();
+  // ユーザーが選んだ日付。未選択（null）の間は今日を表示・保存に使う
+  const [pickedDate, setDate] = useState<string | null>(null);
+  const date = pickedDate ?? today;
   const [memo, setMemo] = useState('');
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([createRow()]);
   const [cardios, setCardios] = useState<CardioRow[]>([]);
