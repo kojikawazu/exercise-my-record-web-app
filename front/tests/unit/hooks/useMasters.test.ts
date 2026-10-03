@@ -3,6 +3,12 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useMasters } from '@/hooks/useMasters';
 import { jsonResponse, stubFetch } from '../../setup/fetchMock';
 
+// repositories/master.ts が import する authFetch は、読み込み時に Supabase クライアントを
+// 初期化する（外部 I/O）。読み取り系のテストでもモックしておく
+vi.mock('@/lib/supabase', () => ({
+  supabase: { auth: { getSession: vi.fn().mockResolvedValue({ data: { session: null } }) } },
+}));
+
 const masters = {
   'body-parts': [
     { id: 'b1', name: '胸', type: 'body-parts' },

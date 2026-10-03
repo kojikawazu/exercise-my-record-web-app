@@ -40,15 +40,16 @@ flowchart LR
 
 画面から API への呼び出しは `components/` → `hooks/` → `repositories/` の一方向に限る（`.claude/rules/frontend.md`「レイヤ依存の一方向ルール」）。
 
-| 層 | 役割 | records の実装（#142） |
+| 層 | 役割 | 実装（records: #142 / masters・profile・admin: #143） |
 |---|---|---|
-| `components/` | 描画・画面遷移・表示文言 | `RecordsListClient` / `AdminRecordsListClient` / `RecordDetailClient` / `AdminRecordNewClient` / `AdminRecordEditClient` |
-| `hooks/` | 取得状態の管理・フォーム値 → API 本文の変換 | `useRecordList` / `useRecordDetail` / `useRecordMutations`、記録フォームの選択肢は `useMasters`（#6）、前回の記録のコピーは `useLatestRecord`（#26） |
-| `repositories/` | `fetch` / `authFetch` の呼び出しと、結果の `ApiResult`（`{ ok, data } \| { ok: false, status }`）への詰め替え | `repositories/record.ts`、`repositories/master.ts`（GET のみ。#6）。失敗の詰め替えは `repositories/request.ts` に集約 |
-| `types/` | API 契約型（Route Handler とフロントで共有） | `types/record.ts` / `types/apiResult.ts` |
+| `components/` | 描画・画面遷移・表示文言 | `RecordsListClient` / `AdminRecordsListClient` / `RecordDetailClient` / `AdminRecordNewClient` / `AdminRecordEditClient` / `AdminMastersClient` / `AdminProfileClient` / `CalorieEstimate` |
+| `hooks/` | 取得状態の管理・フォーム値 → API 本文の変換 | `useRecordList` / `useRecordDetail` / `useRecordMutations`、記録フォームの選択肢は `useMasters`（#6）、前回の記録のコピーは `useLatestRecord`（#26）、マスター管理は `useMasterList`、体重は `useProfile`（プロフィール画面・推定消費カロリーで共用）、管理者判定は `useAdminSession` |
+| `repositories/` | `fetch` / `authFetch` の呼び出しと、結果の `ApiResult`（`{ ok, data } \| { ok: false, status }`）への詰め替え | `repositories/record.ts` / `master.ts` / `profile.ts` / `admin.ts`。失敗の詰め替えは `repositories/request.ts` に集約 |
+| `types/` | API 契約型（Route Handler とフロントで共有） | `types/record.ts` / `types/master.ts` / `types/profile.ts` / `types/admin.ts` / `types/apiResult.ts` |
 
 - repositories は例外を投げず、失敗を `status`（通信エラーは `0`）で返す。画面は `status` で分岐する（例: 409 = 同日重複）。
-- マスター管理画面（masters の追加・更新・削除）/ profile / admin は未移行（#143）。
+- `components/` / `hooks/` から `fetch` / `authFetch` を直接呼ぶ箇所はない（#143 で移行完了）。
+- `repositories/admin.ts` の `fetchAdminMe` は `authFetch` を使わず、`useAdminSession` が認証状態の変化イベントで受け取ったトークンを明示的に渡す（`getSession()` を取り直すと、ログアウト直後などに別時点のトークンを拾い得るため）。
 
 ## 技術スタック
 

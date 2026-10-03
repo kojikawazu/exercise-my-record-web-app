@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
+import type { ProfileResponse } from '@/types/profile';
 
 let fallbackWeightKg: number | null = null;
 
@@ -16,7 +17,7 @@ let fallbackWeightKg: number | null = null;
 export async function GET() {
   const prisma = getPrisma();
   if (!prisma) {
-    return NextResponse.json({ weightKg: fallbackWeightKg });
+    return NextResponse.json<ProfileResponse>({ weightKg: fallbackWeightKg });
   }
   try {
     const profile = await prisma.exerciseProfile.findFirst({
@@ -25,9 +26,9 @@ export async function GET() {
     if (typeof profile?.weightKg === 'number') {
       fallbackWeightKg = profile.weightKg;
     }
-    return NextResponse.json({ weightKg: profile?.weightKg ?? fallbackWeightKg });
+    return NextResponse.json<ProfileResponse>({ weightKg: profile?.weightKg ?? fallbackWeightKg });
   } catch {
-    return NextResponse.json({ weightKg: fallbackWeightKg });
+    return NextResponse.json<ProfileResponse>({ weightKg: fallbackWeightKg });
   }
 }
 
@@ -75,5 +76,5 @@ export async function POST(request: Request) {
     // Ignore DB errors in the provisional profile endpoint.
   }
   fallbackWeightKg = weightKg;
-  return NextResponse.json({ weightKg });
+  return NextResponse.json<ProfileResponse>({ weightKg });
 }
