@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  deleteMaster,
   injectAdminSession,
   selectDate,
   resetDb,
@@ -182,6 +183,59 @@ test('should edit a record and persist the change', async ({ page }) => {
   // 詳細で永続化を確認。
   await page.goto('/records/2026-02-02');
   await expect(page.getByText('編集後メモ')).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
+// マスター連動（記録フォームの選択肢）
+// ---------------------------------------------------------------------------
+
+test('should build form options from the masters (seeded body parts / cardio types / exercises)', async ({
+  page,
+}) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/records/new');
+
+  // 部位はマスターの名称昇順（seed: 胸 / 背中 / 脚）。直書きだった「腹」は出ない。
+  const partSelect = page.locator('select').first();
+  await expect(partSelect.locator('option')).toHaveText(['選択', '背中', '胸', '脚']);
+
+  // 種目名は datalist の候補として出る（自由入力は input のまま）。
+  await expect(page.locator('datalist option')).toHaveCount(3);
+
+  // 有酸素行の種別はマスターの先頭（名称昇順で「ウォーク」）が既定になる。
+  await page.getByRole('button', { name: '追加' }).nth(1).click();
+  const cardioSelect = page.locator('select').nth(1);
+  await expect(cardioSelect.locator('option')).toHaveText(['ウォーク', 'ラン']);
+  await expect(cardioSelect).toHaveValue('ウォーク');
+});
+
+test('should reflect a body part added on the master screen in the record form', async ({
+  page,
+}) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/masters');
+  await page.getByPlaceholder('新しい項目を追加').fill('肩');
+  await page.getByRole('button', { name: '追加' }).click();
+  await expect(page.getByText('肩', { exact: true })).toBeVisible();
+
+  await page.goto('/admin/records/new');
+  await page.locator('select').first().selectOption('肩');
+  await expect(page.locator('select').first()).toHaveValue('肩');
+});
+
+test('should keep a saved part that has been removed from the master on the edit screen', async ({
+  page,
+}) => {
+  // 2026-02-02 の記録は「脚」を含む。マスターから外しても編集画面で値が消えないこと。
+  await deleteMaster('body-parts', '脚');
+  await injectAdminSession(page);
+  await page.goto('/admin/records/2026-02-02/edit');
+  await expect(page.locator('textarea')).toHaveValue('体調良好');
+
+  await expect(page.locator('select').nth(2)).toHaveValue('脚');
+  // 新しい行の選択肢には、マスターから外した「脚」は出ない。
+  await page.getByRole('button', { name: '追加' }).first().click();
+  await expect(page.locator('select').nth(3).locator('option')).toHaveText(['選択', '背中', '胸']);
 });
 
 // ---------------------------------------------------------------------------

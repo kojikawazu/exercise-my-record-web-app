@@ -81,6 +81,17 @@ export const seedRecordsForDates = async (dates: string[]): Promise<void> => {
   }
 };
 
+/**
+ * 指定種別・名称のマスターを削除する（保存済みの記録がマスターから外れた状態を作る検証用）。
+ *
+ * @param type - マスター種別（`body-parts` 等）
+ * @param name - 削除する名称
+ */
+export const deleteMaster = async (type: string, name: string): Promise<void> => {
+  const db = getClient();
+  await db.exerciseMaster.deleteMany({ where: { type, name } });
+};
+
 /** reset してからベースラインを投入するショートカット。 */
 export const resetAndSeedBaseline = async (): Promise<void> => {
   await resetDb();

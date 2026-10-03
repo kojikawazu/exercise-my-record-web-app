@@ -187,6 +187,18 @@ describe('computeErrors', () => {
     expect(errors.cardios['c1'].minutes).toBeUndefined();
   });
 
+  it('should return cardio type error when an entered row has no type', () => {
+    const cardio = { ...validCardio, type: '' };
+    const errors = computeErrors('2026-01-01', [validWorkout], [cardio]);
+    expect(errors.cardios['c1']).toEqual({ type: '種別を選択してください' });
+  });
+
+  it('should not require a type for an empty optional cardio row', () => {
+    const cardio = { ...validCardio, type: '', minutes: '', distance: '' };
+    const errors = computeErrors('2026-01-01', [validWorkout], [cardio]);
+    expect(errors.cardios).toEqual({});
+  });
+
   it('should return cardio minutes error when minutes is zero', () => {
     const cardio = { ...validCardio, minutes: '0' };
     const errors = computeErrors('2026-01-01', [validWorkout], [cardio]);

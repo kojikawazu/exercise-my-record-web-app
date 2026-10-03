@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -12,6 +12,8 @@ import DatePicker from '@/components/DatePicker';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
 import { useRecordDetail } from '@/hooks/useRecordDetail';
 import { useRecordMutations } from '@/hooks/useRecordMutations';
+import { useMasters } from '@/hooks/useMasters';
+import { withCurrentOption } from '@/lib/recordForm';
 import type { RecordDetail, RecordWorkout } from '@/types/record';
 import type { CardioRow, WorkoutRow } from '@/types/recordForm';
 
@@ -51,13 +53,14 @@ const emptyRow = (): WorkoutRow => ({
 });
 
 /**
- * 空の有酸素入力行を生成する。行追加に使用する（種別は「ラン」を既定とする）。
+ * 空の有酸素入力行を生成する。行追加に使用する。
  *
+ * @param type - 既定の種別（有酸素種別マスターの先頭。マスターが未取得・0 件なら空文字）
  * @returns 数値項目が空で新規 ID を持つ有酸素行
  */
-const createCardioRow = (): CardioRow => ({
+const createCardioRow = (type: string): CardioRow => ({
   id: crypto.randomUUID(),
-  type: 'ラン',
+  type,
   minutes: '',
   distance: '',
 });
@@ -75,6 +78,9 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
   const [cardios, setCardios] = useState<CardioRow[]>([]);
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [notice, setNotice] = useState('');
+  const { bodyParts, exercises, cardioTypes, status: mastersStatus } = useMasters();
+  // 種目名の <input list> と <datalist> を結ぶ ID
+  const exerciseListId = useId();
 
   // 取得した既存記録をフォームの初期値として流し込む（取得成功時に 1 回だけ呼ばれる）
   const presetForm = (data: RecordDetail) => {
@@ -84,8 +90,7 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
       setCardios(
         data.cardios.map((c) => ({
           id: crypto.randomUUID(),
-          // 選択肢はラン / ウォークのみのため、それ以外の保存値はランとして表示する（従来の挙動）
-          type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
+          type: c.type,
           minutes: String(c.minutes),
           distance: String(c.distance),
         })),
@@ -116,7 +121,7 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
   const updateCardio = (id: string, field: keyof CardioRow, value: string) => {
     setCardios((prev) => prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
-  const addCardioRow = () => setCardios((prev) => [...prev, createCardioRow()]);
+  const addCardioRow = () => setCardios((prev) => [...prev, createCardioRow(cardioTypes[0] ?? '')]);
   const removeCardioRow = (id: string) => setCardios((prev) => prev.filter((row) => row.id !== id));
 
   const handleSave = async () => {
@@ -178,6 +183,9 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
           {notice || loadNotice ? (
             <p className="text-sm font-bold text-red-500">{notice || loadNotice}</p>
           ) : null}
+          {mastersStatus === 'error' ? (
+            <p className="text-sm font-bold text-red-500">選択肢を取得できませんでした。</p>
+          ) : null}
           <Card className="p-6 md:p-8">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               日付
@@ -194,6 +202,12 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
                 最少1行
               </span>
             </div>
+            {/* 種目名の入力候補。マスターに無い種目も記録できるよう自由入力を残す */}
+            <datalist id={exerciseListId}>
+              {exercises.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
             <div className="mt-6 grid gap-4">
               {workouts.map((row) => (
                 <div key={row.id} className="rounded-2xl bg-gray-50 p-4">
@@ -206,10 +220,11 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
                         onChange={(event) => updateWorkout(row.id, 'part', event.target.value)}
                       >
                         <option value="">選択</option>
-                        <option value="胸">胸</option>
-                        <option value="背中">背中</option>
-                        <option value="脚">脚</option>
-                        <option value="腹">腹</option>
+                        {withCurrentOption(bodyParts, row.part).map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
                       </select>
                       {displayErrors.workouts[row.id]?.part ? (
                         <p className="mt-1 text-xs text-red-500">
@@ -222,6 +237,7 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
                       <input
                         type="text"
                         placeholder="種目を入力"
+                        list={exerciseListId}
                         className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
                         value={row.name}
                         onChange={(event) => updateWorkout(row.id, 'name', event.target.value)}
@@ -316,9 +332,18 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
                         value={row.type}
                         onChange={(event) => updateCardio(row.id, 'type', event.target.value)}
                       >
-                        <option value="ラン">ラン</option>
-                        <option value="ウォーク">ウォーク</option>
+                        {row.type === '' ? <option value="">選択</option> : null}
+                        {withCurrentOption(cardioTypes, row.type).map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
                       </select>
+                      {displayErrors.cardios[row.id]?.type ? (
+                        <p className="mt-1 text-xs text-red-500">
+                          {displayErrors.cardios[row.id].type}
+                        </p>
+                      ) : null}
                     </label>
                     <label className="text-[10px] font-black uppercase text-gray-400">
                       時間 (分)
