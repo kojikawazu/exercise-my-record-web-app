@@ -1,17 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  calculateCardioCalories,
-  calculateStrengthCalories,
-  formatCalories,
-  type CardioType,
-} from '@/lib/calorie';
+import { calculateCardioCalories, calculateStrengthCalories, formatCalories } from '@/lib/calorie';
 
 /** 消費カロリー算定に用いる有酸素 1 件分の入力。 */
 type CardioEntry = {
-  /** 有酸素種別（METs 係数の決定に使う）。 */
-  type: CardioType;
+  /** 有酸素種別（METs 係数の決定に使う。係数を持たない種別はカロリー 0 として扱う）。 */
+  type: string;
   /** 運動時間（分）。 */
   minutes: number;
 };

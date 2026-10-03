@@ -9,7 +9,7 @@
   - [追加スクリプト (package.json)](#追加スクリプト-packagejson)
   - [設定ファイル](#設定ファイル)
 - [テストケース一覧](#テストケース一覧)
-  - [1. `lib/validation.ts` — 純粋バリデーション関数](#1-libvalidationts--純粋バリデーション関数)
+  - [1. `validation/record.ts` — 純粋バリデーション関数](#1-validationrecordts--純粋バリデーション関数)
   - [2. `lib/calorie.ts` — カロリー計算関数](#2-libcaloriets--カロリー計算関数)
   - [3. `hooks/useRecordValidation` — フックの状態管理](#3-hooksuserecordvalidation--フックの状態管理)
   - [4. API Routes — `GET/POST /api/records`](#4-api-routes--getpost-apirecords)
@@ -77,9 +77,9 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 
 ---
 
-### 1. `lib/validation.ts` — 純粋バリデーション関数
+### 1. `validation/record.ts` — 純粋バリデーション関数
 
-**テストファイル**: `front/tests/unit/lib/validation.test.ts`
+**テストファイル**: `front/tests/unit/validation/record.test.ts`（#141 で `lib/validation.ts` から移設）
 
 #### 正常系
 
@@ -401,7 +401,7 @@ E2E 合計 20 件（smoke 5 + record-crud 15、全 pass）。#124 で record-cru
 
 | ファイル | テスト数目安 | 優先度 |
 |---|---|---|
-| `tests/unit/lib/validation.test.ts` | 15件 | High |
+| `tests/unit/validation/record.test.ts` | 15件 | High |
 | `tests/unit/lib/calorie.test.ts` | 10件 | High |
 | `tests/unit/hooks/useRecordValidation.test.ts` | 8件 | High |
 | `tests/unit/app/api/api/records/route.test.ts` | 10件 | High |

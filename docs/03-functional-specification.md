@@ -147,7 +147,7 @@
 - バリデーションはフィールド単位でエラー表示（どの項目がエラーか分かるようにする）。
 - エラー表示は保存ボタン押下後から開始（初期表示ではエラーを出さない）。エラーがある場合は保存を抑止。
 - 同日保存時はエラーとして弾き、通知 UI を表示する。
-- 実装: `front/src/lib/validation.ts`（純粋関数）、`front/src/hooks/useRecordValidation.ts`（状態管理）。
+- 実装: `front/src/validation/record.ts`（純粋関数）、`front/src/types/recordForm.ts`（フォーム行・エラーの型）、`front/src/hooks/useRecordValidation.ts`（状態管理）。
 
 ### 単位
 

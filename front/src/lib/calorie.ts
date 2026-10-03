@@ -1,6 +1,3 @@
-/** 有酸素種別の識別子。日本語表記・英小文字・英表記の別名を許容する。 */
-export type CardioType = 'ラン' | 'ウォーク' | 'run' | 'walk' | 'Running' | 'Walking';
-
 /**
  * 有酸素種別ごとの METs（運動強度）係数の暫定値。
  *
@@ -26,7 +23,7 @@ export const cardioMets: Record<string, number> = {
  * @param type - 有酸素種別。`cardioMets` に無い値は消費カロリー 0 とみなす
  * @returns 推定消費カロリー（kcal、丸め前の実数）
  */
-export const calculateCardioCalories = (weightKg: number, minutes: number, type: CardioType) => {
+export const calculateCardioCalories = (weightKg: number, minutes: number, type: string) => {
   const mets = cardioMets[type] ?? 0;
   const hours = minutes / 60;
   return mets * weightKg * hours;

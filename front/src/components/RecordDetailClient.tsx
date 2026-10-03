@@ -145,9 +145,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
                 <CalorieEstimate
                   totalSets={totalSets}
                   cardios={cardios.map((c) => ({
-                    type: (c.type === 'ウォーク'
-                      ? 'ウォーク'
-                      : 'ラン') as import('@/lib/calorie').CardioType,
+                    type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
                     minutes: c.minutes,
                   }))}
                 />

@@ -31,7 +31,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 ## ロジック分離
 
 - **クライアントコンポーネント**のロジックは**カスタムフック**（`hooks/`）に切り出す。コンポーネントは UI 描画に専念する。
-  - 実例: 入力バリデーションは `hooks/useRecordValidation.ts`（状態管理）と `lib/validation.ts`（純粋関数）に分離。
+  - 実例: 入力バリデーションは `hooks/useRecordValidation.ts`（状態管理）と `validation/record.ts`（純粋関数）に分離。
 - **サーバーコンポーネント**のデータ取得は `page.tsx` や `lib/` 内のサーバー関数で行う（hooks は使用しない）。
 - 状態の種類で手段を分ける:
   - **サーバー状態**（API データ）: React Query / SWR
@@ -53,7 +53,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - 置き場所は**参照範囲**で決める。1 ファイルに閉じる型（props 型等）はコロケーション、2 箇所以上から参照される型は `types/` へ集約する。詳細は `typescript.md`「型定義の配置」に従う。
 - `type` / `interface` は型本体・各メンバーともにコメント必須（`jsdoc.md`）。
 - **共通定数は `constants/` に集約する**（判断軸は型と同じ「参照範囲」。マジックナンバー・マジック文字列を直接書かない）。ただし union の元になる定数は、導出される型と**同じファイルに同居**させる。環境変数は `constants/` に置かない。詳細は `typescript.md`「定数の配置」に従う。
-- **現状**: `types/` は作成済み（`types/master.ts`）。`constants/` は未作成で、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
+- **現状**: `types/` は作成済み（`types/master.ts` / `types/recordForm.ts`）。`constants/` は未作成で、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
 
 ## ディレクトリの役割分担
 
@@ -140,16 +140,16 @@ front/src/
 ├── components/             # 設計選択に従う
 ├── hooks/                  # クライアントロジック（useXxx）
 ├── repositories/           # API アクセス（fetch/authFetch はここだけ。未作成 — issue #111）
-├── validation/             # 入力検証（Zod 導入時は schemas/。未作成 — issue #111）
+├── validation/             # 入力検証（Zod 導入時は schemas/。validation/record.ts）
 ├── lib/                    # 純粋関数・サーバー専用クライアント（prisma / supabase）
 ├── generated/              # Prisma 自動生成（lint・編集対象外）
 ├── constants/              # 共通定数（環境変数は置かない。未作成 — 必要時に作る）
-└── types/                  # 型定義（types/master.ts）
+└── types/                  # 型定義（types/master.ts / types/recordForm.ts）
 ```
 
 ## バリデーション
 
-- 入力検証は**純粋関数**に集約し、状態管理は `hooks/useRecordValidation.ts` が担う（ロジック分離の実例）。置き場所は `validation/`（現状は `lib/validation.ts`。移行は issue #111）。検証ライブラリの導入方針は `typescript.md`「スキーマバリデーション」に従う。
+- 入力検証は**純粋関数**に集約し、状態管理は `hooks/useRecordValidation.ts` が担う（ロジック分離の実例）。置き場所は `validation/`（`validation/record.ts`）。フォーム行の型など検証を伴わない型は `types/recordForm.ts` に置く。検証ライブラリの導入方針は `typescript.md`「スキーマバリデーション」に従う。
 - **クライアント検証は UX のためのものであり、セキュリティ担保ではない**。Route Handler でも必ず検証する（信頼境界が違うため、この重複は**必要**な重複 — `duplication.md`）。
 - 同じ入力ルールなら、**制約値を定数として共有する**（検証の実装は両側に置いても、上限値等の数値を二重に書かない）。
 

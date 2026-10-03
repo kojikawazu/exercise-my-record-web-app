@@ -184,9 +184,7 @@ export default function RecordsListClient() {
                   <CalorieEstimate
                     totalSets={record.totalSets}
                     cardios={(record.cardios ?? []).map((c) => ({
-                      type: (c.type === 'ウォーク'
-                        ? 'ウォーク'
-                        : 'ラン') as import('@/lib/calorie').CardioType,
+                      type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
                       minutes: c.minutes,
                     }))}
                   />

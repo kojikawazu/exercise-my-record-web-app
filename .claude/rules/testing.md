@@ -47,7 +47,7 @@ front/
 ├── src/                       # プロダクションコードのみ
 └── tests/
     ├── unit/                  # src の構造をミラーする
-    │   ├── lib/validation.test.ts
+    │   ├── validation/record.test.ts
     │   ├── hooks/useRecordValidation.test.ts
     │   ├── types/master.test.ts
     │   └── app/api/records/route.test.ts
