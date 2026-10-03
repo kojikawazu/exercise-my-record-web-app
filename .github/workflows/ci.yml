@@ -27,6 +27,11 @@ jobs:
   changes:
     name: Detect changed paths
     runs-on: ubuntu-latest
+    # pull_request では変更ファイル一覧を GitHub API から取得するため pull-requests: read が要る。
+    # 無いと private リポジトリで changes が失敗し、後続の全ジョブが skip（= 緑）になる。
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       app: ${{ steps.filter.outputs.app }}
     steps:
@@ -34,12 +39,24 @@ jobs:
 
       # 判定は「除外リスト」で書く。対象リストで書くと、新しいディレクトリが
       # 増えたときに黙ってテストが走らなくなるため、安全側に倒す。
+      #
+      # 'some-with-excludes': いずれかの肯定パターン（'**'）に一致し、かつどの否定パターン
+      # （先頭 '!'）にも一致しないファイルを対象にする。
+      # 除外を '!(a|b)' の extglob 1 本で書かない — picomatch では否定になるのは先頭の '!'
+      # だけで、'!(...)' の内側では '**' が 1 階層しか跨がず、docs/ の 2 階層目や
+      # ルート直下の *.md を除外できない（#118）。
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          predicate-quantifier: 'some-with-excludes'
           filters: |
             app:
-              - '!(docs/**|**/*.md|.claude/**|.markdownlint-cli2.jsonc|LICENSE)'
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.claude/**'
+              - '!.markdownlint-cli2.jsonc'
+              - '!LICENSE'
 
   static-check:
     name: Static Checks (lint / typecheck / build)
