@@ -82,13 +82,31 @@ test('should show edit button for admin user', async ({ page }) => {
 // 記録追加フォーム — バリデーション
 // ---------------------------------------------------------------------------
 
+test("should prefill today's local date and allow changing it", async ({ page }) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/records/new');
+
+  // 期待値はブラウザ側のローカル日付で組み立てる（toISOString は UTC 換算で日付がずれるため）
+  const today = await page.evaluate(() => {
+    const now = new Date();
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  });
+  const picker = page.getByRole('button', { name: /year jump/i });
+  await expect(picker).toContainText(today);
+
+  await selectDate(page, '2025-06-15');
+  await expect(picker).toContainText('2025-06-15');
+});
+
 test('should show field validation errors when saving empty form', async ({ page }) => {
   await injectAdminSession(page);
   await page.goto('/admin/records/new');
 
   await page.getByRole('button', { name: '保存' }).click();
 
-  await expect(page.getByText('日付を選択してください')).toBeVisible();
+  // 日付は今日が初期値で入るため（#124）、空フォームでも日付エラーは出ない
+  await expect(page.getByText('日付を選択してください')).toHaveCount(0);
   await expect(page.getByText('部位を選択してください').first()).toBeVisible();
   await expect(page.getByText('種目名を入力してください').first()).toBeVisible();
   await expect(page.getByText('値を入力してください').first()).toBeVisible();
