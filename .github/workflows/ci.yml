@@ -34,7 +34,7 @@ jobs:
 
       # 判定は「除外リスト」で書く。対象リストで書くと、新しいディレクトリが
       # 増えたときに黙ってテストが走らなくなるため、安全側に倒す。
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
