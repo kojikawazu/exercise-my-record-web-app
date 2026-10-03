@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useProfile } from '@/hooks/useProfile';
 import { calculateCardioCalories, calculateStrengthCalories, formatCalories } from '@/lib/calorie';
 
 /** 消費カロリー算定に用いる有酸素 1 件分の入力。 */
@@ -26,20 +27,7 @@ type CalorieEstimateProps = {
  * `-- kcal` を表示する。props の各項目は {@link CalorieEstimateProps} を参照。
  */
 export default function CalorieEstimate({ totalSets, cardios }: CalorieEstimateProps) {
-  const [weightKg, setWeightKg] = useState<number | null>(null);
-
-  useEffect(() => {
-    const fetchWeight = async () => {
-      const res = await fetch('/api/profile');
-      if (!res.ok) return;
-      const data = (await res.json()) as { weightKg: number | null };
-      if (typeof data.weightKg === 'number') {
-        setWeightKg(data.weightKg);
-      }
-    };
-
-    void fetchWeight();
-  }, []);
+  const { weightKg } = useProfile();
 
   const calories = useMemo(() => {
     if (weightKg === null) return null;

@@ -342,6 +342,21 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 | `tests/unit/lib/recordForm.test.ts`（`createWorkoutRow` / `toFormRows` / `isFormBlank`） | 8 | 正: 数値の文字列化と順序・空行の生成 / 準: 行 ID を振り直す・日付とメモを含めない・筋トレ 0 件なら空行 1 行・入力の有無の判定（重量 0・数値が空の有酸素行は入力ありとみなす） |
 | `tests/e2e/record-crud.spec.ts`（前回の記録をコピー） | 3 | 正: 最新記録の 3 種目と有酸素が入り、メモは入らず、別日付で保存できる / 準: 入力済みなら確認し、キャンセルで入力を保持・OK で置換 / 記録 0 件ならボタン無効 |
 
+### 5i. masters / profile / admin の repositories / hooks（#143）
+
+マスター管理・プロフィール・推定消費カロリー・管理者判定の API アクセスを `repositories/` と hooks に移した（records の 5f と同じ方針）。モックは外部 I/O（グローバル `fetch`、`@/lib/supabase`）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/repositories/master.test.ts` | 12 | 正: 取得・追加（Bearer / JSON）・名称変更・削除（本文を読まない） / 準: 0 件・409・401・404 を `status` で返す / 異: 5xx・通信エラーは `status: 0` |
+| `tests/unit/repositories/profile.test.ts` | 6 | 正: 取得・保存（Bearer / JSON） / 準: 未保存は `null`・401・400 / 異: 通信エラー |
+| `tests/unit/repositories/admin.test.ts` | 4 | 正: 渡したトークンを付け `no-store` で判定 / 準: 403・401 / 異: 通信エラー |
+| `tests/unit/hooks/useMasterList.test.ts` | 9 | 正: 取得・追加は先頭へ・名称はサーバー値で置換・削除 / 準: 種別切替中は前の種別を出さない・409 / 失敗時は一覧を変えない・**操作中にタブを切り替えても別種別へ反映しない** / 異: 取得失敗は空で `error` |
+| `tests/unit/hooks/useProfile.test.ts` | 5 | 正: 取得・保存後に更新 / 準: 未保存は `null`・保存失敗は保存済みの値を保持 / 異: 取得失敗は `error` |
+| `tests/unit/hooks/useAdminSession.test.ts` | 5 | 正: セッションのトークンで管理者判定 / 準: 403 は非管理者・セッション無しは API を呼ばない / 異: 通信エラー・2xx の本文が JSON でない場合も判定を終えて非管理者 |
+
+画面の振る舞い（マスター管理・プロフィール・カロリー表示・管理者メニュー）は既存の E2E / シナリオで回帰を確認する。
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

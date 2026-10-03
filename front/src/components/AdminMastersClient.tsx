@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Save, Trash2, X } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { authFetch } from '@/lib/authFetch';
+import { useMasterList } from '@/hooks/useMasterList';
 import { MASTER_TYPES, type MasterResponse, type MasterType } from '@/types/master';
 
 /**
@@ -33,67 +33,43 @@ const masterTabs = MASTER_TYPES.map((type) => ({
  */
 export default function AdminMastersClient() {
   const [activeType, setActiveType] = useState<MasterType>('body-parts');
-  const [items, setItems] = useState<MasterResponse[]>([]);
+  const { items, status: listStatus, add, rename, remove } = useMasterList(activeType);
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  // 追加・更新・削除の失敗メッセージ。タブを切り替えたら消す
   const [statusMessage, setStatusMessage] = useState('');
-  const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const loading = listStatus === 'loading';
+  const message = statusMessage || (listStatus === 'error' ? '取得に失敗しました。' : '');
 
   const activeLabel = useMemo(
     () => masterTabs.find((tab) => tab.type === activeType)?.label ?? '',
     [activeType],
   );
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      setStatusMessage('');
-      const res = await fetch(`/api/masters?type=${activeType}`);
-      if (!res.ok) {
-        setStatusMessage('取得に失敗しました。');
-        setLoading(false);
-        return;
-      }
-      const data = (await res.json()) as MasterResponse[];
-      setItems(data);
-      setLoading(false);
-    };
-
-    void fetchItems();
-  }, [activeType]);
+  const selectType = (type: MasterType) => {
+    setActiveType(type);
+    setStatusMessage('');
+  };
 
   const handleAdd = async () => {
     const name = inputValue.trim();
     if (!name) return;
     setStatusMessage('');
     setAdding(true);
-    try {
-      const res = await authFetch(`/api/masters?type=${activeType}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
+    const result = await add(name);
+    setAdding(false);
 
-      if (res.status === 409) {
-        setStatusMessage('同じ名称が既に存在します。');
-        return;
-      }
-
-      if (!res.ok) {
-        setStatusMessage('追加に失敗しました。');
-        return;
-      }
-
-      const created = (await res.json()) as MasterResponse;
-      setItems((prev) => [created, ...prev]);
-      setInputValue('');
-    } finally {
-      setAdding(false);
+    if (!result.ok) {
+      setStatusMessage(
+        result.status === 409 ? '同じ名称が既に存在します。' : '追加に失敗しました。',
+      );
+      return;
     }
+    setInputValue('');
   };
 
   const handleEdit = (item: MasterResponse) => {
@@ -105,39 +81,23 @@ export default function AdminMastersClient() {
     const name = editingValue.trim();
     if (!name) return;
     setSavingId(id);
-    try {
-      const res = await authFetch(`/api/masters/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
+    const result = await rename(id, name);
+    setSavingId(null);
 
-      if (!res.ok) {
-        setStatusMessage('更新に失敗しました。');
-        return;
-      }
-
-      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, name } : item)));
-      setEditingId(null);
-      setEditingValue('');
-    } finally {
-      setSavingId(null);
+    if (!result.ok) {
+      setStatusMessage('更新に失敗しました。');
+      return;
     }
+    setEditingId(null);
+    setEditingValue('');
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('この項目を削除します。よろしいですか？')) return;
     setDeletingId(id);
-    try {
-      const res = await authFetch(`/api/masters/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        setStatusMessage('削除に失敗しました。');
-        return;
-      }
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    } finally {
-      setDeletingId(null);
-    }
+    const result = await remove(id);
+    setDeletingId(null);
+    if (!result.ok) setStatusMessage('削除に失敗しました。');
   };
 
   return (
@@ -159,7 +119,7 @@ export default function AdminMastersClient() {
             <button
               key={tab.type}
               type="button"
-              onClick={() => setActiveType(tab.type)}
+              onClick={() => selectType(tab.type)}
               className={`rounded-full border px-4 py-2 text-sm font-bold ${
                 activeType === tab.type
                   ? 'border-[color:var(--accent)] text-[color:var(--accent)]'
@@ -201,9 +161,7 @@ export default function AdminMastersClient() {
           </div>
         </Card>
 
-        {statusMessage ? (
-          <p className="mt-4 text-sm font-bold text-red-500">{statusMessage}</p>
-        ) : null}
+        {message ? <p className="mt-4 text-sm font-bold text-red-500">{message}</p> : null}
 
         {loading ? (
           <Card className="mt-6 p-6">

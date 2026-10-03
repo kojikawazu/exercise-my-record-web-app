@@ -1,12 +1,12 @@
 'use client';
 
 import { Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { authFetch } from '@/lib/authFetch';
+import { useProfile } from '@/hooks/useProfile';
 import Link from 'next/link';
 
 /**
@@ -15,26 +15,12 @@ import Link from 'next/link';
  * 1 件のみ維持（上書き保存）。
  */
 export default function AdminProfileClient() {
-  const [weightKg, setWeightKg] = useState('');
-  const [isFetching, setIsFetching] = useState(true);
+  const { weightKg: savedWeightKg, status: loadStatus, save } = useProfile();
+  // 入力欄の値。未編集（null）の間は保存済みの体重を表示する
+  const [input, setInput] = useState<string | null>(null);
+  const weightKg = input ?? (savedWeightKg === null ? '' : String(savedWeightKg));
+  const isFetching = loadStatus === 'loading';
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-
-  useEffect(() => {
-    const fetchWeight = async () => {
-      try {
-        const res = await fetch('/api/profile');
-        if (!res.ok) return;
-        const data = (await res.json()) as { weightKg: number | null };
-        if (typeof data.weightKg === 'number') {
-          setWeightKg(String(data.weightKg));
-        }
-      } finally {
-        setIsFetching(false);
-      }
-    };
-
-    void fetchWeight();
-  }, []);
 
   const handleSave = async () => {
     setStatus('saving');
@@ -43,23 +29,13 @@ export default function AdminProfileClient() {
       setStatus('error');
       return;
     }
-    try {
-      const res = await authFetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weightKg: value }),
-      });
-
-      if (!res.ok) {
-        setStatus('error');
-        console.warn('Profile save failed.', res.status);
-        return;
-      }
-      setStatus('saved');
-    } catch (error) {
+    const result = await save(value);
+    if (!result.ok) {
       setStatus('error');
-      console.warn('Profile save failed.', error);
+      console.warn('Profile save failed.', result.status);
+      return;
     }
+    setStatus('saved');
   };
 
   return (
@@ -87,7 +63,7 @@ export default function AdminProfileClient() {
                   type="number"
                   step="0.1"
                   value={weightKg}
-                  onChange={(event) => setWeightKg(event.target.value)}
+                  onChange={(event) => setInput(event.target.value)}
                   placeholder="例: 65.5"
                   className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold"
                 />
