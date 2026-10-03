@@ -108,6 +108,8 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 | S-11 | 有酸素: minutes=0 | cardio(minutes="0", distance="5") | `errors.cardios[id].minutes = '正しい数値を入力してください'` | High |
 | S-12 | 複数workoutの一部のみエラー | workout1=有効, workout2=part空 | workout2のみエラー | Medium |
 | S-13 | sets が NaN 文字列 | workout.sets="abc" | `errors.workouts[id].sets` が設定される | Medium |
+| S-14 | 有酸素: 入力のある行で種別が空 | cardio(type="", minutes="30", distance="5") | `errors.cardios[id] = { type: '種別を選択してください' }` | High |
+| S-15 | 有酸素: 未入力行の種別が空 | cardio(type="", minutes="", distance="") | cardios にエラーなし | Medium |
 
 #### 異常系
 
@@ -317,6 +319,18 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 | `tests/unit/hooks/useRecordMutations.test.ts` | 5 | 正: 作成（date 付与）・更新・関数参照の安定 / 準: 409・404 を返す |
 
 画面の振る舞い（一覧・詳細・追加・編集・削除）は既存の E2E / シナリオで回帰を確認する。
+
+### 5g. 記録フォームのマスター連動（#6）
+
+記録追加・編集の選択肢（部位・種目・有酸素種別）をマスターから作る。モックは外部 I/O（グローバル `fetch`）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/repositories/master.test.ts` | 4 | 正: 種別をクエリに付けて取得 / 準: 0 件は空配列・503 を `status` で返す / 異: 通信エラーは `status: 0` |
+| `tests/unit/hooks/useMasters.test.ts` | 3 | 正: 3 種別の名称を取得 / 準: 1 種別だけ失敗しても他は使え `error` / 異: 全失敗（通信エラー・5xx）は空配列で `error` |
+| `tests/unit/lib/recordForm.test.ts`（`withCurrentOption`） | 5 | 正: 含まれていればそのまま / 準: マスターに無い現在値を先頭に足す・空値は足さない・マスター 0 件でも現在値を残す / 異: 引数の配列を変更しない |
+| `tests/unit/validation/record.test.ts`（S-14 / S-15） | 2 | 準: 入力のある有酸素行の種別未選択はエラー・未入力行は種別を問わない |
+| `tests/e2e/record-crud.spec.ts`（マスター連動） | 3 | 正: seed したマスターが選択肢・候補・既定値になる・マスター管理で追加した部位が選べる / 準: マスターから外した保存済みの部位が編集画面で残る |
 
 ### 5d-2. テスト DB の接続先ガード（#116）
 

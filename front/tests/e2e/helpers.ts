@@ -11,6 +11,7 @@ export {
   seedRecordsForDates,
   resetAndSeedBaseline,
   disconnectDb,
+  deleteMaster,
 } from './db';
 
 // ---------------------------------------------------------------------------

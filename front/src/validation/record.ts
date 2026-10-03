@@ -33,7 +33,7 @@ export function validatePositiveNumericField(value: string): string | undefined 
  *
  * @param date - 日付入力（空なら必須エラー）
  * @param workouts - 筋トレ行の配列（各行の部位・種目・セット・回数・重量を検証）
- * @param cardios - 有酸素行の配列（入力のある行のみ時間・距離を検証）
+ * @param cardios - 有酸素行の配列（入力のある行のみ種別・時間・距離を検証）
  * @returns フィールド単位のエラー。行エラーは行 id をキーに格納する
  */
 export function computeErrors(
@@ -66,6 +66,7 @@ export function computeErrors(
     if (row.minutes === '' && row.distance === '') continue;
 
     const rowErrors: FieldErrors = {};
+    if (!row.type) rowErrors.type = '種別を選択してください';
     const minutesErr = validatePositiveNumericField(row.minutes);
     if (minutesErr) rowErrors.minutes = minutesErr;
     const distanceErr = validatePositiveNumericField(row.distance);

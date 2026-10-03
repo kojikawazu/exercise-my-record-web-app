@@ -24,7 +24,7 @@ export type WorkoutRow = {
 export type CardioRow = {
   /** 行を一意に識別するキー（描画の key・更新/削除の対象特定・エラーの紐付けに使う）。 */
   id: string;
-  /** 有酸素種別。マスター（cardio-types）連動を見据えて固定 union にせず文字列で持つ。 */
+  /** 有酸素種別（マスター cardio-types の名称。未選択は空文字）。マスターで増減するため固定 union にしない。 */
   type: string;
   /** 時間（分。文字列で保持し保存時に数値へ変換）。距離とともに空なら未入力の任意行。 */
   minutes: string;

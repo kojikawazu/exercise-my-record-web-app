@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toRecordRequest } from '@/lib/recordForm';
+import { toRecordRequest, withCurrentOption } from '@/lib/recordForm';
 
 const workout = {
   id: 'w1',
@@ -64,5 +64,31 @@ describe('toRecordRequest', () => {
       cardios: [{ id: 'c1', type: 'ラン', minutes: '', distance: '' }],
     });
     expect(result.cardios).toBeNull();
+  });
+});
+
+describe('withCurrentOption', () => {
+  const options = ['胸', '背中'];
+
+  it('should return the options as is when the current value is included', () => {
+    expect(withCurrentOption(options, '背中')).toEqual(['胸', '背中']);
+  });
+
+  it('should prepend the current value when it is missing from the master', () => {
+    expect(withCurrentOption(options, '腹')).toEqual(['腹', '胸', '背中']);
+  });
+
+  it('should not prepend an empty (unselected) value', () => {
+    expect(withCurrentOption(options, '')).toEqual(['胸', '背中']);
+  });
+
+  it('should keep the current value even when the master is empty', () => {
+    expect(withCurrentOption([], 'ラン')).toEqual(['ラン']);
+  });
+
+  it('should not mutate the given options', () => {
+    const source = ['胸'];
+    withCurrentOption(source, '脚');
+    expect(source).toEqual(['胸']);
   });
 });
