@@ -63,6 +63,8 @@ flowchart LR
 | パッケージ管理 | pnpm（workspace: `front/`） |
 | テスト | Vitest 4 / Playwright（[`08-test-specification.md`](./08-test-specification.md)） |
 
+- `front/next.config.ts` で `agentRules: false` を設定している。Next.js 16.3 以降の `next dev` は `front/` 直下に `AGENTS.md` / `CLAUDE.md`（Next.js のバージョン別ドキュメントを読ませる指示）を自動生成するが、エージェント向け指示の正本はリポジトリ直下の `CLAUDE.md` / `AGENTS.md` と `.claude/rules/` であり、二重化を避けるため生成を止めている。
+
 ## インフラ構成
 
 - ホスティング: Vercel（デプロイ対象は `front/`）。
