@@ -95,7 +95,7 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
 - **パス判定は「除外リスト」方式**（`docs/**` / `**/*.md` / `.claude/**` 以外はコード変更とみなす）。許可リスト方式だと、新しいディレクトリが増えたときに黙ってテストが走らなくなるため。
 - **`ci.yml` はワークフローレベルの `paths` を使わない**。必須チェック（ブランチ保護）に設定した場合、ワークフローが起動せずチェックが pending のまま PR がマージ不能になるため。ジョブレベル `if:` によるスキップは「skipped」＝成功扱いになる。
 - 両ワークフローとも `concurrency`（連続 push で古い実行をキャンセル）と最小権限の `permissions: contents: read` を設定する。
-- **action の版は Dependabot で追随する**（`.github/dependabot.yml`、`github-actions` を週次。#128）。手で一括置換せず、action ごとの更新 PR をレビューしてマージする。
+- **action の版は Dependabot で追随する**（`.github/dependabot.yml`、`github-actions` を週次。#128）。手で一括置換せず、Dependabot が 1 本にまとめた更新 PR（`groups`）をレビューしてマージする（action ごとに分けると同じワークフローファイル上で互いに競合するため）。
 - markdown lint の設定は `.markdownlint-cli2.jsonc`。見た目のルールは無効化し、**壊れているもの**（言語指定のないコードフェンス・空リンク・無効な見出しアンカー・表の前後空行）のみを検出する。
 
 - `ci.yml` のジョブ（並列実行）:
