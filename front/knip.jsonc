@@ -1,0 +1,16 @@
+// knip: 未使用の export・ファイル・依存関係を検出する（.claude/rules/dead-code.md「検出」）。
+// Next.js / Vitest / Playwright はプラグインが自動で有効になり、page.tsx の default・route.ts の
+// HTTP メソッド・metadata 等の規約 export はエントリとして扱われる。除外は「ツールから見えない
+// 外部要因」に限り、理由を必ず書く（増えてきたら設定ではなく構成を疑う）。
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "ignoreDependencies": [
+    // prisma-client-js ジェネレータは prisma generate 時に @prisma/client を要求する。
+    // 生成先 src/generated/ は gitignore 対象のため、knip からは参照が見えない。
+    "@prisma/client",
+  ],
+  "ignoreBinaries": [
+    // Supabase CLI（dev:db:up / dev:db:down）は npm 依存ではなく brew で入れる前提（README「前提」）。
+    "supabase",
+  ],
+}

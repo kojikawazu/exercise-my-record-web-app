@@ -56,7 +56,7 @@
 
 ```bash
 cd front
-pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom
+pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom
 ```
 
 ### 追加スクリプト (package.json)

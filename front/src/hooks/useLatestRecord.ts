@@ -4,7 +4,7 @@ import type { ApiResult } from '@/types/apiResult';
 import type { RecordDetail } from '@/types/record';
 
 /** 最新の記録の日付の取得状態。 */
-export type LatestRecordStatus =
+type LatestRecordStatus =
   /** 一覧の結果がまだ届いていない。 */
   | 'loading'
   /** 最新の記録の日付を取得できた。 */

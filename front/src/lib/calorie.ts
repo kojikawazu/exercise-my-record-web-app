@@ -4,7 +4,7 @@
  * ラン = 8.0 / ウォーク = 4.0。表記ゆれ（日本語・英語）を同じ係数へ寄せる。
  * 未知の種別は係数を持たず、カロリー算定では 0 として扱う。
  */
-export const cardioMets: Record<string, number> = {
+const cardioMets: Record<string, number> = {
   ラン: 8.0,
   ウォーク: 4.0,
   run: 8.0,

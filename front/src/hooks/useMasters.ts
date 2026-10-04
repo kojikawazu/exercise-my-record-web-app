@@ -4,7 +4,7 @@ import type { ApiResult } from '@/types/apiResult';
 import type { MasterResponse } from '@/types/master';
 
 /** 記録フォームの選択肢の取得状態。 */
-export type MastersStatus =
+type MastersStatus =
   /** 3 種別のいずれかの結果がまだ届いていない。 */
   | 'loading'
   /** 3 種別とも取得に成功した。 */

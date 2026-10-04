@@ -10,7 +10,6 @@ export {
   seedBaseline,
   seedRecordsForDates,
   resetAndSeedBaseline,
-  disconnectDb,
   deleteMaster,
 } from './db';
 

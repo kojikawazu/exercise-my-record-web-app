@@ -4,7 +4,7 @@ import type { ApiResult } from '@/types/apiResult';
 import type { RecordDetail } from '@/types/record';
 
 /** 記録詳細の取得状態。 */
-export type RecordDetailStatus =
+type RecordDetailStatus =
   /** 指定日の結果がまだ届いていない（日付が変わった直後を含む）。 */
   | 'loading'
   /** 取得に成功した。 */

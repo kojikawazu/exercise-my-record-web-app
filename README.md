@@ -87,6 +87,7 @@ pnpm dev   # http://localhost:3000
 | `pnpm run test:e2e` | Playwright E2E テスト（単機能フロー、実 DB。事前に `e2e:db:up`、要 Docker） |
 | `pnpm run test:scenario` | Playwright シナリオテスト（複数機能横断、実 DB。事前に `e2e:db:up`、要 Docker） |
 | `pnpm lint` / `pnpm format` | Lint / フォーマットチェック（いずれも CI 必須。`format` は差分ゼロを検証するのみ） |
+| `pnpm knip` | 未使用の export・ファイル・依存関係を検出（CI 必須。除外は `front/knip.jsonc` に理由付きで置く） |
 | `pnpm run format:fix` | Prettier で自動整形（`pnpm format` が落ちたら手元でこれを実行する） |
 | `make secret-scan` | 鍵・`.env` などの秘匿ファイルが追跡中・追跡候補（未追跡かつ `.gitignore` されていない）に無いか検査（CI の `secret-scan` と同一。テストは `./scripts/check-secret-files.test.sh`） |
 | `make actionlint` | GitHub Actions ワークフローを actionlint で検証（リポジトリルートで実行。`run:` 内は shellcheck で検査、要 Docker。CI と同一コマンド） |
