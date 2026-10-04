@@ -34,6 +34,7 @@ jobs:
       pull-requests: read
     outputs:
       app: ${{ steps.filter.outputs.app }}
+      workflows: ${{ steps.filter.outputs.workflows }}
     steps:
       - uses: actions/checkout@v7
 
@@ -57,6 +58,26 @@ jobs:
               - '!.claude/**'
               - '!.markdownlint-cli2.jsonc'
               - '!LICENSE'
+            # workflows は対象リストで書いてよい。actionlint の検査対象は .github/workflows/
+            # で閉じており、未知のファイルが増えても検査対象は増えないため fail-open にならない。
+            # Makefile は actionlint のバージョン定義を持つため、その更新でも検査を走らせる。
+            workflows:
+              - '.github/workflows/**'
+              - 'Makefile'
+
+  # ワークフロー自体の検証。YAML 構文・${{ }} 式の型・action 入力に加え、
+  # run: の中身を shellcheck に流す（人間のレビューで最も見落とされる層）。
+  # コマンドとバージョンは Makefile が唯一の定義（ローカルと文字列レベルで同一にする）。
+  actionlint:
+    name: Workflow Lint (actionlint)
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run actionlint
+        run: make actionlint
 
   static-check:
     name: Static Checks (lint / typecheck / build)
@@ -197,10 +218,12 @@ jobs:
 
       - name: Create .env.local for E2E
         run: |
-          echo "E2E_BYPASS=1" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key" >> .env.local
-          echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy" >> .env.local
+          cat >> .env.local <<'EOF'
+          E2E_BYPASS=1
+          NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key
+          DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
+          EOF
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -252,10 +275,12 @@ jobs:
 
       - name: Create .env.local for E2E
         run: |
-          echo "E2E_BYPASS=1" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key" >> .env.local
-          echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy" >> .env.local
+          cat >> .env.local <<'EOF'
+          E2E_BYPASS=1
+          NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key
+          DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
+          EOF
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium

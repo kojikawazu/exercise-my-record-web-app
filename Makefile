@@ -11,8 +11,14 @@ FRONT_DIR := front
 # 例: make migrate DATABASE_URL=postgres://...
 DATABASE_URL ?= $(shell grep -E '^DATABASE_URL=' $(FRONT_DIR)/.env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"')
 
+# actionlint の Docker イメージ。バージョンはここが唯一の定義（CI も `make actionlint` を呼ぶ）。
+# 公式イメージは shellcheck を同梱しており、`run:` 内のシェル検査が CI とローカルで必ず揃う。
+# バイナリ版は shellcheck が PATH に無いとその層を黙ってスキップする（終了コード 0）ため既定にしない
+# （Docker を使えない場合の代替手順は README「よく使うコマンド」）。
+ACTIONLINT_IMAGE := rhysd/actionlint:1.7.12
+
 # .PHONY: 同名ファイルの有無に関わらず常にレシピを実行する（Makefile の慣習）
-.PHONY: help install dev build lint format test test-it e2e scenario e2e-db-up e2e-db-down migrate
+.PHONY: help install dev build lint format actionlint test test-it e2e scenario e2e-db-up e2e-db-down migrate
 
 # 引数なし `make` のデフォルトを help にする
 .DEFAULT_GOAL := help
@@ -46,6 +52,10 @@ lint:
 ## format: Prettier のフォーマットチェック
 format:
 	cd $(FRONT_DIR) && pnpm format
+
+## actionlint: GitHub Actions ワークフローを検証する（shellcheck 込み、要 Docker）
+actionlint:
+	docker run --rm -v "$(CURDIR)":/repo -w /repo $(ACTIONLINT_IMAGE) -color
 
 # ---- テスト --------------------------------------------------------------
 

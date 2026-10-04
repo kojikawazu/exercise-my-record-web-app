@@ -88,6 +88,9 @@ pnpm dev   # http://localhost:3000
 | `pnpm run test:scenario` | Playwright シナリオテスト（複数機能横断、実 DB。事前に `e2e:db:up`、要 Docker） |
 | `pnpm lint` / `pnpm format` | Lint / フォーマットチェック（いずれも CI 必須。`format` は差分ゼロを検証するのみ） |
 | `pnpm run format:fix` | Prettier で自動整形（`pnpm format` が落ちたら手元でこれを実行する） |
+| `make actionlint` | GitHub Actions ワークフローを actionlint で検証（リポジトリルートで実行。`run:` 内は shellcheck で検査、要 Docker。CI と同一コマンド） |
+
+> `make actionlint` は shellcheck 同梱の公式イメージ（`rhysd/actionlint`、バージョンは `Makefile` の `ACTIONLINT_IMAGE`）を使う。Docker を使えない環境では、**同じバージョンの actionlint バイナリと shellcheck を併せて**入れて `actionlint` を実行する（`brew install actionlint shellcheck`）。shellcheck が無いと `run:` の検査だけが**エラーにならずに黙ってスキップ**され、CI でだけ落ちる。
 
 ## DB マイグレーション
 
@@ -117,7 +120,7 @@ psql "$PROD_DATABASE_URL" -f front/prisma/migrations/<name>/migration.sql
   - 認証バイパスはサーバー専用フラグ `E2E_BYPASS=1`（`webServer.command` が付与）＋ クライアントの localStorage バイパス。本番ビルドでは無効。
 - **テスト DB の接続先ガード**: IT / E2E の接続先は `front/tests/setup/test-database-url.ts` で解決し、`localhost` / `127.0.0.1` / `::1` 以外なら seed・`db push` の前に中断する。`DATABASE_URL`（`.env`）は参照しない。接続先を変える場合はテスト専用の `TEST_DATABASE_URL` を使う（既定 `postgresql://e2e:e2e@localhost:5433/e2e`）。E2E は既存の dev サーバーを再利用しないため、`localhost:3000` を空けてから実行する。
 - **シナリオ（Playwright）**: 複数機能横断のユーザージャーニー（`front/tests/scenario/`）。E2E と同じ実 DB 基盤。`pnpm run test:scenario`（**要 Docker**）。
-- CI（GitHub Actions, `.github/workflows/ci.yml`）で `static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` を並列実行。ドキュメントのみの変更ではスキップされ、代わりに `.github/workflows/docs.yml` が markdown lint を実行する。
+- CI（GitHub Actions, `.github/workflows/ci.yml`）で `static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` を並列実行。ドキュメントのみの変更ではスキップされ、代わりに `.github/workflows/docs.yml` が markdown lint を実行する。`.github/workflows/**` / `Makefile` の変更時は `actionlint` ジョブ（`make actionlint`）でワークフロー自体も検証する。
 
 詳細は [`docs/08-test-specification.md`](docs/08-test-specification.md)。
 

@@ -107,10 +107,11 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
 
 | ファイル | 対象 | トリガー |
 |---|---|---|
-| `.github/workflows/ci.yml` | コード（静的検査・Vitest・Playwright） | `push`→`main` / `pull_request`→`main`。`changes` ジョブでパス判定し、ドキュメントのみの変更では各ジョブを `if:` でスキップ |
+| `.github/workflows/ci.yml` | コード（静的検査・Vitest・Playwright）・ワークフロー（actionlint） | `push`→`main` / `pull_request`→`main`。`changes` ジョブでパス判定し、ドキュメントのみの変更では各ジョブを `if:` でスキップ |
 | `.github/workflows/docs.yml` | ドキュメント（markdown lint・必須ファイル存在確認） | `push`→`main` / `pull_request`→`main`、いずれも `**/*.md` 等の変更時のみ |
 
 - **パス判定は「除外リスト」方式**（`docs/**` / `**/*.md` / `.claude/**` 以外はコード変更とみなす）。許可リスト方式だと、新しいディレクトリが増えたときに黙ってテストが走らなくなるため。
+  - 例外: `actionlint` 用の `workflows` 出力は**対象リスト**（`.github/workflows/**` / `Makefile`）。検査対象が `.github/workflows/` で閉じており、未知のファイルが増えても検査対象は増えないため fail-open にならない。`Makefile` は actionlint のバージョン定義を持つため含める。
 - **`ci.yml` はワークフローレベルの `paths` を使わない**。必須チェック（ブランチ保護）に設定した場合、ワークフローが起動せずチェックが pending のまま PR がマージ不能になるため。ジョブレベル `if:` によるスキップは「skipped」＝成功扱いになる。
 - 両ワークフローとも `concurrency`（連続 push で古い実行をキャンセル）と最小権限の `permissions: contents: read` を設定する。
 - **action の版は Dependabot で追随する**（`.github/dependabot.yml`、`github-actions` を週次。#128）。手で一括置換せず、Dependabot が 1 本にまとめた更新 PR（`groups`）をレビューしてマージする（action ごとに分けると同じワークフローファイル上で互いに競合するため）。
@@ -125,6 +126,7 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
   | `it-test` | Vitest 統合テスト（Testcontainers の実 PostgreSQL、`pnpm test:it`） | ~1〜2 分 |
   | `e2e-test` | Playwright E2E テスト（単機能フロー、実 DB、`--project=e2e`） | ~7 分 |
   | `scenario-test` | Playwright シナリオテスト（複数機能横断、実 DB、`--project=scenario`） | ~2 分 |
+  | `actionlint` | ワークフロー検証（`make actionlint`。YAML 構文・`${{ }}` 式の型・action 入力・`run:` 内の shellcheck）。`workflows` 出力が true のときのみ | ~20 秒 |
 
 ### CI 固有の設定
 
@@ -134,6 +136,7 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
 6. **`e2e-test` の実 DB**: E2E は `front/docker-compose.e2e.yml` の PostgreSQL に対して実行する。CI は `pnpm run e2e:db:up`（`docker compose up -d --wait`）で DB を起動し、Playwright の `globalSetup` が `prisma db push` でスキーマを適用、webServer(dev) は `DATABASE_URL`（compose DB）で起動する。データは各テストの `beforeEach` で reset+seed。
 4. **`it-test` の Node バージョン**: Testcontainers 12 が Node 22+ の API に依存するため、IT ジョブのみ Node 22 で実行する（他ジョブは Node 20）。
 5. **Playwright タイムアウト**: テスト 60 秒（ローカル 30 秒）、webServer 起動 120 秒（CI はオンデマンドコンパイルで初回が遅いため）。
+7. **actionlint の取得方法**: shellcheck 同梱の公式 Docker イメージをタグ固定で使う（`Makefile` の `ACTIONLINT_IMAGE` が唯一の定義で、CI も `make actionlint` を呼ぶ）。バイナリ版は shellcheck が PATH に無いと `run:` の検査を終了コード 0 のまま黙ってスキップするため、CI とローカルで検査層がずれる。download スクリプトを `main` から引数なしで使う方式は、上流に新ルールが入った日にコード無変更で CI が赤くなるため採らない。
 
 ### 構築時のトラブルシューティング記録
 
