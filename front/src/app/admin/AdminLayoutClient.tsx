@@ -2,12 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  getBypassFlag,
-  isBypassAllowed,
-  setBypassSession,
-  useAdminSession,
-} from '@/hooks/useAdminSession';
+import { setBypassSession, useAdminSession } from '@/hooks/useAdminSession';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 /**
@@ -23,7 +18,9 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   const searchParams = useSearchParams();
   const { isAdmin, isLoading, isBypass } = useAdminSession();
   const bypassParam = searchParams.get('bypass') === '1';
-  const hasBypass = isBypass || (isBypassAllowed && getBypassFlag()) || bypassParam;
+  // localStorage をレンダー中に直接読まない（hydration mismatch になる。#140）。
+  // フラグの変化は useAdminSession の isBypass が同期的に追従する
+  const hasBypass = isBypass || bypassParam;
 
   const isLoginRoute = pathname.startsWith('/admin/login');
 

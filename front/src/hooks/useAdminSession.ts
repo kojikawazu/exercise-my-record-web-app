@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { fetchAdminMe } from '@/repositories/admin';
 
 const BYPASS_KEY = 'e2e_admin_bypass';
+// 同一タブでのバイパスフラグ変更を購読者へ知らせるイベント名。
+// storage イベントは「別タブ」での変更にしか発火しないため、setBypassSession が自前で発行する。
+const BYPASS_CHANGE_EVENT = 'e2e-admin-bypass-change';
 
 /**
  * 管理者セッションの判定結果。判定中と「判定済みで非管理者」を区別するため、
@@ -27,10 +30,12 @@ export const isBypassAllowed = process.env.NODE_ENV !== 'production';
  * localStorage に保存された E2E バイパスフラグの有無を返す。
  *
  * バイパス非許可環境（本番）・サーバー側（`window` 不在）では常に `false`。
+ * レンダー中に直接呼ばないこと（サーバーとクライアントで値が食い違い hydration mismatch になる）。
+ * 描画に使う場合は {@link useAdminSession} の `isBypass` を参照する。
  *
  * @returns バイパスが有効なら `true`
  */
-export function getBypassFlag() {
+function getBypassFlag() {
   if (!isBypassAllowed || typeof window === 'undefined') return false;
   return localStorage.getItem(BYPASS_KEY) === '1';
 }
@@ -49,7 +54,26 @@ export function setBypassSession(enabled: boolean) {
   } else {
     localStorage.removeItem(BYPASS_KEY);
   }
+  window.dispatchEvent(new Event(BYPASS_CHANGE_EVENT));
 }
+
+/**
+ * バイパスフラグの変化（別タブの `storage` イベント・同一タブの {@link setBypassSession}）を購読する。
+ *
+ * @param onChange - 変化時に React が再読込するためのコールバック
+ * @returns 購読解除関数
+ */
+function subscribeBypass(onChange: () => void) {
+  window.addEventListener('storage', onChange);
+  window.addEventListener(BYPASS_CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(BYPASS_CHANGE_EVENT, onChange);
+  };
+}
+
+// サーバー描画・hydration 中はバイパス無効として扱い、サーバー HTML と一致させる（#140）
+const getServerBypassFlag = () => false;
 
 /**
  * 管理者ログイン状態を購読するフック。
@@ -62,16 +86,14 @@ export function setBypassSession(enabled: boolean) {
  */
 export function useAdminSession(): AdminSessionState {
   const [sessionActive, setSessionActive] = useState(false);
-  const [bypassActive, setBypassActive] = useState(() => getBypassFlag());
-  const [ready, setReady] = useState(() => getBypassFlag());
+  const [ready, setReady] = useState(false);
+  // localStorage を初期 state に読み込まない（クライアントの初回描画がサーバー HTML と食い違うため）。
+  // hydration 中はサーバー値（false）、以降はクライアント値を返し、フラグの変化にも追従する
+  const bypassActive = useSyncExternalStore(subscribeBypass, getBypassFlag, getServerBypassFlag);
 
   useEffect(() => {
     let mounted = true;
     let requestId = 0;
-
-    if (isBypassAllowed) {
-      setBypassActive(getBypassFlag());
-    }
 
     const syncAdminFromSession = async (session: Session | null) => {
       const currentRequestId = ++requestId;

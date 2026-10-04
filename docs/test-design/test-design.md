@@ -353,7 +353,7 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 | `tests/unit/repositories/admin.test.ts` | 4 | 正: 渡したトークンを付け `no-store` で判定 / 準: 403・401 / 異: 通信エラー |
 | `tests/unit/hooks/useMasterList.test.ts` | 9 | 正: 取得・追加は先頭へ・名称はサーバー値で置換・削除 / 準: 種別切替中は前の種別を出さない・409 / 失敗時は一覧を変えない・**操作中にタブを切り替えても別種別へ反映しない** / 異: 取得失敗は空で `error` |
 | `tests/unit/hooks/useProfile.test.ts` | 5 | 正: 取得・保存後に更新 / 準: 未保存は `null`・保存失敗は保存済みの値を保持 / 異: 取得失敗は `error` |
-| `tests/unit/hooks/useAdminSession.test.ts` | 5 | 正: セッションのトークンで管理者判定 / 準: 403 は非管理者・セッション無しは API を呼ばない / 異: 通信エラー・2xx の本文が JSON でない場合も判定を終えて非管理者 |
+| `tests/unit/hooks/useAdminSession.test.tsx` | 12 | 正: セッションのトークンで管理者判定・バイパスフラグがあっても hydration で mismatch を起こさず、hydration 後に管理者になる / 準: 403 は非管理者・セッション無しは API を呼ばない・サーバー描画ではバイパス無効（判定中）・同一タブの `setBypassSession` と別タブの `storage` イベントに追従 / 異: 通信エラー・2xx の本文が JSON でない場合も判定を終えて非管理者・フラグ値が `'1'` 以外（`'0'` / `'true'` / 空）ならバイパスしない |
 
 画面の振る舞い（マスター管理・プロフィール・カロリー表示・管理者メニュー）は既存の E2E / シナリオで回帰を確認する。
 
