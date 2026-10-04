@@ -51,7 +51,7 @@
 E2E テストは実データベースを使わない設計。
 
 1. **API モック**: Playwright の `page.route()` でブラウザレベルのネットワークリクエストを傍受。
-2. **認証バイパス**: `localStorage` に `e2e_admin_bypass=1` を注入して管理者セッションをシミュレート。
+2. **認証バイパス**: `localStorage` に `e2e_admin_bypass=1` を注入して管理者セッションをシミュレート。フラグは `useAdminSession` が `useSyncExternalStore` で購読し、サーバー描画・hydration 中は無効（サーバー HTML と一致させる）、hydration 後に有効になる。レンダー中に `localStorage` を直接読まない（読むと hydration mismatch になり、本物の hydration 不具合が紛れる。#140）。
 3. **Supabase ダミー認証情報**: `.env.local` にダミー URL/キーを設定してクライアント初期化を通す。
 4. **テストログイン有効化**: Playwright 起動時のみサーバー専用フラグ `E2E_BYPASS=1` を付与（`playwright.config.ts` の `webServer.command` が `E2E_BYPASS=1 pnpm dev` を実行）。本番ビルドでは無効。
 
