@@ -115,4 +115,5 @@
 ## 脆弱性対策
 
 - シークレット・鍵ファイル・大容量バイナリを push しない（`.claude/rules/git.md`）。
+- サーバー専用モジュール（`front/src/lib/prisma.ts` / `front/src/lib/adminAuth.ts`）は `import 'server-only'` で保護し、Client Component から import された場合は `next build` を失敗させる。型チェック・Lint・ビルドのいずれも通ってしまう誤 import を、レビューに頼らず検知するため（#114）。
 <!-- OWASP Top10 等の対策方針を記述（未確定） -->

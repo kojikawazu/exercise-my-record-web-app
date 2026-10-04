@@ -49,6 +49,7 @@ flowchart LR
 
 - repositories は例外を投げず、失敗を `status`（通信エラーは `0`）で返す。画面は `status` で分岐する（例: 409 = 同日重複）。
 - `components/` / `hooks/` から `fetch` / `authFetch` を直接呼ぶ箇所はない（#143 で移行完了）。
+- サーバー専用モジュール（`lib/prisma.ts` / `lib/adminAuth.ts`）は先頭で `import 'server-only'` しており、Client Component から import すると `next build` が失敗する（DB 接続情報・`ADMIN_EMAIL` のクライアントバンドル混入を機械的に防ぐ。#114）。`lib/supabase.ts` はクライアントでも使うため対象外。
 - `repositories/admin.ts` の `fetchAdminMe` は `authFetch` を使わず、`useAdminSession` が認証状態の変化イベントで受け取ったトークンを明示的に渡す（`getSession()` を取り直すと、ログアウト直後などに別時点のトークンを拾い得るため）。
 
 ## 技術スタック

@@ -19,8 +19,15 @@ export default defineConfig({
     hookTimeout: 120_000,
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // `server-only` は `react-server` 条件でのみ空モジュールに解決され、それ以外では import 時に throw する。
+      // Vitest（node）はこの条件を持たないため、実物の lib/prisma・lib/adminAuth を読む IT では空モジュールに差し替える。
+      // Client Component からの誤 import の検知は next build が担う（#114）。
+      {
+        find: /^server-only$/,
+        replacement: path.resolve(__dirname, './node_modules/server-only/empty.js'),
+      },
+    ],
   },
 });
