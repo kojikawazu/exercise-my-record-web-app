@@ -1,3 +1,5 @@
+// Client Component から import されたらビルドを失敗させる（DB 接続情報のクライアント混入を防ぐ。#114）。
+import 'server-only';
 import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';

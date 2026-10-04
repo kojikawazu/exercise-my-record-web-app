@@ -368,6 +368,18 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 
 CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全件を強制モードで実行して確認する（観測記録は `docs/06-security-specification.md`）。
 
+### 5k. サーバー専用モジュールの境界（#114）
+
+`lib/prisma.ts` / `lib/adminAuth.ts` に `import 'server-only'` を追加した。境界の検知は `next build` が担うため、自動テストは追加しない（ビルド成否の検証はテストランナーの対象外）。代わりに以下を手動で確認した。
+
+| 確認内容 | 結果 |
+|---|---|
+| Client Component（`AdminLoginClient.tsx`）から `lib/prisma` を import して `next build` | 失敗（`'server-only' cannot be imported from a Client Component module`） |
+| 同じく `lib/adminAuth` を import して `next build` | 失敗（同上） |
+| 対照: `lib/adminAuth` から `import 'server-only'` を外し、同じ誤 import で `next build` | **成功してしまう**（＝検知は `server-only` によるもの） |
+
+既存テストへの影響: UT は `@/lib/prisma` / `@/lib/adminAuth` をモックしているため影響なし。IT は実物を読むため、`vitest.it.config.ts` で `server-only` を空モジュールに差し替えた（IT 19 件パス）。
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

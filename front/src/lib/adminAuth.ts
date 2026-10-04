@@ -1,3 +1,5 @@
+// Client Component から import されたらビルドを失敗させる（ADMIN_EMAIL 等のクライアント混入を防ぐ。#114）。
+import 'server-only';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
