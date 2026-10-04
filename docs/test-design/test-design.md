@@ -357,6 +357,17 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 
 画面の振る舞い（マスター管理・プロフィール・カロリー表示・管理者メニュー）は既存の E2E / シナリオで回帰を確認する。
 
+### 5j. セキュリティヘッダー（#122）
+
+全レスポンスに付与するセキュリティヘッダー（`lib/securityHeaders.ts`）。値の組み立ては純粋関数として UT で、`next.config.ts` の `headers()` が実際に適用されることは E2E で確認する。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/lib/securityHeaders.test.ts` | 11 | 正: 5 種類のヘッダーと値・本番の CSP（`'unsafe-eval'` なし、`connect-src` に Supabase のオリジン） / 準: `next dev` のときだけ `'unsafe-eval'`・Supabase の URL（末尾スラッシュ・パス付き・ローカルのポート付き http）をオリジンに正規化 / 異: 未設定・空文字・URL として不正・http(s) 以外・CSP の区切りを含む値は `connect-src 'self'` のみ |
+| `tests/e2e/smoke.spec.ts` | 1 | 正: 画面（`/`）と Route Handler（`/api/records`）の双方のレスポンスに 5 種類のヘッダーが付く |
+
+CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全件を強制モードで実行して確認する（観測記録は `docs/06-security-specification.md`）。
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

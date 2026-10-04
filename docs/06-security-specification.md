@@ -10,6 +10,10 @@
 - [RLS ポリシー（防御の第 2 層）](#rls-ポリシー防御の第-2-層)
 - [E2E テスト時の認証バイパス](#e2e-テスト時の認証バイパス)
 - [暗号化](#暗号化)
+- [セキュリティヘッダー](#セキュリティヘッダー)
+  - [CSP ディレクティブ](#csp-ディレクティブ)
+  - [CSP 導入時の観測記録（Issue #122 / 2026-10-04）](#csp-導入時の観測記録issue-122--2026-10-04)
+  - [対象外とした項目](#対象外とした項目)
 - [脆弱性対策](#脆弱性対策)
 
 ## 認証
@@ -58,6 +62,53 @@
 
 - 通信は HTTPS（Vercel / Supabase）。
 <!-- 保存データの暗号化方針を記述（未確定） -->
+
+## セキュリティヘッダー
+
+全レスポンス（画面・Route Handler・静的ファイル）に以下を付与する。定義は `front/src/lib/securityHeaders.ts`、適用は `front/next.config.ts` の `headers()`（`source: '/:path*'`）。
+
+| ヘッダー | 値 | 目的 |
+|---|---|---|
+| `Content-Security-Policy` | 下表のディレクティブ（**強制**） | XSS 成立時の外部送信・外部スクリプト読み込みを止める |
+| `X-Content-Type-Options` | `nosniff` | MIME スニッフィングの防止 |
+| `X-Frame-Options` | `DENY` | クリックジャッキングの防止（CSP の `frame-ancestors` 非対応ブラウザ向け） |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | 外部遷移時に URL パスを漏らさない |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | 使わないブラウザ権限を無効化 |
+
+**位置づけ**: Supabase のセッションは `localStorage` に保存されるため、XSS が成立するとアクセストークンが奪取される。CSP（特に `connect-src`）はトークンの外部送信を止める多層防御の最後の層である。
+
+### CSP ディレクティブ
+
+| ディレクティブ | 値 | 理由 |
+|---|---|---|
+| `default-src` / `base-uri` / `form-action` | `'self'` | 既定は自オリジンのみ |
+| `object-src` / `frame-ancestors` | `'none'` | プラグイン・埋め込みを使わない |
+| `script-src` | `'self' 'unsafe-inline'`（`next dev` のときのみ `'unsafe-eval'` を追加） | Next.js のハイドレーション用インラインスクリプトのため `'unsafe-inline'` が必要。`'unsafe-eval'` は開発モードの React / Turbopack のみが使うため本番では外す |
+| `style-src` | `'self' 'unsafe-inline'` | インラインスタイルのため |
+| `font-src` | `'self' data:` | 外部フォントを使わない |
+| `img-src` | `'self' data: blob:` | 外部画像を表示する機能が無いため `https:` は許可しない |
+| `connect-src` | `'self' <Supabase のオリジン>` | Supabase Auth との通信。`NEXT_PUBLIC_SUPABASE_URL` を**オリジンに正規化**して加える。未設定・不正・http(s) 以外の値なら加えない（通信がブロックされる側に倒す） |
+
+- Google OAuth は `signInWithOAuth` によるページ遷移（`window.location`）であり、`connect-src` / `form-action` の対象外。Supabase Realtime（WebSocket）は使っていないため `wss:` は許可しない。
+- ヘッダーは `next build` 時に確定する（ビルド時の `NEXT_PUBLIC_SUPABASE_URL` が入る）。Supabase の URL を変えた場合は再ビルドが必要。
+
+### CSP 導入時の観測記録（Issue #122 / 2026-10-04）
+
+`report-uri` / `report-to` は設定していないため、ブラウザのコンソールを直接観測した。観測手段が機能することは、ページから外部オリジン（`https://example.com`）へ `fetch` して違反が記録されること（Report-Only では記録のみ、強制ではブロック）で確認した。
+
+| 観測対象 | 環境 | Report-Only | 強制 |
+|---|---|---|---|
+| 一覧 `/`・ログイン画面 `/admin/login` の表示 | ローカル本番ビルド（`next build && next start`） | 違反 0 件 | 違反 0 件 |
+| Supabase（`connect-src`）への通信 | ローカル本番ビルド → ローカル Supabase `/auth/v1/health` | 許可（200） | 許可（200） |
+| 公開・管理者導線全般（一覧・詳細・ページング・記録の追加 / 編集 / 削除・マスター管理・プロフィール） | `next dev` + E2E バイパス（`pnpm test:e2e` 28 件 / `pnpm test:scenario` 3 件） | — | 全件パス |
+
+**未観測（マージ後に本番で確認する）**: 本物の Google OAuth ログイン（Supabase へのリダイレクト → コールバック → セッション取得）と、本番ビルドでの認証後導線。本番ビルドでは E2E バイパスが無効で、ローカル Supabase には Google OAuth を設定していないため、ローカルでは再現できない。
+
+### 対象外とした項目
+
+- **nonce 化**: `script-src` から `'unsafe-inline'` を外すにはリクエストごとの nonce 発行が必要で、middleware（Next.js 16 では `proxy.ts`）の新設を伴う。強制化そのものには不要なため別タスクとする。
+- **HSTS**: Vercel が自ドメインに自動付与するため、アプリ側では付与しない。
+- **違反レポートの収集**（`report-to`）: 受け口となるエンドポイントが無いため見送る。
 
 ## 脆弱性対策
 
