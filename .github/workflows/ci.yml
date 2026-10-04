@@ -115,6 +115,11 @@ jobs:
       - name: Lint (ESLint)
         run: pnpm lint
 
+      # 未使用の export・ファイル・依存関係は ESLint では検出できない（ファイルを横断するため）。
+      # 除外は front/knip.jsonc に理由付きで置く（.claude/rules/dead-code.md「検出」）。
+      - name: Unused code (knip)
+        run: pnpm knip
+
       - name: Typecheck (tsc --noEmit)
         run: pnpm exec tsc --noEmit
 

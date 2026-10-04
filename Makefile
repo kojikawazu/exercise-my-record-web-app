@@ -18,7 +18,7 @@ DATABASE_URL ?= $(shell grep -E '^DATABASE_URL=' $(FRONT_DIR)/.env 2>/dev/null |
 ACTIONLINT_IMAGE := rhysd/actionlint:1.7.12
 
 # .PHONY: 同名ファイルの有無に関わらず常にレシピを実行する（Makefile の慣習）
-.PHONY: help install dev build lint format actionlint secret-scan test test-it e2e scenario e2e-db-up e2e-db-down migrate
+.PHONY: help install dev build lint format knip actionlint secret-scan test test-it e2e scenario e2e-db-up e2e-db-down migrate
 
 # 引数なし `make` のデフォルトを help にする
 .DEFAULT_GOAL := help
@@ -52,6 +52,10 @@ lint:
 ## format: Prettier のフォーマットチェック
 format:
 	cd $(FRONT_DIR) && pnpm format
+
+## knip: 未使用の export・ファイル・依存関係を検出する（CI と同一）
+knip:
+	cd $(FRONT_DIR) && pnpm knip
 
 ## actionlint: GitHub Actions ワークフローを検証する（shellcheck 込み、要 Docker）
 actionlint:

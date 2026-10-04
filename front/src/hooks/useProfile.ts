@@ -4,7 +4,7 @@ import type { ApiResult } from '@/types/apiResult';
 import type { ProfileResponse } from '@/types/profile';
 
 /** 保存済みの体重の取得状態。 */
-export type ProfileStatus =
+type ProfileStatus =
   /** 結果がまだ届いていない。 */
   | 'loading'
   /** 取得に成功した（未保存で `weightKg` が `null` の場合を含む）。 */

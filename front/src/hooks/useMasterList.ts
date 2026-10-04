@@ -4,7 +4,7 @@ import type { ApiResult } from '@/types/apiResult';
 import type { MasterResponse, MasterType } from '@/types/master';
 
 /** マスター一覧の取得状態。 */
-export type MasterListStatus =
+type MasterListStatus =
   /** 選択中の種別の結果がまだ届いていない（種別を切り替えた直後を含む）。 */
   | 'loading'
   /** 取得に成功した。 */

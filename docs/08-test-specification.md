@@ -80,7 +80,7 @@ IT / E2E の seed・`TRUNCATE`・`prisma db push --accept-data-loss` は全デ�
 - E2E: Playwright（`front/tests/e2e/`、`smoke.spec.ts` / `record-crud.spec.ts`、`--project=e2e`）。**実 PostgreSQL（`docker-compose.e2e.yml`）** に対して実 API/DB を通す（`page.route` モックは撤廃）。`globalSetup` で `prisma db push`、各テスト `beforeEach` で reset+seed、認証は `E2E_BYPASS` + localStorage バイパス。直列実行（`workers:1`）。
 - シナリオ: Playwright（`front/tests/scenario/`、`--project=scenario`）。E2E と同じ実 DB 基盤で、**複数機能横断のユーザージャーニー**を検証（`pnpm run test:scenario`）。
 - 統合(IT): Vitest + Testcontainers（`@testcontainers/postgresql`）。実 PostgreSQL に対し Prisma 経由で Route Handler を検証。ファイル命名 `*.it.test.ts`、設定 `front/vitest.it.config.ts`、コマンド `pnpm test:it`。認証は `E2E_BYPASS=1` でバイパス。`lib/prisma` / `lib/adminAuth` の `import 'server-only'` は Vitest（`react-server` 条件を持たない）では import 時に throw するため、`vitest.it.config.ts` で空モジュールに差し替えている（#114）。
-- 静的検査: ESLint（`eslint-plugin-jsdoc` 含む）+ `tsc --noEmit` + `next build`。CI の `static-check` ジョブで実行。
+- 静的検査: ESLint（`eslint-plugin-jsdoc` 含む）+ knip（未使用の export・ファイル・依存関係）+ `tsc --noEmit` + `next build`。CI の `static-check` ジョブで実行。
 - CI: GitHub Actions（`.github/workflows/ci.yml`、`static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` ジョブを並列実行）。ドキュメントのみの変更ではスキップされる（`.claude/rules/github-actions.md`）。
 - 秘匿ファイル検査: `scripts/check-secret-files.sh` を `.github/workflows/secret-scan.yml` で常時実行（パスフィルタなし）。スクリプト自体のテスト `scripts/check-secret-files.test.sh`（代表パスの検出／素通り・未追跡・`--history`・git 管理外・不明な引数）も同ジョブで毎回実行する。
 - ワークフロー検証: actionlint（`run:` 内は shellcheck）。`.github/workflows/**` / `Makefile` の変更時に CI の `actionlint` ジョブで実行し、手元では同一コマンドの `make actionlint`（要 Docker）。

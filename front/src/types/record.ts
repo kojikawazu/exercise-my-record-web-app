@@ -4,7 +4,7 @@
  */
 
 /** 有酸素 1 件分（一覧・詳細のレスポンス、作成・更新のリクエストで共通）。 */
-export type RecordCardio = {
+type RecordCardio = {
   /** 有酸素種別（例: ラン / ウォーク）。マスター連動を見据えて文字列で持つ。 */
   type: string;
   /** 運動時間（分）。 */
@@ -68,7 +68,7 @@ export type RecordDetail = {
 };
 
 /** 作成・更新リクエストの筋トレ 1 種目分（ID はサーバーが採番するため持たない）。 */
-export type RecordWorkoutInput = Omit<RecordWorkout, 'id'>;
+type RecordWorkoutInput = Omit<RecordWorkout, 'id'>;
 
 /** `PATCH /api/records/[date]` のリクエスト本文（筋トレ・有酸素は全置換）。 */
 export type RecordUpdateRequest = {
