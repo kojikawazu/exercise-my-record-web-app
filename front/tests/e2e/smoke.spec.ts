@@ -78,3 +78,17 @@ test('admin pages render for a bypassed admin', async ({ page }) => {
   // seed した体重 65 が読み込まれる。
   await expect(page.getByRole('spinbutton')).toHaveValue('65');
 });
+
+test('pages and API responses carry security headers', async ({ page, request }) => {
+  // 値の詳細は UT（tests/unit/lib/securityHeaders.test.ts）で検証する。ここでは next.config.ts の
+  // headers() が画面・Route Handler の双方に実際に適用されていることを確かめる。
+  const pageResponse = await page.goto('/');
+  const apiResponse = await request.get('/api/records');
+  for (const response of [pageResponse?.headers(), apiResponse.headers()]) {
+    expect(response?.['content-security-policy']).toContain("frame-ancestors 'none'");
+    expect(response?.['x-content-type-options']).toBe('nosniff');
+    expect(response?.['x-frame-options']).toBe('DENY');
+    expect(response?.['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    expect(response?.['permissions-policy']).toBe('camera=(), microphone=(), geolocation=()');
+  }
+});
