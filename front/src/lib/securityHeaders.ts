@@ -46,8 +46,9 @@ function toSupabaseOrigin(url: string | undefined): string | null {
 /**
  * Content-Security-Policy の値を組み立てる。
  *
- * `script-src` / `style-src` の `'unsafe-inline'` は、Next.js のハイドレーション用インラインスクリプトと
- * インラインスタイルのため。nonce 化は middleware の新設を伴うため見送っている。
+ * `script-src` / `style-src` の `'unsafe-inline'` は、Next.js のハイドレーション用インラインスクリプト
+ * （RSC ペイロード）とインラインスタイルのため。SRI では外せず、nonce 化は静的プリレンダリングを失うため
+ * 現状維持としている（検証結果は docs/06-security-specification.md、#159）。
  *
  * @param options - 組み立ての入力
  * @returns `; ` 区切りの CSP 文字列

@@ -108,9 +108,30 @@
 
 ### 対象外とした項目
 
-- **nonce 化**: `script-src` から `'unsafe-inline'` を外すにはリクエストごとの nonce 発行が必要で、middleware（Next.js 16 では `proxy.ts`）の新設を伴う。強制化そのものには不要なため別タスクとする。
+- **`script-src` の `'unsafe-inline'` の除去（SRI / nonce）**: 検証の結果、現状維持とした。次節を参照。
 - **HSTS**: Vercel が自ドメインに自動付与するため、アプリ側では付与しない。
 - **違反レポートの収集**（`report-to`）: 受け口となるエンドポイントが無いため見送る。
+
+### `'unsafe-inline'` を外せるかの検証（Issue #159 / 2026-10-04）
+
+**結論: SRI では外せない。nonce なら外せるが、静的プリレンダリングを失うコストに見合わないため現状維持とする。**
+
+**手順**: ローカル本番ビルド（`next build && next start`、ダミー env）を 2 つ用意し、現行の強制 CSP に加えて `script-src 'self'`（`'unsafe-inline'` なし）の `Content-Security-Policy-Report-Only` を付与した。Playwright で 9 画面（`/`・`/admin/login`・`/admin`・`/admin/masters`・`/admin/profile`・`/admin/records`・`/admin/records/new`・`/records/[date]`・`/admin/records/[date]/edit`）を開き、コンソールの CSP 違反を数えた。実験用の設定はコミットしていない。
+
+| ビルド | インラインスクリプトの違反 | 外部スクリプトの違反 | ハイドレーション |
+|---|---|---|---|
+| SRI なし（基準） | 全画面で 2 件 / 画面 | 0 件 | 成功（Report-Only のため） |
+| SRI あり（`experimental.sri`、sha256） | **全画面で 2 件 / 画面（減らない）** | 0 件 | 成功（Report-Only のため） |
+
+- 違反するインラインスクリプトは、App Router が HTML に埋め込む **RSC ペイロード**（`(self.__next_f=self.__next_f||[]).push(...)` / `self.__next_f.push([1,"…"])`）。SRI が `integrity` を付けるのは `<script src>` の外部ファイルだけで、インラインには付けられない（SRI 有効時も外部チャンク 10 本中 4 本は `integrity` 無しだった）。
+- **ハッシュの列挙も使えない**。RSC ペイロードは画面ごとに内容が違い、動的ページ（`/records/[date]` 等）ではリクエストごとに変わる。一方、`headers()` の値はビルド時に固定される。
+- 残る手段は **nonce**（`proxy.ts` でリクエストごとに発行し `'nonce-…' 'strict-dynamic'`）のみ。nonce はリクエストごとに HTML を生成する前提のため、静的プリレンダリングと両立しない。
+  - コスト: 現在静的プリレンダリングされている 7 画面（`/`・`/admin`・`/admin/login`・`/admin/masters`・`/admin/profile`・`/admin/records`・`/admin/records/new`）がすべて動的レンダリングになり、全ページビューで関数が実行される（CDN キャッシュから配信できなくなる）。全リクエストに proxy を挟む構成変更も伴う。
+  - 得られるもの: XSS でインラインスクリプトを注入された場合に、CSP の `script-src` で実行を止められる。
+- **現状維持とする理由**: インラインスクリプトの注入経路が現状ほぼ無い（React の自動エスケープ、`dangerouslySetInnerHTML` 不使用、ユーザー入力の HTML / Markdown を描画する機能が無い）。注入されても `connect-src` / `img-src` が外部オリジンへの送信を止める（トークン奪取の主経路を塞いでいる）。これらに対し、全画面の動的化は性能・運用コストが恒常的にかかる。
+  - 留意点: CSP はページ遷移（`location` の書き換え等）による外部送信までは止めない。この層は XSS の入口を作らないこと（上記）で担保する。
+- **SRI 単体の採用も見送る**（`'unsafe-inline'` を外せないなら得るものが小さい）。外部チャンクは自オリジン（Vercel）から配信しており、SRI が主に防ぐ「第三者 CDN での改ざん」の脅威が当てはまらない。加えて experimental である。
+- **再評価のタイミング**: ユーザー入力の HTML / Markdown を描画する機能を追加するとき（`dangerouslySetInnerHTML` の導入等）、または Next.js が RSC ペイロードを外部化・ハッシュ化する等で静的生成のまま `'unsafe-inline'` を外せる手段を提供したとき。同じ手順（Report-Only + コンソール観測）で確認する。
 
 ## 脆弱性対策
 
