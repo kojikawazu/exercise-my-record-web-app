@@ -7,7 +7,7 @@ globs:
 
 使用するツールは `coding-standards.md`（ESLint + Prettier）と `typescript.md`（`tsc --noEmit` / `typescript-eslint` / `eslint-plugin-jsdoc`）で定める。本ルールは**どう運用するか**を定める。
 
-本プロジェクトの CI 上の実体は `.github/workflows/ci.yml` の `static-check` ジョブ（`pnpm format` → `pnpm lint` → `tsc --noEmit` → `next build`）、`.github/workflows/docs.yml` の markdown lint（`.markdownlint-cli2.jsonc`）、`.github/workflows/secret-scan.yml` の秘匿ファイル検出（`scripts/check-secret-files.sh`）。発火条件は `github-actions.md` に従う。
+本プロジェクトの CI 上の実体は `.github/workflows/ci.yml` の `static-check` ジョブ（`pnpm format` → `pnpm lint` → `pnpm knip` → `tsc --noEmit` → `next build`。knip の運用は `dead-code.md`「検出」）、`.github/workflows/docs.yml` の markdown lint（`.markdownlint-cli2.jsonc`）、`.github/workflows/secret-scan.yml` の秘匿ファイル検出（`scripts/check-secret-files.sh`）。発火条件は `github-actions.md` に従う。
 
 - Formatter の設定は `front/.prettierrc`、対象外は `front/.prettierignore`（生成物・実行成果物を除外する）。
 - `pnpm format` は `prettier --check .`（差分ゼロの検証のみ）。修正は `pnpm run format:fix` を手元で実行する。
