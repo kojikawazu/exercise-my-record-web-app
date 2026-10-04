@@ -146,3 +146,26 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
 - **`NEXT_PUBLIC_*` のクライアントバンドル展開**: シェル環境変数の継承では不十分な場合がある → `.env.local` で確実に設定し、`isBypassAllowed` を `NODE_ENV !== 'production'` のみに簡素化。
 
 ※ Vercel ビルドエラーの詳細時系列は [`docs/error-reports/2026-02-04-vercel-build-errors.md`](./error-reports/2026-02-04-vercel-build-errors.md) を参照。
+
+### `next build` のトレース警告（許容。#139 / 2026-10-04）
+
+Next.js 16.3.8 以降、`next build` が次の警告を 2 件出す（ビルドは成功する）。**調査の結果、許容する**。
+
+```text
+Warning: Dynamic filesystem access causes tracing of the whole project
+```
+
+- **発生源**: Prisma の生成コード（`src/generated/prisma/index.js` の `process.cwd()` 起点のパス解決、`runtime/library.js` の `.env.vault` 探索）。Prisma を import する Route Handler（`/api/records` / `/api/records/[date]` / `/api/masters` / `/api/masters/[id]` / `/api/profile`）の 5 関数が、プロジェクト全体（`src/` / `tests/` / `public/` / 設定ファイル等）をトレース対象に含める。
+- **16.3.8 で挙動が変わったのではない**。16.1.6（#130 の直前）でも同じ 5 関数がプロジェクト全体をトレースしており、16.3.8 は警告を出すようになっただけ。
+- **計測**（`.next/server/**/*.nft.json` に列挙されるファイルの数と合計サイズ。CI と同じダミー env でクリーンな worktree からビルド）:
+
+  | 関数 | 16.1.6 | 16.3.8 |
+  |---|---|---|
+  | Prisma を使う Route Handler（5 関数） | 256 ファイル / 25.18 MB | 364 ファイル / 26.08 MB |
+  | ページ（例: `/admin`） | 73 ファイル / 1.45 MB | 138 ファイル / 2.22 MB |
+  | Prisma を使わない Route Handler（`/api/admin/me`） | 54 ファイル / 1.31 MB | 123 ファイル / 2.07 MB |
+
+  - 増分（約 0.8〜0.9 MB）は Prisma の有無に関係なく全関数で同程度で、主に `node_modules`（Next.js 本体の更新）による。プロジェクト内のファイル数の増加（95 → 134）は、期間中にリポジトリへ追加したファイル（`repositories/` / `hooks/` 等）で、トレースの挙動は変わっていない。
+  - Prisma 関数の 26 MB のうち 22.9 MB は Prisma のクエリエンジン（`src/generated`、必要なもの）。**全体トレースで余分に入るプロジェクトファイルは約 0.7 MB（2〜3%）**。Vercel の関数サイズ上限（展開後 250 MB）に対して約 10% で、余裕がある。
+- **許容する理由**: `outputFileTracingExcludes` で `tests/**` 等を除外すれば約 0.7 MB を削れるが、除外しすぎて実行時に必要なファイルを落とすと「ビルドは通るのに本番でだけ落ちる」失敗になる。2〜3% の削減に対して負うリスクが見合わない。生成コードへ `turbopackIgnore` コメントを入れる対処は、`prisma generate` のたびに消えるため使えない。
+- **再評価のタイミング**: Prisma のメジャー更新や generator の変更（`prisma-client-js` → `prisma-client` 等）のとき、または関数サイズが上限の 50% を超えたとき。同じ計測（`.nft.json` のファイル数・合計サイズ）で比較する。
