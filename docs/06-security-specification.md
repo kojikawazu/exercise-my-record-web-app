@@ -115,5 +115,11 @@
 ## 脆弱性対策
 
 - シークレット・鍵ファイル・大容量バイナリを push しない（`.claude/rules/git.md`）。
+- **秘匿ファイルの混入を CI で検出する**（#119）。鍵・証明書（`*.key` / `*.pem` / `*.p12` / `id_rsa` 等）・認証情報（`serviceAccountKey.json` 等）・`.env` 系が追跡された時点で `secret-scan` ワークフローを失敗させる。検出・除外パターンの正本は `scripts/check-secret-files.sh`（手元では `make secret-scan`）。
+  - `.gitignore` は未追跡ファイルにしか効かず、追跡済み・`git add -f`・書き漏れを止められないため、「混入させない」`.gitignore` と「混入したら落とす」本検査の両方を置く。
+  - 手元では未追跡のファイルも検査する（`.gitignore` に書き忘れた `.env` をコミット前に捕まえる）。
+  - テンプレート・型定義（`*.example` / `*.sample` / `*.template` / `*.dist` / `*.env.d.ts`）は除外する。
+  - 既定では履歴を走査しない。導入時に `--history` で全履歴のパスを照合し、0 件を確認済み（2026-10-04）。
+  - **push 済みの秘匿ファイルは追跡から外しても履歴に残る。検出された場合の対処は鍵・トークンのローテーション**（履歴の書き換えでは、既に取得された複製を消せない）。
 - サーバー専用モジュール（`front/src/lib/prisma.ts` / `front/src/lib/adminAuth.ts`）は `import 'server-only'` で保護し、Client Component から import された場合は `next build` を失敗させる。型チェック・Lint・ビルドのいずれも通ってしまう誤 import を、レビューに頼らず検知するため（#114）。
 <!-- OWASP Top10 等の対策方針を記述（未確定） -->
