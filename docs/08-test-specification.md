@@ -82,3 +82,4 @@ IT / E2E の seed・`TRUNCATE`・`prisma db push --accept-data-loss` は全デ�
 - 統合(IT): Vitest + Testcontainers（`@testcontainers/postgresql`）。実 PostgreSQL に対し Prisma 経由で Route Handler を検証。ファイル命名 `*.it.test.ts`、設定 `front/vitest.it.config.ts`、コマンド `pnpm test:it`。認証は `E2E_BYPASS=1` でバイパス。`lib/prisma` / `lib/adminAuth` の `import 'server-only'` は Vitest（`react-server` 条件を持たない）では import 時に throw するため、`vitest.it.config.ts` で空モジュールに差し替えている（#114）。
 - 静的検査: ESLint（`eslint-plugin-jsdoc` 含む）+ `tsc --noEmit` + `next build`。CI の `static-check` ジョブで実行。
 - CI: GitHub Actions（`.github/workflows/ci.yml`、`static-check` / `unit-test` / `it-test` / `e2e-test` / `scenario-test` ジョブを並列実行）。ドキュメントのみの変更ではスキップされる（`.claude/rules/github-actions.md`）。
+- ワークフロー検証: actionlint（`run:` 内は shellcheck）。`.github/workflows/**` / `Makefile` の変更時に CI の `actionlint` ジョブで実行し、手元では同一コマンドの `make actionlint`（要 Docker）。
