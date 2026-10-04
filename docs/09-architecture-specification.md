@@ -103,17 +103,18 @@ flowchart LR
 
 ## CI/CD パイプライン
 
-GitHub Actions による自動検査。**変更内容に関係のあるジョブだけを動かす**ため、コード用とドキュメント用にワークフローを分離している（`.claude/rules/github-actions.md`）。
+GitHub Actions による自動検査。**変更内容に関係のあるジョブだけを動かす**ため、コード用とドキュメント用にワークフローを分離している（`.claude/rules/github-actions.md`）。秘匿ファイルの検出は発火条件が別物（常時実行）のため、独立したワークフローに置く。
 
 | ファイル | 対象 | トリガー |
 |---|---|---|
 | `.github/workflows/ci.yml` | コード（静的検査・Vitest・Playwright）・ワークフロー（actionlint） | `push`→`main` / `pull_request`→`main`。`changes` ジョブでパス判定し、ドキュメントのみの変更では各ジョブを `if:` でスキップ |
+| `.github/workflows/secret-scan.yml` | 秘匿ファイル（鍵・`.env`）の混入検出（`scripts/check-secret-files.sh` とそのテスト） | `push`→`main` / `pull_request`→`main`。**パスフィルタなしで常時実行**（どの種別の変更にも混入し得るうえ、`git ls-files` はインデックスを読むだけで数秒で終わる） |
 | `.github/workflows/docs.yml` | ドキュメント（markdown lint・必須ファイル存在確認） | `push`→`main` / `pull_request`→`main`、いずれも `**/*.md` 等の変更時のみ |
 
 - **パス判定は「除外リスト」方式**（`docs/**` / `**/*.md` / `.claude/**` 以外はコード変更とみなす）。許可リスト方式だと、新しいディレクトリが増えたときに黙ってテストが走らなくなるため。
   - 例外: `actionlint` 用の `workflows` 出力は**対象リスト**（`.github/workflows/**` / `Makefile`）。検査対象が `.github/workflows/` で閉じており、未知のファイルが増えても検査対象は増えないため fail-open にならない。`Makefile` は actionlint のバージョン定義を持つため含める。
 - **`ci.yml` はワークフローレベルの `paths` を使わない**。必須チェック（ブランチ保護）に設定した場合、ワークフローが起動せずチェックが pending のまま PR がマージ不能になるため。ジョブレベル `if:` によるスキップは「skipped」＝成功扱いになる。
-- 両ワークフローとも `concurrency`（連続 push で古い実行をキャンセル）と最小権限の `permissions: contents: read` を設定する。
+- 全ワークフローとも `concurrency`（連続 push で古い実行をキャンセル）と最小権限の `permissions: contents: read` を設定する。
 - **action の版は Dependabot で追随する**（`.github/dependabot.yml`、`github-actions` を週次。#128）。手で一括置換せず、Dependabot が 1 本にまとめた更新 PR（`groups`）をレビューしてマージする（action ごとに分けると同じワークフローファイル上で互いに競合するため）。
 - markdown lint の設定は `.markdownlint-cli2.jsonc`。見た目のルールは無効化し、**壊れているもの**（言語指定のないコードフェンス・空リンク・無効な見出しアンカー・表の前後空行）のみを検出する。
 

@@ -18,7 +18,7 @@ DATABASE_URL ?= $(shell grep -E '^DATABASE_URL=' $(FRONT_DIR)/.env 2>/dev/null |
 ACTIONLINT_IMAGE := rhysd/actionlint:1.7.12
 
 # .PHONY: 同名ファイルの有無に関わらず常にレシピを実行する（Makefile の慣習）
-.PHONY: help install dev build lint format actionlint test test-it e2e scenario e2e-db-up e2e-db-down migrate
+.PHONY: help install dev build lint format actionlint secret-scan test test-it e2e scenario e2e-db-up e2e-db-down migrate
 
 # 引数なし `make` のデフォルトを help にする
 .DEFAULT_GOAL := help
@@ -56,6 +56,10 @@ format:
 ## actionlint: GitHub Actions ワークフローを検証する（shellcheck 込み、要 Docker）
 actionlint:
 	docker run --rm -v "$(CURDIR)":/repo -w /repo $(ACTIONLINT_IMAGE) -color
+
+## secret-scan: 鍵・.env などの秘匿ファイルが追跡/追跡候補に無いか検査する（CI と同一）
+secret-scan:
+	./scripts/check-secret-files.sh
 
 # ---- テスト --------------------------------------------------------------
 
