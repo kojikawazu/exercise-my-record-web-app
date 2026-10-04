@@ -101,8 +101,10 @@
 | 一覧 `/`・ログイン画面 `/admin/login` の表示 | ローカル本番ビルド（`next build && next start`） | 違反 0 件 | 違反 0 件 |
 | Supabase（`connect-src`）への通信 | ローカル本番ビルド → ローカル Supabase `/auth/v1/health` | 許可（200） | 許可（200） |
 | 公開・管理者導線全般（一覧・詳細・ページング・記録の追加 / 編集 / 削除・マスター管理・プロフィール） | `next dev` + E2E バイパス（`pnpm test:e2e` 28 件 / `pnpm test:scenario` 3 件） | — | 全件パス |
+| レスポンスヘッダーの値（`'unsafe-eval'` なし・`connect-src` に本番 Supabase のオリジン） | 本番（Vercel） | — | 設計どおり |
+| Google OAuth ログイン → 一覧・詳細・記録の追加 / 編集 / 削除・マスター管理・プロフィール | 本番（Vercel） | — | 違反 0 件 |
 
-**未観測（マージ後に本番で確認する）**: 本物の Google OAuth ログイン（Supabase へのリダイレクト → コールバック → セッション取得）と、本番ビルドでの認証後導線。本番ビルドでは E2E バイパスが無効で、ローカル Supabase には Google OAuth を設定していないため、ローカルでは再現できない。
+本物の Google OAuth ログインと認証後導線は、本番ビルドでは E2E バイパスが無効で、ローカル Supabase には Google OAuth を設定していないためローカルでは再現できない。そのため PR #156 のマージ後に本番で観測した（#157）。
 
 ### 対象外とした項目
 
