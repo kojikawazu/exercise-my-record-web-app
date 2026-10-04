@@ -10,7 +10,7 @@
   - [一般ユーザー](#一般ユーザー)
   - [管理者](#管理者)
   - [共通](#共通)
-- [E2E テスト環境の仕組み（DB なしで動作）](#e2e-テスト環境の仕組みdb-なしで動作)
+- [E2E テスト環境の仕組み（実 DB）](#e2e-テスト環境の仕組み実-db)
 - [カバレッジ目標](#カバレッジ目標)
 - [使用ツール](#使用ツール)
 
@@ -24,7 +24,7 @@
 
 - モック許可: `@/lib/prisma`（getPrisma）, `@/lib/adminAuth`（requireAdmin）, `@supabase/supabase-js`。
 - モック禁止: バリデーション関数、カロリー計算関数、フックの状態ロジック。
-- E2E: 実 Dev サーバー + E2E バイパス。
+- E2E: 実 Dev サーバー + 実 API + 実 PostgreSQL（API・DB はモックしない）。認証のみバイパスする。
 
 ## テストケース一覧（受け入れ E2E）
 
@@ -46,14 +46,17 @@
 
 - セキュリティヘッダー: 画面・API のレスポンスに CSP / `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / `Permissions-Policy` が付く。CSP を強制した状態で上記の受け入れシナリオがすべて通る。
 
-## E2E テスト環境の仕組み（DB なしで動作）
+## E2E テスト環境の仕組み（実 DB）
 
-E2E テストは実データベースを使わない設計。
+E2E・シナリオテストは **API も DB もモックしない**。実 Next サーバー → 実 API（Route Handler）→ 実 PostgreSQL を通して検証する（テスト戦略 Phase 3 で `page.route()` による API モックを撤廃。経緯は [`test-design.md`](./test-design/test-design.md)）。
 
-1. **API モック**: Playwright の `page.route()` でブラウザレベルのネットワークリクエストを傍受。
-2. **認証バイパス**: `localStorage` に `e2e_admin_bypass=1` を注入して管理者セッションをシミュレート。フラグは `useAdminSession` が `useSyncExternalStore` で購読し、サーバー描画・hydration 中は無効（サーバー HTML と一致させる）、hydration 後に有効になる。レンダー中に `localStorage` を直接読まない（読むと hydration mismatch になり、本物の hydration 不具合が紛れる。#140）。
-3. **Supabase ダミー認証情報**: `.env.local` にダミー URL/キーを設定してクライアント初期化を通す。
-4. **テストログイン有効化**: Playwright 起動時のみサーバー専用フラグ `E2E_BYPASS=1` を付与（`playwright.config.ts` の `webServer.command` が `E2E_BYPASS=1 pnpm dev` を実行）。本番ビルドでは無効。
+1. **DB**: `front/docker-compose.e2e.yml` の PostgreSQL（`postgres:16-alpine`、ホスト 5433）。Playwright の外で `pnpm run e2e:db:up` により起動する（CI も同じコマンド）。
+2. **スキーマ適用**: Playwright の `globalSetup`（`tests/e2e/global-setup.ts`）が `prisma db push` を実行する。e2e / scenario の両プロジェクトで共通。
+3. **データ**: 各テストの `beforeEach` で reset + seed する（`tests/e2e/db.ts` の `resetAndSeedBaseline` 等）。実 DB を共有するため直列実行（`workers: 1`）。
+4. **アプリサーバー**: `playwright.config.ts` の `webServer` が `E2E_BYPASS=1 DATABASE_URL=<テスト DB> pnpm dev` で dev サーバーを起動する。接続先の解決・ローカル以外の拒否・既存サーバーを再利用しない理由は、次節「テスト DB の接続先ガード」を参照。
+5. **認証バイパス（サーバー）**: サーバー専用フラグ `E2E_BYPASS=1` により、書き込み系 API の管理者認証をバイパスする（`front/src/lib/adminAuth.ts`）。本番ビルドでは無効。
+6. **認証バイパス（クライアント）**: `localStorage` に `e2e_admin_bypass=1` を注入して管理者セッションをシミュレートする（`tests/e2e/helpers.ts` の `injectAdminSession`）。フラグは `useAdminSession` が `useSyncExternalStore` で購読し、サーバー描画・hydration 中は無効（サーバー HTML と一致させる）、hydration 後に有効になる。レンダー中に `localStorage` を直接読まない（読むと hydration mismatch になり、本物の hydration 不具合が紛れる。#140）。
+7. **Supabase の接続情報**: E2E は Supabase Auth を使わない（認証は 5・6 のバイパス）が、クライアントの初期化に `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` が必要。CI は `.env.local` にダミー値を生成し、手元では `front/.env`（ローカル Supabase）の値を使う。
 
 CI 固有の追加設定（`prisma generate`、`.env.local` 動的生成、タイムアウト延長）と構築時のトラブルシュート記録は [`09-architecture-specification.md`](./09-architecture-specification.md) を参照。
 
@@ -77,7 +80,7 @@ IT / E2E の seed・`TRUNCATE`・`prisma db push --accept-data-loss` は全デ�
 
 - **テストは `front/tests/` に集約する**（ソースツリー `front/src/` にテストファイルを置かない）。レベルの分離はファイル名ではなく**ディレクトリ**で行う: `tests/unit/`（UT）/ `tests/it/`（IT）/ `tests/e2e/` / `tests/scenario/` / `tests/setup/`（足場）。`tests/unit/` `tests/it/` は `src/` の構造をミラーする。詳細は `.claude/rules/testing.md`。
 - ユニット: Vitest 4（jsdom, `@testing-library/react`）。設定: `front/vitest.config.ts`（`include: tests/unit/**`）, `front/tests/setup/setup.ts`。
-- E2E: Playwright（`front/tests/e2e/`、`smoke.spec.ts` / `record-crud.spec.ts`、`--project=e2e`）。**実 PostgreSQL（`docker-compose.e2e.yml`）** に対して実 API/DB を通す（`page.route` モックは撤廃）。`globalSetup` で `prisma db push`、各テスト `beforeEach` で reset+seed、認証は `E2E_BYPASS` + localStorage バイパス。直列実行（`workers:1`）。
+- E2E: Playwright（`front/tests/e2e/`、`smoke.spec.ts` / `record-crud.spec.ts`、`--project=e2e`、`pnpm run test:e2e`）。実 PostgreSQL に対して実 API/DB を通す。仕組みは「[E2E テスト環境の仕組み（実 DB）](#e2e-テスト環境の仕組み実-db)」。
 - シナリオ: Playwright（`front/tests/scenario/`、`--project=scenario`）。E2E と同じ実 DB 基盤で、**複数機能横断のユーザージャーニー**を検証（`pnpm run test:scenario`）。
 - 統合(IT): Vitest + Testcontainers（`@testcontainers/postgresql`）。実 PostgreSQL に対し Prisma 経由で Route Handler を検証。ファイル命名 `*.it.test.ts`、設定 `front/vitest.it.config.ts`、コマンド `pnpm test:it`。認証は `E2E_BYPASS=1` でバイパス。`lib/prisma` / `lib/adminAuth` の `import 'server-only'` は Vitest（`react-server` 条件を持たない）では import 時に throw するため、`vitest.it.config.ts` で空モジュールに差し替えている（#114）。
 - 静的検査: ESLint（`eslint-plugin-jsdoc` 含む）+ knip（未使用の export・ファイル・依存関係）+ `tsc --noEmit` + `next build`。CI の `static-check` ジョブで実行。
