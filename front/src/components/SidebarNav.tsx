@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { CalendarDays, History, LayoutGrid } from 'lucide-react';
+import { CalendarDays, History, LayoutGrid, LineChart } from 'lucide-react';
 import { useAdminSession } from '@/hooks/useAdminSession';
 
 /**
- * サイドバーのナビゲーション。記録一覧・カレンダーへの導線に加え、管理者にのみ管理者メニューを表示する。
+ * サイドバーのナビゲーション。記録一覧・カレンダー・推移グラフへの導線に加え、管理者にのみ管理者メニューを表示する。
  *
  * 管理者判定は {@link useAdminSession} に依存し、判定中（`isLoading`）は管理者リンクを出さない。
  * バイパス経由（`isBypass`）でも管理者リンクを表示する。
@@ -31,6 +31,13 @@ export default function SidebarNav() {
       >
         <CalendarDays size={16} />
         カレンダー
+      </Link>
+      <Link
+        href="/trends"
+        className="mt-2 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white/70 hover:bg-white/10"
+      >
+        <LineChart size={16} />
+        推移グラフ
       </Link>
       {!isLoading && (isAdmin || isBypass) ? (
         <Link

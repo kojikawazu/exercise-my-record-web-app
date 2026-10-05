@@ -59,6 +59,24 @@ export type RecordCalendarResponse = {
   dates: string[];
 };
 
+/** 推移グラフの 1 日分（記録がある日のみ。記録の無い日は含めない）。 */
+export type RecordTrendPoint = {
+  /** 記録日（`YYYY-MM-DD`）。 */
+  date: string;
+  /** その日の筋トレセット数の合計。 */
+  totalSets: number;
+  /** その日の有酸素の合計距離（km）。 */
+  cardioDistance: number;
+  /** その日の有酸素の種別と時間（推定カロリーの算定に使う。距離は `cardioDistance` に集約済み）。 */
+  cardios: Pick<RecordCardio, 'type' | 'minutes'>[];
+};
+
+/** `GET /api/records/trends` のレスポンス。 */
+export type RecordTrendsResponse = {
+  /** 期間内の記録（日付昇順）。記録が無ければ空配列。 */
+  points: RecordTrendPoint[];
+};
+
 /** 記録詳細の筋トレ 1 種目分。 */
 export type RecordWorkout = {
   /** 種目の一意 ID（リストの key に使う）。 */

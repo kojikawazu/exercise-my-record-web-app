@@ -6,6 +6,7 @@ import type {
   RecordDetail,
   RecordIdResponse,
   RecordListResponse,
+  RecordTrendsResponse,
   RecordUpdateRequest,
 } from '@/types/record';
 
@@ -27,6 +28,17 @@ export const fetchRecordList = (page: number) =>
 export const fetchRecordCalendar = (month: string) =>
   requestJson<RecordCalendarResponse>(() =>
     fetch(`/api/records/calendar?month=${encodeURIComponent(month)}`),
+  );
+
+/**
+ * 推移グラフ用に、期間内の記録を取得する（認証不要）。
+ *
+ * @param from - 起点日（`YYYY-MM-DD`、当日を含む）。`null` は全期間
+ * @returns 期間内の記録（日付昇順）。不正な起点日は `{ ok: false, status: 400 }`
+ */
+export const fetchRecordTrends = (from: string | null) =>
+  requestJson<RecordTrendsResponse>(() =>
+    fetch(from ? `/api/records/trends?from=${encodeURIComponent(from)}` : '/api/records/trends'),
   );
 
 /**

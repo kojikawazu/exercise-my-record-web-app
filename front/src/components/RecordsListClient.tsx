@@ -12,6 +12,7 @@ import RecordMenuList from '@/components/RecordMenuList';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useRecordList } from '@/hooks/useRecordList';
+import { toCalorieCardioType } from '@/lib/calorie';
 
 /**
  * 一般ユーザー向けの記録一覧クライアント。ページング付きで記録と推定カロリーを表示する。
@@ -108,7 +109,7 @@ export default function RecordsListClient() {
                   <CalorieEstimate
                     totalSets={record.totalSets}
                     cardios={record.cardios.map((c) => ({
-                      type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
+                      type: toCalorieCardioType(c.type),
                       minutes: c.minutes,
                     }))}
                   />
