@@ -9,17 +9,15 @@ import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import RecordMenuList from '@/components/RecordMenuList';
-import DashboardSummary from '@/components/DashboardSummary';
-import LatestRecordHighlight from '@/components/LatestRecordHighlight';
-import MonthHeatmap from '@/components/MonthHeatmap';
+import Dashboard from '@/components/Dashboard';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useRecordList } from '@/hooks/useRecordList';
 import { toCalorieCardioType } from '@/lib/calorie';
 
 /**
- * トップページ（一般ユーザー向け）。1 ページ目は今週のサマリー・今月のヒートマップ・最新の
- * 記録のダッシュボードを上部に表示し（#27）、その下にページング付きの記録一覧と推定カロリーを表示する。
+ * トップページ（一般ユーザー向け）。1 ページ目はダッシュボード（今週のサマリーと連続記録日数・
+ * 今月のヒートマップ・最新の記録）を上部に表示し（#27 / #28）、その下にページング付きの記録一覧と推定カロリーを表示する。
  *
  * URL の `page` クエリを唯一の真実としてページ状態を同期し、API がページ番号をクランプした
  * 場合は URL を補正する。管理者（{@link useAdminSession}）には管理者メニューと記録追加への
@@ -76,13 +74,7 @@ export default function RecordsListClient() {
 
         {/* ダッシュボードは「今」を見るためのもので、1 ページ目にだけ出す（#27） */}
         {currentPage === 1 ? (
-          <div className="mt-8 grid gap-6">
-            <DashboardSummary />
-            <MonthHeatmap />
-            {hasFetched && page === 1 && records[0] ? (
-              <LatestRecordHighlight record={records[0]} />
-            ) : null}
-          </div>
+          <Dashboard latestRecord={hasFetched && page === 1 ? (records[0] ?? null) : null} />
         ) : null}
 
         <div className="mt-8 grid gap-6" role="region" aria-label="記録一覧">

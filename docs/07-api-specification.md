@@ -13,6 +13,7 @@
   - [GET /records/:date](#get-recordsdate)
   - [GET /records/calendar?month=YYYY-MM](#get-recordscalendarmonthyyyy-mm)
   - [GET /records/trends?from=YYYY-MM-DD](#get-recordstrendsfromyyyy-mm-dd)
+  - [GET /records/streak?today=YYYY-MM-DD](#get-recordsstreaktodayyyyy-mm-dd)
   - [GET /admin/me](#get-adminme)
   - [マスター管理](#マスター管理)
   - [プロフィール](#プロフィール)
@@ -37,6 +38,7 @@
 | DELETE | `/records/:date` | レコード削除 | 必須 |
 | GET | `/records/calendar?month=YYYY-MM` | 月別記録有無 | 不要 |
 | GET | `/records/trends?from=YYYY-MM-DD` | 推移グラフ用データ | 不要 |
+| GET | `/records/streak?today=YYYY-MM-DD` | 連続記録日数（ストリーク） | 不要 |
 | GET | `/admin/me` | 管理者判定（`{ isAdmin }`） | 任意 |
 | GET | `/masters?type=...` | マスター取得 | 不要 |
 | POST | `/masters?type=...` | マスター追加 | 必須 |
@@ -119,6 +121,21 @@
   - 体重は履歴を持たないため返さない（#178）。
 - エラー: 400 `{ "error": "invalid from" }` / 503 `{ "error": "database unavailable" }`。
 
+
+### GET /records/streak?today=YYYY-MM-DD
+
+- 用途: トップページのサマリー・ヒートマップ用。今日を起点とした連続記録日数を返す（#28）。
+- クエリ: `today`（必須、`YYYY-MM-DD`。ブラウザのローカル日付。サーバーの UTC で決めると日付がずれるため）。
+- 判定: 今日を起点に、記録がある日が途切れずに続く日数。今日が未記録でも昨日まで続いていれば継続中として昨日までを数える。今日も昨日も未記録なら 0。今日より後の記録は数えない。
+  - 連続は月をまたいで遡るため、今日以前の記録日を日付のみ取得してサーバーで数える（明細は読まない。判定は `front/src/lib/streak.ts`）。
+- レスポンス:
+
+  ```json
+  { "days": 3, "from": "2026-10-03", "to": "2026-10-05", "recordedToday": false }
+  ```
+
+  - `from` / `to` は連続の初日・最終日（`days` が 0 なら `null`）。`recordedToday` が `false` なら「今日記録すると +1 日」と促せる。
+- エラー: 400 `{ "error": "invalid today" }`（欠落・形式不正・暦に無い日付）/ 503 `{ "error": "database unavailable" }`。
 ### GET /admin/me
 
 - 用途: 現在のリクエストユーザーが管理者かの判定（フロントの認証状態確認用）。

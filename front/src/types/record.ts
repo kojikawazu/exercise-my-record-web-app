@@ -77,6 +77,18 @@ export type RecordTrendsResponse = {
   points: RecordTrendPoint[];
 };
 
+/** `GET /api/records/streak` のレスポンス。今日を起点とした連続記録日数。 */
+export type RecordStreakResponse = {
+  /** 連続記録日数。今日が未記録でも昨日まで続いていれば昨日までを数える。途切れていれば 0 */
+  days: number;
+  /** 連続の初日（`YYYY-MM-DD`）。`days` が 0 なら `null` */
+  from: string | null;
+  /** 連続の最終日（今日、または今日が未記録なら昨日。`YYYY-MM-DD`）。`days` が 0 なら `null` */
+  to: string | null;
+  /** 今日の記録があるか（`false` なら「今日記録すると +1 日」と促せる）。 */
+  recordedToday: boolean;
+};
+
 /** 記録詳細の筋トレ 1 種目分。 */
 export type RecordWorkout = {
   /** 種目の一意 ID（リストの key に使う）。 */

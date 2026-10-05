@@ -1,19 +1,7 @@
 import { estimateDailyCalories, toCalorieCardioType } from '@/lib/calorie';
-import { toLocalIso } from '@/lib/date';
+import { addDays } from '@/lib/date';
 import type { DateRange, WeekRanges, WeekTotals } from '@/types/dashboard';
 import type { RecordTrendPoint } from '@/types/record';
-
-/**
- * `YYYY-MM-DD` を基準に日数をずらした日付を返す（ローカル日付で計算し、月・年をまたぐ）。
- *
- * @param date - 基準日（`YYYY-MM-DD`）
- * @param days - ずらす日数（負で過去）
- * @returns ずらした日付（`YYYY-MM-DD`）
- */
-const addDays = (date: string, days: number) => {
-  const [year, month, day] = date.split('-').map(Number);
-  return toLocalIso(new Date(year, month - 1, day + days));
-};
 
 /**
  * 今週（月曜始まり）と、先週のうち今週と同じ曜日までの範囲を求める。

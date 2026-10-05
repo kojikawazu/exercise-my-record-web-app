@@ -1,10 +1,11 @@
 'use client';
 
-import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { Flame, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
 import { changeRate } from '@/lib/dashboard';
+import type { RecordStreakResponse } from '@/types/record';
 
 /** {@link StatTile} の props。 */
 type StatTileProps = {
@@ -52,13 +53,49 @@ function StatTile({ label, value, current, previous }: StatTileProps) {
   );
 }
 
+/** {@link StreakBanner} / {@link DashboardSummary} の props。 */
+type StreakProps = {
+  /** 連続記録日数。取得中・取得失敗は `null`（表示しない） */
+  streak: RecordStreakResponse | null;
+};
+
+/**
+ * 連続記録日数（ストリーク）の表示（#28）。今日が未記録なら「今日記録すると +1 日」と促す。
+ * props の各項目は {@link StreakProps} を参照。
+ */
+function StreakBanner({ streak }: StreakProps) {
+  if (!streak) return null;
+  if (streak.days === 0) {
+    return (
+      <p className="mt-4 flex items-center gap-2 text-sm font-bold text-gray-500">
+        <Flame size={18} aria-hidden="true" />
+        連続記録はまだありません。今日から始めましょう
+      </p>
+    );
+  }
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <p className="flex items-center gap-2 text-lg font-black text-gray-900">
+        <Flame size={22} className="text-[color:var(--accent-pink)]" aria-hidden="true" />
+        {streak.days}日連続記録中
+      </p>
+      {streak.recordedToday ? null : (
+        <p className="text-xs font-bold text-gray-500">
+          今日記録すると {streak.days + 1} 日になります
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
  * トップページの「今週のサマリー」カード（#27）。
  *
  * 今週（月曜〜今日）のトレーニング回数・合計セット数・推定消費カロリーと、先週の同じ曜日まで
- * との比較を表示する。体重が未設定ならカロリーは `-- kcal`（先週比なし）。
+ * との比較を表示する。体重が未設定ならカロリーは `-- kcal`（先週比なし）。先頭に連続記録日数を
+ * 表示する（#28）。props の各項目は {@link StreakProps} を参照。
  */
-export default function DashboardSummary() {
+export default function DashboardSummary({ streak }: StreakProps) {
   const { current, previous, status } = useWeeklySummary();
 
   return (
@@ -67,6 +104,7 @@ export default function DashboardSummary() {
         <h2 className="shrink-0 text-xl font-black text-[color:var(--accent)]">今週のサマリー</h2>
         <span className="text-xs font-bold text-gray-400">月曜〜今日 / 先週の同じ曜日まで比</span>
       </div>
+      <StreakBanner streak={streak} />
       {status === 'loading' ? (
         <div className="py-6">
           <LoadingSpinner mode="fetching" />

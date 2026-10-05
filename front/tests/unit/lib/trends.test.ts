@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTrendSeries, parseIsoDate, parseTrendPeriod, trendFromDate } from '@/lib/trends';
+import { buildTrendSeries, parseTrendPeriod, trendFromDate } from '@/lib/trends';
 
 describe('parseTrendPeriod', () => {
   it('should accept each period option', () => {
@@ -43,32 +43,6 @@ describe('trendFromDate', () => {
   it('should account for February 29 in a leap year', () => {
     // 2028-03-01 から遡って 7 日（当日含む）: 2/24〜3/1（2/29 を含む）
     expect(trendFromDate('2028-03-01', '1w')).toBe('2028-02-24');
-  });
-});
-
-describe('parseIsoDate', () => {
-  it('should accept a valid date', () => {
-    expect(parseIsoDate('2026-02-28')).toBe('2026-02-28');
-    expect(parseIsoDate('2028-02-29')).toBe('2028-02-29');
-  });
-
-  it('should reject a missing value', () => {
-    expect(parseIsoDate(null)).toBeNull();
-    expect(parseIsoDate(undefined)).toBeNull();
-    expect(parseIsoDate('')).toBeNull();
-  });
-
-  it('should reject dates that do not exist on the calendar', () => {
-    expect(parseIsoDate('2026-02-29')).toBeNull();
-    expect(parseIsoDate('2026-02-30')).toBeNull();
-    expect(parseIsoDate('2026-04-31')).toBeNull();
-  });
-
-  it('should reject malformed values', () => {
-    expect(parseIsoDate('2026-2-1')).toBeNull();
-    expect(parseIsoDate('2026-02-01T00:00:00Z')).toBeNull();
-    expect(parseIsoDate('0999-01-01')).toBeNull();
-    expect(parseIsoDate('abc')).toBeNull();
   });
 });
 

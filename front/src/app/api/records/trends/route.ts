@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
-import { parseIsoDate } from '@/lib/trends';
+import { parseIsoDate } from '@/lib/date';
 import type { RecordTrendPoint, RecordTrendsResponse } from '@/types/record';
 
 /**

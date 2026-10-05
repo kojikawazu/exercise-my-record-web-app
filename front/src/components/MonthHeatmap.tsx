@@ -7,14 +7,23 @@ import { WEEK_LABELS } from '@/constants/calendar';
 import { useRecordCalendar } from '@/hooks/useRecordCalendar';
 import { useTodayLocalIso } from '@/hooks/useTodayLocalIso';
 import { buildMonthCells } from '@/lib/calendar';
+import type { RecordStreakResponse } from '@/types/record';
+
+/** {@link MonthHeatmap} の props。 */
+type MonthHeatmapProps = {
+  /** 連続記録日数。連続の範囲（`from`〜`to`）の日を別の見た目で示す。取得中・失敗・0 日は `null` 相当で強調しない */
+  streak: RecordStreakResponse | null;
+};
 
 /**
  * トップページの「今月のヒートマップ」（#27）。
  *
  * 今月（ブラウザのローカル日付）の日を小さなマス目で並べ、記録がある日を塗る。塗られた日は
- * 記録詳細へのリンク。月の移動はカレンダー画面に任せ、見出しから導線を出す。
+ * 記録詳細へのリンク。月の移動はカレンダー画面に任せ、見出しから導線を出す。連続記録中の日は
+ * 色（ピンク）と白い点の形の両方で示し、凡例を添える（色だけで区別しない。#28）。props の各項目は
+ * {@link MonthHeatmapProps} を参照。
  */
-export default function MonthHeatmap() {
+export default function MonthHeatmap({ streak }: MonthHeatmapProps) {
   const today = useTodayLocalIso();
   const month = today.slice(0, 7);
   const { recordedDates, status } = useRecordCalendar(month);
@@ -51,15 +60,24 @@ export default function MonthHeatmap() {
             {cells.map((day, idx) => {
               if (day === null) return <span key={`empty-${idx}`} />;
               const iso = `${month}-${String(day).padStart(2, '0')}`;
-              const todayRing = iso === today ? 'ring-2 ring-[color:var(--accent-pink)]' : '';
+              const todayRing = iso === today ? 'ring-2 ring-gray-900' : '';
+              // `YYYY-MM-DD` は文字列の大小比較が日付の前後と一致する
+              const inStreak =
+                streak?.from != null && streak.to != null && iso >= streak.from && iso <= streak.to;
               return recordedDates.has(iso) ? (
                 <Link
                   key={iso}
                   href={`/records/${iso}`}
-                  aria-label={`${iso} の記録を見る`}
+                  aria-label={`${iso} の記録を見る${inStreak ? '（連続記録中）' : ''}`}
                   title={iso}
-                  className={`aspect-square rounded-md bg-[color:var(--accent)] hover:opacity-80 ${todayRing}`}
-                />
+                  className={`flex aspect-square items-center justify-center rounded-md hover:opacity-80 ${
+                    inStreak ? 'bg-[color:var(--accent-pink)]' : 'bg-[color:var(--accent)]'
+                  } ${todayRing}`}
+                >
+                  {inStreak ? (
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" aria-hidden="true" />
+                  ) : null}
+                </Link>
               ) : (
                 <span
                   key={iso}
@@ -68,6 +86,28 @@ export default function MonthHeatmap() {
                 />
               );
             })}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-gray-500">
+            <span className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded-sm bg-[color:var(--accent)]" aria-hidden="true" />
+              記録あり
+            </span>
+            <span className="flex items-center gap-1">
+              <span
+                className="flex h-3 w-3 items-center justify-center rounded-sm bg-[color:var(--accent-pink)]"
+                aria-hidden="true"
+              >
+                <span className="h-1 w-1 rounded-full bg-white" />
+              </span>
+              連続記録中
+            </span>
+            <span className="flex items-center gap-1">
+              <span
+                className="h-3 w-3 rounded-sm bg-gray-100 ring-2 ring-gray-900"
+                aria-hidden="true"
+              />
+              今日
+            </span>
           </div>
         </div>
       )}
