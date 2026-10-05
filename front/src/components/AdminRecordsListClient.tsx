@@ -73,15 +73,15 @@ export default function AdminRecordsListClient() {
       />
 
       <section className="mx-auto max-w-5xl px-6 pt-8">
-        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <Link href="/admin/records/new" className={`ml-auto ${buttonClasses('pink')}`}>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+          <Link href="/admin/records/new" className={`ml-auto ${buttonClasses('cta')}`}>
             <Plus size={16} />
             記録追加
           </Link>
         </div>
 
         <div className="mt-8 grid gap-6">
-          {error ? <p className="text-sm font-bold text-red-500">{error}</p> : null}
+          {error ? <p className="text-sm font-bold text-danger">{error}</p> : null}
           {!hasFetched ? (
             <Card className="p-10">
               <LoadingSpinner mode="fetching" />
@@ -89,7 +89,7 @@ export default function AdminRecordsListClient() {
           ) : null}
           {records.length === 0 && hasFetched ? (
             <Card className="p-10 text-center">
-              <p className="text-lg font-bold text-gray-500">
+              <p className="text-lg font-bold text-muted">
                 記録がありません。最初の記録を追加しましょう
               </p>
             </Card>
@@ -99,19 +99,16 @@ export default function AdminRecordsListClient() {
               <Card key={record.date} className="p-6 md:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">
                       日付
                     </p>
-                    <h2 className="text-2xl font-black text-gray-900">{record.date}</h2>
+                    <h2 className="text-2xl font-black text-foreground">{record.date}</h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Link href={`/records/${record.date}`} className={buttonClasses('outline')}>
                       詳細を見る
                     </Link>
-                    <Link
-                      href={recordEditHref(record.date)}
-                      className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
-                    >
+                    <Link href={recordEditHref(record.date)} className={buttonClasses('outline')}>
                       編集
                     </Link>
                     <button
@@ -142,7 +139,7 @@ export default function AdminRecordsListClient() {
               >
                 前へ
               </button>
-              <span className="text-sm font-bold text-gray-600">
+              <span className="text-sm font-bold text-muted">
                 {page} / {totalPages} ページ
               </span>
               <button

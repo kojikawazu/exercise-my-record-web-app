@@ -24,17 +24,17 @@ type PageHeaderProps = {
  */
 export default function PageHeader({ title, subtitle, action, maxWidth = '5xl' }: PageHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 border-b bg-white/80 px-6 py-4 backdrop-blur">
+    <div className="sticky top-0 z-10 border-b border-line bg-surface/80 px-6 py-4 backdrop-blur">
       <div
         className={`mx-auto flex ${widthMap[maxWidth]} flex-wrap items-center justify-between gap-4`}
       >
         <div>
           {subtitle ? (
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">
               {subtitle}
             </p>
           ) : null}
-          <h1 className="text-2xl font-black tracking-tight text-[color:var(--accent)]">{title}</h1>
+          <h1 className="text-2xl font-black tracking-tight text-primary">{title}</h1>
         </div>
         {action}
       </div>

@@ -79,15 +79,15 @@ export default function DatePicker({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm font-bold text-gray-500"
+        className="flex w-full items-center justify-between rounded-xl bg-surface-muted px-4 py-3 text-sm font-bold text-muted"
       >
         <span>{value || placeholder}</span>
-        <span className="text-xs font-bold text-gray-400">Year jump</span>
+        <span className="text-xs font-bold text-subtle">Year jump</span>
       </button>
 
       {open ? (
         <div
-          className="absolute left-0 top-full z-20 mt-2 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+          className="absolute left-0 top-full z-20 mt-2 w-full rounded-2xl border border-line bg-surface p-4 shadow-lg"
           onClick={(event) => event.stopPropagation()}
           onMouseDown={(event) => event.preventDefault()}
         >
@@ -95,7 +95,7 @@ export default function DatePicker({
             <button
               type="button"
               onClick={() => moveMonth(-1)}
-              className="rounded-full border border-gray-200 p-2 text-gray-500"
+              className="rounded-full border border-line p-2 text-muted"
             >
               <ChevronLeft size={16} />
             </button>
@@ -103,7 +103,7 @@ export default function DatePicker({
               <select
                 value={year}
                 onChange={(event) => setYear(Number(event.target.value))}
-                className="rounded-lg border border-gray-200 px-2 py-1 text-sm font-bold text-gray-600"
+                className="rounded-lg border border-line px-2 py-1 text-sm font-bold text-muted"
               >
                 {years.map((item) => (
                   <option key={item} value={item}>
@@ -114,7 +114,7 @@ export default function DatePicker({
               <select
                 value={month}
                 onChange={(event) => setMonth(Number(event.target.value))}
-                className="rounded-lg border border-gray-200 px-2 py-1 text-sm font-bold text-gray-600"
+                className="rounded-lg border border-line px-2 py-1 text-sm font-bold text-muted"
               >
                 {Array.from({ length: 12 }, (_, idx) => (
                   <option key={idx} value={idx}>
@@ -122,18 +122,18 @@ export default function DatePicker({
                   </option>
                 ))}
               </select>
-              <span className="text-xs font-bold text-gray-400">{monthLabel}</span>
+              <span className="text-xs font-bold text-subtle">{monthLabel}</span>
             </div>
             <button
               type="button"
               onClick={() => moveMonth(1)}
-              className="rounded-full border border-gray-200 p-2 text-gray-500"
+              className="rounded-full border border-line p-2 text-muted"
             >
               <ChevronRight size={16} />
             </button>
           </div>
 
-          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-gray-400">
+          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-subtle">
             {WEEK_LABELS.map((label) => (
               <span key={label}>{label}</span>
             ))}
@@ -149,7 +149,7 @@ export default function DatePicker({
                     event.stopPropagation();
                     handleSelect(day);
                   }}
-                  className="rounded-lg px-2 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100"
+                  className="rounded-lg px-2 py-2 text-sm font-bold text-muted hover:bg-surface-muted"
                 >
                   {day}
                 </button>

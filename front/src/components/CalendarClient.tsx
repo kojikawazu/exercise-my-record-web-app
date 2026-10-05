@@ -70,7 +70,7 @@ export default function CalendarClient({ month }: CalendarClientProps) {
               <ChevronLeft size={16} />
               前月
             </button>
-            <h2 className="text-xl font-black text-gray-900" aria-live="polite">
+            <h2 className="text-xl font-black text-foreground" aria-live="polite">
               {displayMonth ? `${yearLabel}年${Number(monthLabel)}月` : ''}
             </h2>
             <button
@@ -85,10 +85,10 @@ export default function CalendarClient({ month }: CalendarClientProps) {
           </div>
 
           {status === 'error' ? (
-            <p className="mt-4 text-sm font-bold text-red-500">記録の取得に失敗しました。</p>
+            <p className="mt-4 text-sm font-bold text-danger">記録の取得に失敗しました。</p>
           ) : null}
 
-          <div className="mt-6 grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-400">
+          <div className="mt-6 grid grid-cols-7 gap-2 text-center text-xs font-bold text-subtle">
             {WEEK_LABELS.map((label) => (
               <span key={label}>{label}</span>
             ))}
@@ -104,21 +104,21 @@ export default function CalendarClient({ month }: CalendarClientProps) {
                 if (day === null) return <span key={`empty-${idx}`} />;
                 const iso = `${displayMonth}-${String(day).padStart(2, '0')}`;
                 const isToday = iso === today;
-                const todayRing = isToday ? 'ring-2 ring-[color:var(--accent-pink)]' : '';
+                const todayRing = isToday ? 'ring-2 ring-foreground' : '';
                 return recordedDates.has(iso) ? (
                   <Link
                     key={iso}
                     href={`/records/${iso}`}
                     aria-label={`${iso} の記録を見る`}
-                    className={`flex flex-col items-center rounded-xl bg-purple-50 py-2 text-sm font-black text-[color:var(--accent)] transition hover:bg-purple-100 ${todayRing}`}
+                    className={`flex flex-col items-center rounded-xl bg-primary-soft py-2 text-sm font-black text-primary transition hover:bg-primary-soft/70 ${todayRing}`}
                   >
                     {day}
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
                   </Link>
                 ) : (
                   <span
                     key={iso}
-                    className={`flex flex-col items-center rounded-xl py-2 text-sm font-bold text-gray-400 ${todayRing}`}
+                    className={`flex flex-col items-center rounded-xl py-2 text-sm font-bold text-subtle ${todayRing}`}
                   >
                     {day}
                     <span className="mt-1 h-1.5 w-1.5" />

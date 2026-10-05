@@ -17,19 +17,19 @@ type RecordMenuListProps = {
 export default function RecordMenuList({ workouts, cardios }: RecordMenuListProps) {
   return (
     <div className="mt-6 grid gap-4 md:grid-cols-2">
-      <div className="rounded-2xl bg-gray-50 p-4">
-        <p className="text-[10px] font-black uppercase text-gray-400">筋トレメニュー</p>
+      <div className="rounded-2xl bg-surface-muted p-4">
+        <p className="text-[10px] font-black uppercase text-subtle">筋トレメニュー</p>
         {workouts.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-400">筋トレの記録なし</p>
+          <p className="mt-2 text-sm text-subtle">筋トレの記録なし</p>
         ) : (
           <ul className="mt-2 grid gap-2">
             {workouts.map((w, i) => (
-              <li key={i} className="text-sm text-gray-800">
-                <span className="mr-2 rounded-full bg-purple-50 px-2 py-0.5 text-xs font-bold text-[color:var(--accent)]">
+              <li key={i} className="text-sm text-foreground">
+                <span className="mr-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">
                   {w.part}
                 </span>
                 <span className="font-bold">{w.name}</span>
-                <span className="ml-2 text-gray-500">
+                <span className="ml-2 text-muted">
                   {w.sets}セット × {w.reps}回 / {w.weight}kg
                 </span>
               </li>
@@ -37,16 +37,16 @@ export default function RecordMenuList({ workouts, cardios }: RecordMenuListProp
           </ul>
         )}
       </div>
-      <div className="rounded-2xl bg-gray-50 p-4">
-        <p className="text-[10px] font-black uppercase text-gray-400">有酸素メニュー</p>
+      <div className="rounded-2xl bg-surface-muted p-4">
+        <p className="text-[10px] font-black uppercase text-subtle">有酸素メニュー</p>
         {cardios.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-400">有酸素の記録なし</p>
+          <p className="mt-2 text-sm text-subtle">有酸素の記録なし</p>
         ) : (
           <ul className="mt-2 grid gap-2">
             {cardios.map((c, i) => (
-              <li key={i} className="text-sm text-gray-800">
+              <li key={i} className="text-sm text-foreground">
                 <span className="font-bold">{c.type}</span>
-                <span className="ml-2 text-gray-500">
+                <span className="ml-2 text-muted">
                   {c.minutes}分 / {c.distance}km
                 </span>
               </li>

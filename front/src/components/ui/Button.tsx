@@ -1,14 +1,18 @@
-/** ボタンの見た目バリアント。primary=主要操作 / outline=枠線 / pink=強調追加 / danger=削除系。 */
-export type ButtonVariant = 'primary' | 'outline' | 'pink' | 'danger';
+/**
+ * ボタンの見た目バリアント。
+ * cta=主要な操作（保存・記録追加・ログイン）/ primary=選択中の状態（期間の切替等）/
+ * outline=枠線（遷移・補助操作）/ danger=削除系。
+ */
+export type ButtonVariant = 'cta' | 'primary' | 'outline' | 'danger';
 
 const base = 'rounded-full px-4 py-2 text-sm font-bold transition inline-flex items-center gap-2';
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'af-button shadow-lg',
+  cta: 'bg-cta text-cta-foreground shadow-lg hover:bg-cta-hover',
+  primary: 'bg-primary-fill text-white shadow-lg hover:bg-primary-fill-hover',
   outline:
-    'border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white',
-  pink: 'bg-[color:var(--accent-pink)] text-white shadow-lg shadow-pink-100 hover:opacity-90',
-  danger: 'border border-[#a94040] text-[#a94040] hover:bg-[#a94040] hover:text-white',
+    'border border-primary text-primary hover:bg-primary-fill hover:border-primary-fill hover:text-white',
+  danger: 'border border-danger text-danger hover:bg-danger hover:text-surface',
 };
 
 /**

@@ -26,16 +26,16 @@ const modeLabels: Record<LoadingMode, string> = {
 };
 
 const modeClasses: Record<LoadingMode, string> = {
-  fetching: 'text-gray-500',
-  saving: 'text-emerald-600',
+  fetching: 'text-muted',
+  saving: 'text-accent',
   deleting: 'text-rose-600',
   exporting: 'text-sky-600',
-  auth: 'text-amber-600',
+  auth: 'text-warning',
 };
 
 const variantClasses: Record<LoadingVariant, string> = {
   block:
-    'flex items-center justify-center gap-2 rounded-2xl bg-gray-50 px-4 py-3 text-sm font-bold',
+    'flex items-center justify-center gap-2 rounded-2xl bg-surface-muted px-4 py-3 text-sm font-bold',
   inline: 'inline-flex items-center gap-2 text-sm font-bold',
 };
 

@@ -37,21 +37,21 @@ export default function MonthHeatmap({ streak }: MonthHeatmapProps) {
   return (
     <Card className="p-6 md:p-8" role="region" aria-label="今月の記録">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="shrink-0 text-xl font-black text-[color:var(--accent)]">
+        <h2 className="shrink-0 text-xl font-black text-primary">
           今月の記録{month ? `（${Number(month.slice(5))}月）` : ''}
         </h2>
         <Link
           href="/calendar"
-          className="text-xs font-bold text-[color:var(--accent)] underline-offset-4 hover:underline"
+          className="text-xs font-bold text-primary underline-offset-4 hover:underline"
         >
           カレンダーで見る
         </Link>
       </div>
       {status === 'error' ? (
-        <p className="mt-4 text-sm font-bold text-red-500">記録の取得に失敗しました。</p>
+        <p className="mt-4 text-sm font-bold text-danger">記録の取得に失敗しました。</p>
       ) : (
         <div className="mt-4 max-w-sm">
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400">
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-subtle">
             {WEEK_LABELS.map((label) => (
               <span key={label}>{label}</span>
             ))}
@@ -60,7 +60,7 @@ export default function MonthHeatmap({ streak }: MonthHeatmapProps) {
             {cells.map((day, idx) => {
               if (day === null) return <span key={`empty-${idx}`} />;
               const iso = `${month}-${String(day).padStart(2, '0')}`;
-              const todayRing = iso === today ? 'ring-2 ring-gray-900' : '';
+              const todayRing = iso === today ? 'ring-2 ring-foreground' : '';
               // `YYYY-MM-DD` は文字列の大小比較が日付の前後と一致する
               const inStreak =
                 streak?.from != null && streak.to != null && iso >= streak.from && iso <= streak.to;
@@ -71,7 +71,7 @@ export default function MonthHeatmap({ streak }: MonthHeatmapProps) {
                   aria-label={`${iso} の記録を見る${inStreak ? '（連続記録中）' : ''}`}
                   title={iso}
                   className={`flex aspect-square items-center justify-center rounded-md hover:opacity-80 ${
-                    inStreak ? 'bg-[color:var(--accent-pink)]' : 'bg-[color:var(--accent)]'
+                    inStreak ? 'bg-accent' : 'bg-primary-fill'
                   } ${todayRing}`}
                 >
                   {inStreak ? (
@@ -82,19 +82,19 @@ export default function MonthHeatmap({ streak }: MonthHeatmapProps) {
                 <span
                   key={iso}
                   title={iso}
-                  className={`aspect-square rounded-md bg-gray-100 ${todayRing}`}
+                  className={`aspect-square rounded-md bg-surface-muted ${todayRing}`}
                 />
               );
             })}
           </div>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-gray-500">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-muted">
             <span className="flex items-center gap-1">
-              <span className="h-3 w-3 rounded-sm bg-[color:var(--accent)]" aria-hidden="true" />
+              <span className="h-3 w-3 rounded-sm bg-primary-fill" aria-hidden="true" />
               記録あり
             </span>
             <span className="flex items-center gap-1">
               <span
-                className="flex h-3 w-3 items-center justify-center rounded-sm bg-[color:var(--accent-pink)]"
+                className="flex h-3 w-3 items-center justify-center rounded-sm bg-accent"
                 aria-hidden="true"
               >
                 <span className="h-1 w-1 rounded-full bg-white" />
@@ -103,7 +103,7 @@ export default function MonthHeatmap({ streak }: MonthHeatmapProps) {
             </span>
             <span className="flex items-center gap-1">
               <span
-                className="h-3 w-3 rounded-sm bg-gray-100 ring-2 ring-gray-900"
+                className="h-3 w-3 rounded-sm bg-surface-muted ring-2 ring-foreground"
                 aria-hidden="true"
               />
               今日

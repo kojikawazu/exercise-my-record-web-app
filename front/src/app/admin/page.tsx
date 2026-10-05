@@ -41,15 +41,15 @@ export default function Page() {
             <Link key={item.label} href={item.href} className="group">
               <Card className="p-6 transition hover:-translate-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-xl font-black text-[color:var(--accent)]">
+                  <span className="flex items-center gap-2 text-xl font-black text-primary">
                     <item.icon size={20} />
                     {item.label}
                   </span>
-                  <span className="text-lg text-[color:var(--accent)] transition group-hover:translate-x-1">
+                  <span className="text-lg text-primary transition group-hover:translate-x-1">
                     →
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-400">移動する</p>
+                <p className="mt-2 text-sm text-subtle">移動する</p>
               </Card>
             </Link>
           ))}

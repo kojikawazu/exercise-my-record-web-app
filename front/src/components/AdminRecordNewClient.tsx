@@ -140,19 +140,19 @@ export default function AdminRecordNewClient() {
 
       <section className="mx-auto max-w-5xl px-6 pt-8">
         <div className="grid gap-8">
-          {notice ? <p className="text-sm font-bold text-red-500">{notice}</p> : null}
+          {notice ? <p className="text-sm font-bold text-danger">{notice}</p> : null}
           {mastersStatus === 'error' ? (
-            <p className="text-sm font-bold text-red-500">選択肢を取得できませんでした。</p>
+            <p className="text-sm font-bold text-danger">選択肢を取得できませんでした。</p>
           ) : null}
           <Card className="p-6 md:p-8">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">
               日付
             </label>
             <div className="mt-3">
               <DatePicker value={date} onChange={setDate} />
             </div>
             {displayErrors.date ? (
-              <p className="mt-1 text-xs text-red-500">{displayErrors.date}</p>
+              <p className="mt-1 text-xs text-danger">{displayErrors.date}</p>
             ) : null}
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <button
@@ -164,15 +164,15 @@ export default function AdminRecordNewClient() {
                 {latestDate ? `前回の記録をコピー（${latestDate}）` : '前回の記録をコピー'}
               </button>
               {latestStatus === 'empty' ? (
-                <p className="text-xs font-bold text-gray-400">コピーできる記録がありません。</p>
+                <p className="text-xs font-bold text-subtle">コピーできる記録がありません。</p>
               ) : null}
               {latestStatus === 'error' ? (
-                <p className="text-xs font-bold text-red-500">前回の記録を取得できませんでした。</p>
+                <p className="text-xs font-bold text-danger">前回の記録を取得できませんでした。</p>
               ) : null}
               {copyMessage ? (
                 <p
                   className={`text-xs font-bold ${
-                    copyMessage.tone === 'error' ? 'text-red-500' : 'text-gray-500'
+                    copyMessage.tone === 'error' ? 'text-danger' : 'text-muted'
                   }`}
                 >
                   {copyMessage.text}
@@ -183,8 +183,8 @@ export default function AdminRecordNewClient() {
 
           <Card className="p-6 md:p-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-[color:var(--accent)]">筋トレ</h2>
-              <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-[color:var(--accent)]">
+              <h2 className="text-xl font-black text-primary">筋トレ</h2>
+              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
                 最少1行
               </span>
             </div>
@@ -196,12 +196,12 @@ export default function AdminRecordNewClient() {
             </datalist>
             <div className="mt-6 grid gap-4">
               {workouts.map((row) => (
-                <div key={row.id} className="rounded-2xl bg-gray-50 p-4">
+                <div key={row.id} className="rounded-2xl bg-surface-muted p-4">
                   <div className="grid gap-4 md:grid-cols-6">
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       部位
                       <select
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.part}
                         onChange={(event) => updateWorkout(row.id, 'part', event.target.value)}
                       >
@@ -213,68 +213,68 @@ export default function AdminRecordNewClient() {
                         ))}
                       </select>
                       {displayErrors.workouts[row.id]?.part ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.workouts[row.id].part}
                         </p>
                       ) : null}
                     </label>
-                    <label className="text-[10px] font-black uppercase text-gray-400 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase text-subtle md:col-span-2">
                       種目名
                       <input
                         type="text"
                         placeholder="種目を入力"
                         list={exerciseListId}
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.name}
                         onChange={(event) => updateWorkout(row.id, 'name', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.name ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.workouts[row.id].name}
                         </p>
                       ) : null}
                     </label>
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       セット数
                       <input
                         type="number"
                         placeholder="0"
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.sets}
                         onChange={(event) => updateWorkout(row.id, 'sets', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.sets ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.workouts[row.id].sets}
                         </p>
                       ) : null}
                     </label>
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       回数
                       <input
                         type="number"
                         placeholder="0"
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.reps}
                         onChange={(event) => updateWorkout(row.id, 'reps', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.reps ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.workouts[row.id].reps}
                         </p>
                       ) : null}
                     </label>
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       重量 (kg)
                       <input
                         type="number"
                         placeholder="0"
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.weight}
                         onChange={(event) => updateWorkout(row.id, 'weight', event.target.value)}
                       />
                       {displayErrors.workouts[row.id]?.weight ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.workouts[row.id].weight}
                         </p>
                       ) : null}
@@ -283,7 +283,7 @@ export default function AdminRecordNewClient() {
                   <div className="mt-4 flex justify-end">
                     <button
                       type="button"
-                      className="rounded-full border border-[color:var(--accent)] px-3 py-1 text-xs font-bold text-[color:var(--accent)]"
+                      className="rounded-full border border-primary px-3 py-1 text-xs font-bold text-primary"
                       onClick={() => removeRow(row.id)}
                       disabled={workouts.length === 1}
                     >
@@ -294,7 +294,7 @@ export default function AdminRecordNewClient() {
               ))}
             </div>
             <div className="mt-4">
-              <button type="button" className={buttonClasses('pink')} onClick={addRow}>
+              <button type="button" className={buttonClasses('cta')} onClick={addRow}>
                 追加
               </button>
             </div>
@@ -302,19 +302,19 @@ export default function AdminRecordNewClient() {
 
           <Card className="p-6 md:p-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-[color:var(--accent)]">有酸素</h2>
-              <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-[color:var(--accent)]">
+              <h2 className="text-xl font-black text-primary">有酸素</h2>
+              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
                 任意
               </span>
             </div>
             <div className="mt-6 grid gap-4">
               {cardios.map((row) => (
-                <div key={row.id} className="rounded-2xl bg-gray-50 p-4">
+                <div key={row.id} className="rounded-2xl bg-surface-muted p-4">
                   <div className="grid gap-4 md:grid-cols-3">
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       種別
                       <select
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.type}
                         onChange={(event) => updateCardio(row.id, 'type', event.target.value)}
                       >
@@ -326,37 +326,37 @@ export default function AdminRecordNewClient() {
                         ))}
                       </select>
                       {displayErrors.cardios[row.id]?.type ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.cardios[row.id].type}
                         </p>
                       ) : null}
                     </label>
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       時間 (分)
                       <input
                         type="number"
                         placeholder="0"
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.minutes}
                         onChange={(event) => updateCardio(row.id, 'minutes', event.target.value)}
                       />
                       {displayErrors.cardios[row.id]?.minutes ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.cardios[row.id].minutes}
                         </p>
                       ) : null}
                     </label>
-                    <label className="text-[10px] font-black uppercase text-gray-400">
+                    <label className="text-[10px] font-black uppercase text-subtle">
                       距離 (km)
                       <input
                         type="number"
                         placeholder="0"
-                        className="mt-2 w-full rounded-lg border-none bg-white p-2 text-sm font-bold"
+                        className="mt-2 w-full rounded-lg border-none bg-surface p-2 text-sm font-bold"
                         value={row.distance}
                         onChange={(event) => updateCardio(row.id, 'distance', event.target.value)}
                       />
                       {displayErrors.cardios[row.id]?.distance ? (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                           {displayErrors.cardios[row.id].distance}
                         </p>
                       ) : null}
@@ -365,7 +365,7 @@ export default function AdminRecordNewClient() {
                   <div className="mt-4 flex justify-end">
                     <button
                       type="button"
-                      className="rounded-full border border-[color:var(--accent)] px-3 py-1 text-xs font-bold text-[color:var(--accent)]"
+                      className="rounded-full border border-primary px-3 py-1 text-xs font-bold text-primary"
                       onClick={() => removeCardioRow(row.id)}
                     >
                       削除
@@ -375,32 +375,32 @@ export default function AdminRecordNewClient() {
               ))}
             </div>
             <div className="mt-4">
-              <button type="button" className={buttonClasses('pink')} onClick={addCardioRow}>
+              <button type="button" className={buttonClasses('cta')} onClick={addCardioRow}>
                 追加
               </button>
             </div>
           </Card>
 
           <Card className="p-6 md:p-8">
-            <h2 className="text-xl font-black text-[color:var(--accent)]">体調メモ</h2>
+            <h2 className="text-xl font-black text-primary">体調メモ</h2>
             <textarea
               placeholder="体調メモを入力"
-              className="mt-4 h-28 w-full rounded-2xl border-none bg-gray-50 px-4 py-3 text-sm font-bold"
+              className="mt-4 h-28 w-full rounded-2xl border-none bg-surface-muted px-4 py-3 text-sm font-bold"
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
             />
-            <p className="mt-2 text-xs font-bold text-gray-400">最大500文字</p>
+            <p className="mt-2 text-xs font-bold text-subtle">最大500文字</p>
           </Card>
 
           <div className="flex justify-end">
             <button
               type="button"
-              className={`${buttonClasses('primary')} rounded-2xl px-6 py-3 text-sm`}
+              className={`${buttonClasses('cta')} rounded-2xl px-6 py-3 text-sm`}
               onClick={handleSave}
               disabled={status === 'saving'}
             >
               {status === 'saving' ? (
-                <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+                <LoadingSpinner mode="saving" variant="inline" className="text-cta-foreground" />
               ) : (
                 '保存'
               )}

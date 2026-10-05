@@ -57,7 +57,7 @@ export default function AdminProfileClient() {
             <LoadingSpinner mode="fetching" />
           ) : (
             <>
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">
                 体重 (kg)
                 <input
                   type="number"
@@ -65,11 +65,11 @@ export default function AdminProfileClient() {
                   value={weightKg}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="例: 65.5"
-                  className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold"
+                  className="mt-3 w-full rounded-2xl border border-line bg-surface-muted px-4 py-3 text-sm font-bold"
                 />
               </label>
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs font-bold text-gray-400">
+                <p className="text-xs font-bold text-subtle">
                   {status === 'saved'
                     ? '保存しました。'
                     : status === 'error'
@@ -79,11 +79,15 @@ export default function AdminProfileClient() {
                 <button
                   type="button"
                   onClick={handleSave}
-                  className={`${buttonClasses('primary')} flex items-center gap-2 rounded-2xl px-6 py-3 text-sm`}
+                  className={`${buttonClasses('cta')} flex items-center gap-2 rounded-2xl px-6 py-3 text-sm`}
                   disabled={status === 'saving'}
                 >
                   {status === 'saving' ? (
-                    <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+                    <LoadingSpinner
+                      mode="saving"
+                      variant="inline"
+                      className="text-cta-foreground"
+                    />
                   ) : (
                     <>
                       <Save size={16} />
