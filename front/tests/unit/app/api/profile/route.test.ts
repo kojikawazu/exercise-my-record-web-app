@@ -9,15 +9,26 @@ vi.mock('@/lib/adminAuth', () => ({
   requireAdmin: vi.fn(),
 }));
 
-const makePrisma = (overrides: Record<string, unknown> = {}) => ({
-  exerciseProfile: {
-    findFirst: vi.fn().mockResolvedValue(null),
-    update: vi.fn().mockResolvedValue({}),
-    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
-    create: vi.fn().mockResolvedValue({}),
-  },
-  ...overrides,
-});
+const makePrisma = () => {
+  const prisma = {
+    exerciseProfile: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue({}),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      create: vi.fn().mockResolvedValue({}),
+    },
+    exerciseWeightLog: {
+      upsert: vi.fn().mockResolvedValue({}),
+    },
+    // 対話型トランザクションは、同じダブルをトランザクションクライアントとして渡して実行する
+    // （トランザクション自体の原子性は IT で実 DB に対して確かめる）
+    $transaction: vi.fn(),
+  };
+  prisma.$transaction.mockImplementation((fn: (tx: typeof prisma) => Promise<unknown>) =>
+    fn(prisma),
+  );
+  return prisma;
+};
 
 /**
  * モジュールスコープの `fallbackWeightKg` はテスト順に依存するため、
@@ -36,6 +47,9 @@ async function load() {
   requireAdmin.mockResolvedValue({ authorized: true } as never);
   return { getPrisma, requireAdmin, GET: route.GET, POST: route.POST };
 }
+
+/** 体重の履歴に積む日付（ブラウザのローカル日付としてクライアントが送る値）。 */
+const TODAY = '2026-10-06';
 
 const makePostRequest = (body: unknown) =>
   new Request('http://localhost/api/profile', {
@@ -117,7 +131,7 @@ describe('POST /api/profile', () => {
     prisma.exerciseProfile.findFirst.mockResolvedValue({ id: 'existing-1' });
     getPrisma.mockReturnValue(prisma as never);
 
-    const res = await POST(makePostRequest({ weightKg: 68 }));
+    const res = await POST(makePostRequest({ weightKg: 68, date: TODAY }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ weightKg: 68 });
@@ -131,6 +145,13 @@ describe('POST /api/profile', () => {
       where: { id: { not: 'existing-1' } },
     });
     expect(prisma.exerciseProfile.create).not.toHaveBeenCalled();
+    // 同じトランザクションで、その日の履歴を積む（同日は上書き）
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.exerciseWeightLog.upsert).toHaveBeenCalledWith({
+      where: { date: new Date('2026-10-06T00:00:00.000Z') },
+      create: { date: new Date('2026-10-06T00:00:00.000Z'), weightKg: 68 },
+      update: { weightKg: 68 },
+    });
   });
 
   // 正常系: 既存なし → create を呼び、{ weightKg } を返す
@@ -140,7 +161,7 @@ describe('POST /api/profile', () => {
     prisma.exerciseProfile.findFirst.mockResolvedValue(null);
     getPrisma.mockReturnValue(prisma as never);
 
-    const res = await POST(makePostRequest({ weightKg: 55.4 }));
+    const res = await POST(makePostRequest({ weightKg: 55.4, date: TODAY }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ weightKg: 55.4 });
@@ -158,12 +179,29 @@ describe('POST /api/profile', () => {
     const prisma = makePrisma();
     getPrisma.mockReturnValue(prisma as never);
 
-    const res = await POST(makePostRequest({ weightKg: '70' }));
+    const res = await POST(makePostRequest({ weightKg: '70', date: TODAY }));
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toBe('weightKg is required');
     expect(prisma.exerciseProfile.update).not.toHaveBeenCalled();
     expect(prisma.exerciseProfile.create).not.toHaveBeenCalled();
+  });
+
+  // 準正常系: date が不正・未指定 → 400（現在値も履歴も書かない）
+  it.each([
+    ['omitted', undefined],
+    ['not a calendar date', '2026-02-30'],
+    ['not YYYY-MM-DD', '2026/10/06'],
+    ['not a string', 20261006],
+  ])('should return 400 when date is %s', async (_label, date) => {
+    const { getPrisma, POST } = await load();
+    const prisma = makePrisma();
+    getPrisma.mockReturnValue(prisma as never);
+
+    const res = await POST(makePostRequest({ weightKg: 70, date }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'invalid date' });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   // 準正常系: weightKg 未指定 → 400
@@ -188,7 +226,7 @@ describe('POST /api/profile', () => {
     const prisma = makePrisma();
     getPrisma.mockReturnValue(prisma as never);
 
-    const res = await POST(makePostRequest({ weightKg: 60 }));
+    const res = await POST(makePostRequest({ weightKg: 60, date: TODAY }));
     expect(res.status).toBe(401);
     // 認証で弾かれた場合は DB へ触れない
     expect(prisma.exerciseProfile.findFirst).not.toHaveBeenCalled();
@@ -202,10 +240,22 @@ describe('POST /api/profile', () => {
     prisma.exerciseProfile.update.mockRejectedValue(new Error('db down'));
     getPrisma.mockReturnValue(prisma as never);
 
-    const res = await POST(makePostRequest({ weightKg: 80 }));
+    const res = await POST(makePostRequest({ weightKg: 80, date: TODAY }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ weightKg: 80 });
+  });
+
+  // 異常系: 履歴の書き込み(upsert)が throw しても握りつぶして { weightKg } を返す
+  it('should swallow DB errors while writing the history and still return weightKg', async () => {
+    const { getPrisma, POST } = await load();
+    const prisma = makePrisma();
+    prisma.exerciseWeightLog.upsert.mockRejectedValue(new Error('db down'));
+    getPrisma.mockReturnValue(prisma as never);
+
+    const res = await POST(makePostRequest({ weightKg: 75, date: TODAY }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ weightKg: 75 });
   });
 
   // 異常系: getPrisma=null でも 200 で保存値を返す
@@ -213,7 +263,7 @@ describe('POST /api/profile', () => {
     const { getPrisma, POST } = await load();
     getPrisma.mockReturnValue(null as never);
 
-    const res = await POST(makePostRequest({ weightKg: 90 }));
+    const res = await POST(makePostRequest({ weightKg: 90, date: TODAY }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ weightKg: 90 });
@@ -224,7 +274,7 @@ describe('POST /api/profile', () => {
     const { getPrisma, POST, GET } = await load();
     getPrisma.mockReturnValue(null as never); // DB を使わず fallback のみ検証
 
-    const postRes = await POST(makePostRequest({ weightKg: 63 }));
+    const postRes = await POST(makePostRequest({ weightKg: 63, date: TODAY }));
     expect(postRes.status).toBe(200);
     expect(await postRes.json()).toEqual({ weightKg: 63 });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTrendSeries, parseTrendPeriod, trendFromDate } from '@/lib/trends';
+import { buildTrendSeries, buildWeightSeries, parseTrendPeriod, trendFromDate } from '@/lib/trends';
 
 describe('parseTrendPeriod', () => {
   it('should accept each period option', () => {
@@ -101,5 +101,23 @@ describe('buildTrendSeries', () => {
 
   it('should return empty series for no points', () => {
     expect(buildTrendSeries([], 65)).toEqual({ sets: [], distance: [], calories: [] });
+  });
+});
+
+describe('buildWeightSeries', () => {
+  it('should map each history entry to a chart point in the same order', () => {
+    expect(
+      buildWeightSeries([
+        { date: '2026-10-01', weightKg: 65.2 },
+        { date: '2026-10-05', weightKg: 64.8 },
+      ]),
+    ).toEqual([
+      { date: '2026-10-01', value: 65.2 },
+      { date: '2026-10-05', value: 64.8 },
+    ]);
+  });
+
+  it('should return an empty series when there is no history', () => {
+    expect(buildWeightSeries([])).toEqual([]);
   });
 });

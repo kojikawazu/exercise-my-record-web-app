@@ -20,6 +20,7 @@ const TABLES = [
   'ExerciseRecord',
   'ExerciseMaster',
   'ExerciseProfile',
+  'ExerciseWeightLog',
 ];
 
 // 各テスト前に全 Exercise テーブルを空にしてテスト間の独立性を担保する。

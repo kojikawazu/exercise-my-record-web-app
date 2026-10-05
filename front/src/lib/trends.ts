@@ -1,5 +1,6 @@
 import { estimateDailyCalories, toCalorieCardioType } from '@/lib/calorie';
 import { addDays } from '@/lib/date';
+import type { WeightHistoryPoint } from '@/types/profile';
 import type { RecordTrendPoint } from '@/types/record';
 import { TREND_PERIODS, type TrendPeriod } from '@/types/trend';
 
@@ -58,7 +59,8 @@ type TrendSeries = {
  * 推移 API の点から、指標ごとのグラフ系列を組み立てる。
  *
  * 推定カロリーは一覧・詳細と同じ算定（有酸素種別は {@link toCalorieCardioType} で寄せる）で、
- * 体重は現在のプロフィールの値を全期間に使う（体重の履歴は持たない）。
+ * 体重は現在のプロフィールの値を全期間に使う（体重の履歴は使わない。一覧・詳細・ダッシュボードと
+ * 同じ値にそろえるため）。
  *
  * @param points - 推移 API の点（日付昇順）
  * @param weightKg - プロフィールの体重（kg）。未設定・未取得は `null`
@@ -84,3 +86,12 @@ export const buildTrendSeries = (
           ),
         })),
 });
+
+/**
+ * 体重の履歴から、推移グラフの系列を組み立てる。
+ *
+ * @param points - 体重履歴 API の点（日付昇順）
+ * @returns 体重（kg）の系列。履歴が無ければ空配列
+ */
+export const buildWeightSeries = (points: WeightHistoryPoint[]): TrendSeriesPoint[] =>
+  points.map((p) => ({ date: p.date, value: p.weightKg }));

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { toLocalIso } from '@/lib/date';
 import { fetchProfile, saveProfile } from '@/repositories/profile';
 import type { ApiResult } from '@/types/apiResult';
 import type { ProfileResponse } from '@/types/profile';
@@ -18,7 +19,10 @@ export type UseProfile = {
   weightKg: number | null;
   /** 取得状態。 */
   status: ProfileStatus;
-  /** 体重を保存する（管理者のみ）。成功時は `weightKg` を保存値に更新する。入力値の検証は呼び出し側の責務。 */
+  /**
+   * 体重を保存する（管理者のみ）。保存した日（ブラウザのローカル日付）の体重として履歴にも積まれる。
+   * 成功時は `weightKg` を保存値に更新する。入力値の検証は呼び出し側の責務。
+   */
   save: (weightKg: number) => Promise<ApiResult<ProfileResponse>>;
 };
 
@@ -42,7 +46,7 @@ export function useProfile(): UseProfile {
   }, []);
 
   const save = useCallback(async (weightKg: number) => {
-    const saved = await saveProfile({ weightKg });
+    const saved = await saveProfile({ weightKg, date: toLocalIso(new Date()) });
     if (saved.ok) setResult(saved);
     return saved;
   }, []);

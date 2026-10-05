@@ -12,7 +12,7 @@ import Link from 'next/link';
 /**
  * プロフィール画面。体重（kg）を入力・保存する。表示時に保存済みの体重を取得してプリセットし、
  * 保存値は消費カロリー計算に使用する。数値以外の入力は保存せずエラー表示にする。データは
- * 1 件のみ維持（上書き保存）。
+ * 1 件のみ維持（上書き保存）し、保存した日の体重として履歴にも積む（推移グラフの体重に使う）。
  */
 export default function AdminProfileClient() {
   const { weightKg: savedWeightKg, status: loadStatus, save } = useProfile();

@@ -254,7 +254,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 |---|---|---|---|
 | `tests/unit/app/api/masters/route.test.ts` | GET / POST | 13 | 正: 一覧(name昇順)・作成 / 準: type不正400・name欠落400・重複409・**監査カラム非公開** / 異: 未認証401・503 |
 | `tests/unit/app/api/masters/[id]/route.test.ts` | PATCH / DELETE | 11 | 正: 更新・削除 / 準: name欠落400・not found404・**監査カラム非公開** / 異: 未認証401・503・**DB の type 不正500** |
-| `tests/unit/app/api/profile/route.test.ts` | GET / POST | 12 | 正: 取得・上書き(update+deleteMany)・新規create / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
+| `tests/unit/app/api/profile/route.test.ts` | GET / POST | 17 | 正: 取得・上書き(update+deleteMany)・新規create・履歴の upsert（#178） / 準: 未存在null・weightKg非数値400 / 異: 未認証401・DBエラー握りつぶし・503相当 |
 | `tests/unit/app/api/admin/me/route.test.ts` | GET | 8 | 正: 管理者200(大小文字/前後空白許容) / 準: トークン欠落401・無効401・非管理者403 / 異: 認証設定不備500 |
 
 補足:
@@ -274,7 +274,7 @@ pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/
 | テストファイル | 検証する実 DB 挙動 | 件数 |
 |---|---|---|
 | `tests/it/app/api/records/route.it.test.ts` | 作成→詳細往復・**同日 unique→409**・ページング(12件/10件)と日付降順・空状態・PATCH全置換・DELETE子行除去(孤児なし)・404 | 10 |
-| `tests/it/app/api/profile/route.it.test.ts` | 保存往復・**繰り返し保存で 1 行維持(上書き)**・非数値400で行なし | 3 |
+| `tests/it/app/api/profile/route.it.test.ts` | 保存往復・**繰り返し保存で 1 行維持(上書き)**・非数値400で行なし・日ごとの履歴と同日上書き・不正な日付で書き込みなし（#178） | 6 |
 | `tests/it/app/api/masters/route.it.test.ts` | name昇順・type別スコープ・PATCH/DELETE・**複合unique(type,name)→409**・別typeなら同名可・404 | 6 |
 
 IT 合計 19 件（全 pass）。モックでは検証できない DB 制約・並び順・トランザクション的挙動を実 DB で担保する。既存のモック route テストは高速な「ハンドラ UT」として併存する。
@@ -349,10 +349,10 @@ records の API アクセスを `repositories/record.ts` と hooks に移した�
 | テストファイル | 件数 | 主な正常/準正常/異常 |
 |---|---|---|
 | `tests/unit/repositories/master.test.ts` | 12 | 正: 取得・追加（Bearer / JSON）・名称変更・削除（本文を読まない） / 準: 0 件・409・401・404 を `status` で返す / 異: 5xx・通信エラーは `status: 0` |
-| `tests/unit/repositories/profile.test.ts` | 6 | 正: 取得・保存（Bearer / JSON） / 準: 未保存は `null`・401・400 / 異: 通信エラー |
+| `tests/unit/repositories/profile.test.ts` | 10 | 正: 取得・保存（Bearer / JSON）・体重の履歴の取得（#178） / 準: 未保存は `null`・401・400 / 異: 通信エラー |
 | `tests/unit/repositories/admin.test.ts` | 4 | 正: 渡したトークンを付け `no-store` で判定 / 準: 403・401 / 異: 通信エラー |
 | `tests/unit/hooks/useMasterList.test.ts` | 9 | 正: 取得・追加は先頭へ・名称はサーバー値で置換・削除 / 準: 種別切替中は前の種別を出さない・409 / 失敗時は一覧を変えない・**操作中にタブを切り替えても別種別へ反映しない** / 異: 取得失敗は空で `error` |
-| `tests/unit/hooks/useProfile.test.ts` | 5 | 正: 取得・保存後に更新 / 準: 未保存は `null`・保存失敗は保存済みの値を保持 / 異: 取得失敗は `error` |
+| `tests/unit/hooks/useProfile.test.ts` | 6 | 正: 取得・保存後に更新・保存日にローカル日付を送る（#178） / 準: 未保存は `null`・保存失敗は保存済みの値を保持 / 異: 取得失敗は `error` |
 | `tests/unit/hooks/useAdminSession.test.tsx` | 12 | 正: セッションのトークンで管理者判定・バイパスフラグがあっても hydration で mismatch を起こさず、hydration 後に管理者になる / 準: 403 は非管理者・セッション無しは API を呼ばない・サーバー描画ではバイパス無効（判定中）・同一タブの `setBypassSession` と別タブの `storage` イベントに追従 / 異: 通信エラー・2xx の本文が JSON でない場合も判定を終えて非管理者・フラグ値が `'1'` 以外（`'0'` / `'true'` / 空）ならバイパスしない |
 
 画面の振る舞い（マスター管理・プロフィール・カロリー表示・管理者メニュー）は既存の E2E / シナリオで回帰を確認する。
@@ -458,6 +458,24 @@ CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全
 | `tests/unit/repositories/record.test.ts`（`fetchRecordStreak`） | 3 | 正: 今日を付けて要求 / 準: 400 を `status` で返す / 異: 通信エラーは `status: 0` |
 | `tests/it/app/api/records/streak/route.it.test.ts` | 4 | 正: 月をまたぐ連続 / 準: 今日未記録でも昨日まで継続・今日より後の記録を無視・記録なしは 0 |
 | `tests/e2e/dashboard.spec.ts`（ストリーク） | 4 | 正: 今日を含む連続・今日未記録で昨日まで継続と促す文言・ヒートマップの連続日と凡例 / 準: 連続なしは開始を促す文言 |
+
+### 5r. 体重の履歴と推移グラフ（#178）
+
+体重の履歴（`ExerciseWeightLog`）・`POST /api/profile` の履歴の積み上げ・`GET /api/profile/weights`・推移グラフの「体重」。現在値と履歴を 1 トランザクションで書くことと 1 日 1 件の上書きは実 DB の IT、系列の組み立ては純粋関数（`buildWeightSeries`）の UT、保存から推移グラフへの反映は E2E で確認する。保存日はブラウザのローカル日付で決めるため、日付がずれやすい時刻（ローカル 23:30）で hook の UT を置く。モックは外部 I/O（Prisma・`fetch`・Supabase）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/app/api/profile/route.test.ts`（追加分） | 6 | 正: 同じトランザクションでその日の履歴を upsert / 準: `date` の欠落・暦に無い日付・形式不正・非文字列は 400（トランザクションを開始しない） / 異: 履歴の書き込み失敗も握りつぶして保存値を返す |
+| `tests/unit/app/api/profile/weights/route.test.ts` | 8 | 正: `YYYY-MM-DD` と体重を返す・`from`（UTC 0 時）以降を昇順で問い合わせる / 準: 省略時は全期間・不正な `from` は 400（DB を問い合わせない、4 件） / 異: DB 接続不可は 503 |
+| `tests/unit/hooks/useWeightHistory.test.ts` | 7 | 正: 起点日から取得・`null` は全期間 / 準: 期間未確定は取得しない・切替中は前の期間を持ち越さない・遅れて届いた古い応答を無視 / 異: 5xx・通信エラーは `error` |
+| `tests/unit/hooks/useProfile.test.ts`（追加分） | 1 | 正: 保存時にブラウザのローカル日付（23:30 でも当日）を送る |
+| `tests/unit/repositories/profile.test.ts`（追加分） | 4 | 正: `from` 付き・全期間の要求、保存本文に `date` を含む / 準: 400 を `status` で返す / 異: 通信エラーは `status: 0` |
+| `tests/unit/lib/trends.test.ts`（`buildWeightSeries`） | 2 | 正: 履歴を同じ順で系列に / 準: 履歴なしは空 |
+| `tests/it/app/api/profile/route.it.test.ts`（追加分） | 3 | 正: 日ごとに履歴を積みつつ現在値は 1 行 / 準: 同日の再保存は履歴を上書き / 異: 不正な `date` は現在値も履歴も書かない |
+| `tests/it/app/api/profile/weights/route.it.test.ts` | 4 | 正: 保存順によらず日付昇順 / 準: 起点日当日を含み前日を含まない・起点日以降に無ければ空 / 異: 暦に無い日付は 400 |
+| `tests/e2e/trends.spec.ts`（追加分） | 2（+1 更新） | 正: 履歴からの体重グラフと表・プロフィールで保存すると直近 1 週間のグラフに今日が載る / 準: 記録の無い期間は体重の空状態も表示（既存ケースに追加） |
+
+マイグレーション SQL（`20261006_exercise_weight_log`）は自動テストの対象外（IT / E2E のスキーマは `prisma db push` で作るため）。PR 作成前に使い捨ての PostgreSQL コンテナで適用し、最新の体重 1 件だけが最終更新日（UTC）の履歴として移ること・RLS が有効になることを確認した。
 
 ### 5d-2. テスト DB の接続先ガード（#116）
 

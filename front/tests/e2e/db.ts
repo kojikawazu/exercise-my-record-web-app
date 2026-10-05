@@ -20,7 +20,7 @@ const getClient = (): PrismaClient => {
 export const resetDb = async (): Promise<void> => {
   const db = getClient();
   await db.$executeRawUnsafe(
-    'TRUNCATE "ExerciseWorkout", "ExerciseCardio", "ExerciseRecord", "ExerciseMaster", "ExerciseProfile" RESTART IDENTITY CASCADE',
+    'TRUNCATE "ExerciseWorkout", "ExerciseCardio", "ExerciseRecord", "ExerciseMaster", "ExerciseProfile", "ExerciseWeightLog" RESTART IDENTITY CASCADE',
   );
 };
 
@@ -101,6 +101,20 @@ export const seedRecordsForDates = async (dates: string[]): Promise<void> => {
   for (const date of dates) {
     await db.exerciseRecord.create({ data: { date: new Date(date) } });
   }
+};
+
+/**
+ * 体重の履歴を投入する（推移グラフの体重の検証用）。記録日はアプリと同じく UTC の 0 時で保存する。
+ *
+ * @param entries - 投入する履歴（日付 `YYYY-MM-DD` と体重 kg）。日付を重複させない
+ */
+export const seedWeightLogs = async (
+  entries: { date: string; weightKg: number }[],
+): Promise<void> => {
+  const db = getClient();
+  await db.exerciseWeightLog.createMany({
+    data: entries.map((e) => ({ date: new Date(`${e.date}T00:00:00.000Z`), weightKg: e.weightKg })),
+  });
 };
 
 /**
