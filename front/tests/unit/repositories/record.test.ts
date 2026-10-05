@@ -18,7 +18,7 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 const listResponse = {
-  records: [{ date: '2026-01-02', totalSets: 3, cardioMinutes: 0, cardioDistance: 0, cardios: [] }],
+  records: [{ date: '2026-01-02', totalSets: 0, workouts: [], cardios: [] }],
   totalCount: 1,
   page: 1,
   totalPages: 1,

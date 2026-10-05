@@ -63,14 +63,22 @@
 
   ```json
   {
-    "records": [{ "date": "...", "totalSets": 0, "cardioMinutes": 0, "cardioDistance": 0, "cardios": [] }],
+    "records": [
+      {
+        "date": "2026-02-02",
+        "totalSets": 9,
+        "workouts": [{ "part": "胸", "name": "ベンチプレス", "sets": 3, "reps": 10, "weight": 60 }],
+        "cardios": [{ "type": "ラン", "minutes": 30, "distance": 5 }]
+      }
+    ],
     "totalCount": 25,
     "page": 1,
     "totalPages": 3
   }
   ```
 
-  ※ 筋トレは現状 `totalSets` 集約のみで詳細配列は未返却（一覧カードの全メニュー表示は要改修、[`11-tasks.md`](./11-tasks.md) 参照）。
+- 一覧カードの筋トレ/有酸素メニュー表示用に、各記録の明細（`workouts` / `cardios`）を返す（#23）。行の ID・`recordId`・監査列（`createdAt` / `updatedAt`）は返さない。明細の並び順は詳細 API と同じく保証しない。
+- `totalSets` は推定消費カロリーの算定用にサーバーで集約した派生値。有酸素の合計時間/距離（旧 `cardioMinutes` / `cardioDistance`）は一覧のサマリー表示廃止に伴い削除した（#23）。
 
 ### GET /records/:date
 

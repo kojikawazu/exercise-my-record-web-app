@@ -15,7 +15,8 @@ test('list page renders seeded records and core elements', async ({ page }) => {
   // seed した 2 レコードの日付が表示される。
   await expect(page.getByText('2026-02-02')).toBeVisible();
   await expect(page.getByText('2026-01-15')).toBeVisible();
-  await expect(page.getByText('合計セット数').first()).toBeVisible();
+  await expect(page.getByText('筋トレメニュー').first()).toBeVisible();
+  await expect(page.getByText('有酸素メニュー').first()).toBeVisible();
   await expect(page.getByText('推定消費カロリー').first()).toBeVisible();
 });
 

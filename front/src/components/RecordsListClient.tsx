@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import PageHeader from '@/components/ui/PageHeader';
 import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import RecordMenuList from '@/components/RecordMenuList';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useRecordList } from '@/hooks/useRecordList';
@@ -60,9 +61,6 @@ export default function RecordsListClient() {
 
       <section className="mx-auto max-w-5xl px-6 pt-8">
         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <span className="rounded-full bg-white px-3 py-1 font-bold">合計セット数</span>
-          <span className="rounded-full bg-white px-3 py-1 font-bold">有酸素合計時間</span>
-          <span className="rounded-full bg-white px-3 py-1 font-bold">有酸素合計距離</span>
           {isAdmin ? (
             <Link href="/admin/records/new" className={`ml-auto ${buttonClasses('pink')}`}>
               <Plus size={16} />
@@ -105,26 +103,7 @@ export default function RecordsListClient() {
                     詳細を見る
                   </Link>
                 </div>
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl bg-gray-50 p-4 text-center">
-                    <p className="text-[10px] font-black uppercase text-gray-400">合計セット数</p>
-                    <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
-                      {record.totalSets}セット
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gray-50 p-4 text-center">
-                    <p className="text-[10px] font-black uppercase text-gray-400">有酸素合計時間</p>
-                    <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
-                      {record.cardioMinutes}分
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gray-50 p-4 text-center">
-                    <p className="text-[10px] font-black uppercase text-gray-400">有酸素合計距離</p>
-                    <p className="mt-2 text-2xl font-black text-[color:var(--accent)]">
-                      {record.cardioDistance}km
-                    </p>
-                  </div>
-                </div>
+                <RecordMenuList workouts={record.workouts} cardios={record.cardios} />
                 <div className="mt-4">
                   <CalorieEstimate
                     totalSets={record.totalSets}

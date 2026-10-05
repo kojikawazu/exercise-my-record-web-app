@@ -13,17 +13,29 @@ type RecordCardio = {
   distance: number;
 };
 
-/** 記録一覧の 1 日分。派生値（合計）はサーバーで算定して返す。 */
+/** 記録一覧カードに表示する筋トレ 1 種目分。一覧では行の ID を公開しない（表示専用で操作対象にしないため）。 */
+type RecordListWorkout = {
+  /** 部位。 */
+  part: string;
+  /** 種目名。 */
+  name: string;
+  /** セット数。 */
+  sets: number;
+  /** 1 セットあたりの回数。 */
+  reps: number;
+  /** 重量（kg）。 */
+  weight: number;
+};
+
+/** 記録一覧の 1 日分。派生値（セット数合計）はサーバーで算定して返す。 */
 export type RecordListItem = {
   /** 記録日（`YYYY-MM-DD`）。一覧の一意キー兼、詳細・編集への遷移パラメータ。 */
   date: string;
-  /** その日の筋トレセット数の合計。 */
+  /** その日の筋トレセット数の合計（推定カロリーの算定に使う）。 */
   totalSets: number;
-  /** その日の有酸素の合計時間（分）。 */
-  cardioMinutes: number;
-  /** その日の有酸素の合計距離（km）。 */
-  cardioDistance: number;
-  /** その日の有酸素の一覧（推定カロリー表示に使う）。記録が無い日は空配列。 */
+  /** その日の筋トレ種目の一覧（一覧カードのメニュー表示に使う）。記録が無い日は空配列。並び順は詳細と同じく保証しない。 */
+  workouts: RecordListWorkout[];
+  /** その日の有酸素の一覧（メニュー表示と推定カロリーの算定に使う）。記録が無い日は空配列。 */
   cardios: RecordCardio[];
 };
 

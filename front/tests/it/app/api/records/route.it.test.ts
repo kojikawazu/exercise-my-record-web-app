@@ -104,7 +104,33 @@ describe('IT: GET /api/records — pagination & ordering (実 DB)', () => {
     expect(body2.records[1].date).toBe('2026-03-01');
   });
 
+  it('should include workouts and cardios of each record in the list (#23)', async () => {
+    await createRecord(createRequest(sampleBody('2026-05-01')));
+
+    const res = await listRecords(new Request(`${postUrl}?page=1`));
+    const [record] = (await res.json()).records;
+    expect(record.date).toBe('2026-05-01');
+    expect(record.totalSets).toBe(7);
+    // 明細の並び順は詳細 API と同じく保証しないため、順序に依存せず比較する
+    expect(record.workouts).toHaveLength(2);
+    expect(record.workouts).toEqual(
+      expect.arrayContaining([
+        { part: '胸', name: 'ベンチプレス', sets: 3, reps: 10, weight: 60 },
+        { part: '背中', name: 'デッドリフト', sets: 4, reps: 8, weight: 100 },
+      ]),
+    );
+    expect(record.cardios).toEqual([{ type: 'ラン', minutes: 30, distance: 5 }]);
+  });
+
   // --- 準正常系 ---
+
+  it('should return empty workouts and cardios for a record without menus', async () => {
+    await createRecord(createRequest({ date: '2026-05-02', workouts: [], cardios: [] }));
+
+    const res = await listRecords(new Request(`${postUrl}?page=1`));
+    const [record] = (await res.json()).records;
+    expect(record).toEqual({ date: '2026-05-02', totalSets: 0, workouts: [], cardios: [] });
+  });
 
   it('should clamp page beyond range to the last page', async () => {
     await createRecord(createRequest({ date: '2026-04-01', workouts: [], cardios: [] }));
