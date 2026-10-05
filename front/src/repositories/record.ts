@@ -6,6 +6,7 @@ import type {
   RecordDetail,
   RecordIdResponse,
   RecordListResponse,
+  RecordStreakResponse,
   RecordTrendsResponse,
   RecordUpdateRequest,
 } from '@/types/record';
@@ -39,6 +40,17 @@ export const fetchRecordCalendar = (month: string) =>
 export const fetchRecordTrends = (from: string | null) =>
   requestJson<RecordTrendsResponse>(() =>
     fetch(from ? `/api/records/trends?from=${encodeURIComponent(from)}` : '/api/records/trends'),
+  );
+
+/**
+ * 今日を起点とした連続記録日数を取得する（認証不要）。
+ *
+ * @param today - 今日（`YYYY-MM-DD`、ブラウザのローカル日付）
+ * @returns 連続記録日数。不正な日付は `{ ok: false, status: 400 }`
+ */
+export const fetchRecordStreak = (today: string) =>
+  requestJson<RecordStreakResponse>(() =>
+    fetch(`/api/records/streak?today=${encodeURIComponent(today)}`),
   );
 
 /**

@@ -91,3 +91,48 @@ test('should show the dashboard only on the first page', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '今週のサマリー' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '最新の記録' })).toHaveCount(0);
 });
+
+test('should show the streak including today', async ({ page }) => {
+  for (const offset of [0, -1, -2]) {
+    await seedWorkoutRecord(dayFromToday(offset), { part: '胸', name: 'ベンチプレス', sets: 3 });
+  }
+
+  await page.goto('/');
+  const summary = page.getByRole('region', { name: '今週のサマリー' });
+  await expect(summary.getByText('3日連続記録中')).toBeVisible();
+  await expect(summary.getByText(/今日記録すると/)).toHaveCount(0);
+});
+
+test('should keep the streak up to yesterday and prompt to record today', async ({ page }) => {
+  for (const offset of [-1, -2]) {
+    await seedWorkoutRecord(dayFromToday(offset), { part: '胸', name: 'ベンチプレス', sets: 3 });
+  }
+
+  await page.goto('/');
+  const summary = page.getByRole('region', { name: '今週のサマリー' });
+  await expect(summary.getByText('2日連続記録中')).toBeVisible();
+  await expect(summary.getByText('今日記録すると 3 日になります')).toBeVisible();
+});
+
+test('should encourage starting a streak when there is none', async ({ page }) => {
+  // ベースラインの記録は 2026 年 1〜2 月のみ（今日・昨日の記録なし）
+  await page.goto('/');
+  await expect(
+    page
+      .getByRole('region', { name: '今週のサマリー' })
+      .getByText('連続記録はまだありません。今日から始めましょう'),
+  ).toBeVisible();
+});
+
+test('should mark streak days on the heatmap with a legend', async ({ page }) => {
+  const today = dayFromToday(0);
+  await seedWorkoutRecord(today, { part: '胸', name: 'ベンチプレス', sets: 3 });
+
+  await page.goto('/');
+  const heatmap = page.getByRole('region', { name: '今月の記録' });
+  await expect(
+    heatmap.getByRole('link', { name: `${today} の記録を見る（連続記録中）` }),
+  ).toBeVisible();
+  await expect(heatmap.getByText('連続記録中', { exact: true })).toBeVisible();
+  await expect(heatmap.getByText('記録あり', { exact: true })).toBeVisible();
+});

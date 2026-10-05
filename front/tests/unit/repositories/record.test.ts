@@ -5,6 +5,7 @@ import {
   fetchRecordCalendar,
   fetchRecordDetail,
   fetchRecordList,
+  fetchRecordStreak,
   fetchRecordTrends,
   updateRecord,
 } from '@/repositories/record';
@@ -106,6 +107,25 @@ describe('fetchRecordTrends', () => {
   it('should return status 400 for an invalid start date', async () => {
     fetchMock.mockResolvedValue(jsonResponse(400, { error: 'invalid from' }));
     expect(await fetchRecordTrends('2026-02-30')).toEqual({ ok: false, status: 400 });
+  });
+});
+
+describe('fetchRecordStreak', () => {
+  it("should request the streak with today's date", async () => {
+    const body = { days: 2, from: '2026-10-06', to: '2026-10-07', recordedToday: true };
+    fetchMock.mockResolvedValue(jsonResponse(200, body));
+    expect(await fetchRecordStreak('2026-10-07')).toEqual({ ok: true, data: body });
+    expect(callOf()[0]).toBe('/api/records/streak?today=2026-10-07');
+  });
+
+  it('should return status 400 for an invalid date', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(400, { error: 'invalid today' }));
+    expect(await fetchRecordStreak('2026-02-30')).toEqual({ ok: false, status: 400 });
+  });
+
+  it('should return status 0 when the request itself fails', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+    expect(await fetchRecordStreak('2026-10-07')).toEqual({ ok: false, status: 0 });
   });
 });
 

@@ -445,6 +445,20 @@ CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全
 
 1 ページ目では最新の記録の日付がダッシュボードと一覧の両方に出るため、一覧を対象にした既存の E2E・シナリオは一覧の領域（`role="region"`・名前「記録一覧」）に絞って確認するよう更新した。
 
+### 5q. ストリーク（#28）
+
+今日を起点とした連続記録日数と `GET /api/records/streak`。判定は純粋関数（`lib/streak.ts`）として UT、今日以前の記録日の取得は実 DB の IT、表示は「今日」基準の相対日付で seed して E2E で確認する。日付の計算（`addDays`）と検証（`parseIsoDate`）は 3 箇所目の利用となったため `lib/date.ts` に共通化した（`parseIsoDate` の UT は `trends.test.ts` から `date.test.ts` へ移動）。モックは外部 I/O（Prisma・`fetch`・Supabase）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/lib/streak.test.ts` | 9 | 正: 今日で終わる連続・今日が未記録でも昨日までで継続・今日だけの 1 日 / 準: 今日も昨日も未記録は 0・途中で途切れる・月/年/うるう日またぎ・入力の順序や重複に依存しない・記録なし / 異: 今日より後の日付は数えない |
+| `tests/unit/lib/date.test.ts`（`addDays`） | 4 | 正: 前後に移動 / 準: 月/年またぎ・うるう日・0 日 |
+| `tests/unit/app/api/records/streak/route.test.ts` | 5 | 正: 今日で終わる連続・今日以前（UTC 0 時）を新しい順に問い合わせる / 準: 連続なしは 0・`today` の欠落/不正は 400（DB を問い合わせない） / 異: DB 接続不可は 503 |
+| `tests/unit/hooks/useStreak.test.ts` | 4 | 正: ローカル日付の今日で要求 / 準: 0 日 / 異: 5xx・通信エラーは `error` |
+| `tests/unit/repositories/record.test.ts`（`fetchRecordStreak`） | 3 | 正: 今日を付けて要求 / 準: 400 を `status` で返す / 異: 通信エラーは `status: 0` |
+| `tests/it/app/api/records/streak/route.it.test.ts` | 4 | 正: 月をまたぐ連続 / 準: 今日未記録でも昨日まで継続・今日より後の記録を無視・記録なしは 0 |
+| `tests/e2e/dashboard.spec.ts`（ストリーク） | 4 | 正: 今日を含む連続・今日未記録で昨日まで継続と促す文言・ヒートマップの連続日と凡例 / 準: 連続なしは開始を促す文言 |
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。
