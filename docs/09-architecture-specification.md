@@ -117,6 +117,7 @@ GitHub Actions による自動検査。**変更内容に関係のあるジョブ
 - **`ci.yml` はワークフローレベルの `paths` を使わない**。必須チェック（ブランチ保護）に設定した場合、ワークフローが起動せずチェックが pending のまま PR がマージ不能になるため。ジョブレベル `if:` によるスキップは「skipped」＝成功扱いになる。
 - 全ワークフローとも `concurrency`（連続 push で古い実行をキャンセル）と最小権限の `permissions: contents: read` を設定する。
 - **action の版は Dependabot で追随する**（`.github/dependabot.yml`、`github-actions` を週次。#128）。手で一括置換せず、Dependabot が 1 本にまとめた更新 PR（`groups`）をレビューしてマージする（action ごとに分けると同じワークフローファイル上で互いに競合するため）。
+- **npm 依存の脆弱性（Dependabot alerts）は、推移的依存なら `front/pnpm-workspace.yaml` の `overrides` で脆弱な範囲だけを修正版へ寄せる**（#183）。親パッケージが lockfile 上で古い版を固定していると `pnpm update` では再解決されないため。キーは脆弱な範囲（例: `'undici@>=7.0.0 <7.29.1'`）に限定し、親が上がれば自然に効かなくなるようにする。各行に経由元と脆弱性の要旨をコメントで残す。peer として自動導入される依存（`vite`）には `overrides` が効かないため、`devDependencies` に明示して修正版を指定する。
 - markdown lint の設定は `.markdownlint-cli2.jsonc`。見た目のルールは無効化し、**壊れているもの**（言語指定のないコードフェンス・空リンク・無効な見出しアンカー・表の前後空行）のみを検出する。
 
 - `ci.yml` のジョブ（並列実行）:
