@@ -12,9 +12,10 @@ test('list page renders seeded records and core elements', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '記録一覧' })).toBeVisible();
   await expect(page.getByRole('link', { name: '管理者ログイン' })).toBeVisible();
   await expect(page.getByRole('link', { name: '詳細を見る' }).first()).toBeVisible();
-  // seed した 2 レコードの日付が表示される。
-  await expect(page.getByText('2026-02-02')).toBeVisible();
-  await expect(page.getByText('2026-01-15')).toBeVisible();
+  // seed した 2 レコードの日付が一覧に表示される（最新はダッシュボードにも出るため一覧の範囲で確認する）。
+  const list = page.getByRole('region', { name: '記録一覧' });
+  await expect(list.getByText('2026-02-02')).toBeVisible();
+  await expect(list.getByText('2026-01-15')).toBeVisible();
   await expect(page.getByText('筋トレメニュー').first()).toBeVisible();
   await expect(page.getByText('有酸素メニュー').first()).toBeVisible();
   await expect(page.getByText('推定消費カロリー').first()).toBeVisible();
