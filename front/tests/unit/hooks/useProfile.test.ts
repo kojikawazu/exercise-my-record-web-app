@@ -44,6 +44,26 @@ describe('useProfile', () => {
     expect(result.current.weightKg).toBe(70);
   });
 
+  it('should send the browser local date as the history date when saving', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { weightKg: 65 }));
+    const { result } = renderHook(() => useProfile());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    // ローカル日付の 23:30（UTC に直すと日付が変わり得る時刻）でも、ローカルの日付を送る
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 6, 23, 30));
+    try {
+      fetchMock.mockResolvedValueOnce(jsonResponse(200, { weightKg: 70 }));
+      await act(async () => {
+        await result.current.save(70);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    const [, init] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(init.body).toBe(JSON.stringify({ weightKg: 70, date: '2026-10-06' }));
+  });
+
   it('should be ready with null weight when nothing is saved', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { weightKg: null }));
     const { result } = renderHook(() => useProfile());

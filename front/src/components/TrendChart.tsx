@@ -31,6 +31,11 @@ type TrendChartProps = {
   points: TrendChartPoint[];
   /** 値の表示整形（ツールチップ・表で使う）。既定は値をそのまま文字列にする */
   formatValue?: (value: number) => string;
+  /**
+   * 縦軸を 0 起点ではなく値の範囲（前後 1 単位の余白付き）に合わせるか。既定は `false`（0 起点）。
+   * 体重のように、値の大きさに比べて変化の幅が小さい指標で使う（0 起点だと変化が潰れて見えない）
+   */
+  fitToData?: boolean;
 };
 
 // 系列色はブランドのアクセント（1 系列のみ。dataviz のコントラスト検査は白背景で PASS）。
@@ -62,6 +67,7 @@ export default function TrendChart({
   unit,
   points,
   formatValue = (value) => String(value),
+  fitToData = false,
 }: TrendChartProps) {
   const renderTooltip = ({
     active,
@@ -105,6 +111,11 @@ export default function TrendChart({
               axisLine={false}
               width={40}
               allowDecimals={false}
+              domain={
+                fitToData
+                  ? [(min: number) => Math.floor(min - 1), (max: number) => Math.ceil(max + 1)]
+                  : undefined
+              }
             />
             <Tooltip
               content={renderTooltip}

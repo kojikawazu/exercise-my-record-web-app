@@ -126,3 +126,12 @@ model ExerciseProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+/// 体重の履歴（1 日 1 件。同日の保存は上書き）。現在の体重は ExerciseProfile が持つ
+model ExerciseWeightLog {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  weightKg  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

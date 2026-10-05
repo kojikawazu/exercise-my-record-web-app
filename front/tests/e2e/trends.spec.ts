@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resetAndSeedBaseline } from './helpers';
+import { injectAdminSession, resetAndSeedBaseline, seedWeightLogs } from './helpers';
 
 // 実 DB に seed したベースライン（体重 65kg、2026-01-15: 筋トレ 2 セット / 2026-02-02: 筋トレ 9 セット + ラン 30 分 5km）
 // で推移グラフ画面を検証する。ベースラインは過去の日付のため、グラフの表示は全期間で確認する。
@@ -51,9 +51,52 @@ test('should show the calorie chart computed from the profile weight', async ({ 
   await expect(caloriesCard.locator('tbody tr').nth(1)).toContainText('319');
 });
 
+test('should show the weight chart from the weight history', async ({ page }) => {
+  await seedWeightLogs([
+    { date: '2026-01-10', weightKg: 66 },
+    { date: '2026-02-01', weightKg: 65.2 },
+  ]);
+  await page.goto('/trends?period=all');
+  await expect(page.getByRole('img', { name: '体重の推移（2 日分）' })).toBeVisible();
+
+  const weightCard = page
+    .locator('div', { has: page.getByRole('heading', { name: /^体重/ }) })
+    .last();
+  await weightCard.getByText('表で見る').click();
+  const rows = weightCard.locator('tbody tr');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText('2026-01-10');
+  await expect(rows.nth(0)).toContainText('66');
+  await expect(rows.nth(1)).toContainText('2026-02-01');
+  await expect(rows.nth(1)).toContainText('65.2');
+});
+
+test('should add today to the weight chart after saving the weight on the profile page', async ({
+  page,
+}) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/profile');
+  const input = page.getByLabel('体重 (kg)');
+  await expect(input).toHaveValue('65');
+  await input.fill('64.3');
+  await page.getByRole('button', { name: '保存' }).click();
+  await expect(page.getByText('保存しました。')).toBeVisible();
+
+  // 今日（ブラウザのローカル日付）の履歴として積まれ、直近 1 週間のグラフに載る
+  await page.goto('/trends?period=1w');
+  await expect(page.getByRole('img', { name: '体重の推移（1 日分）' })).toBeVisible();
+  const weightCard = page
+    .locator('div', { has: page.getByRole('heading', { name: /^体重/ }) })
+    .last();
+  await weightCard.getByText('表で見る').click();
+  await expect(weightCard.locator('tbody tr')).toHaveCount(1);
+  await expect(weightCard.locator('tbody tr').nth(0)).toContainText('64.3');
+});
+
 test('should show the empty state when the period has no records', async ({ page }) => {
   await page.goto('/trends?period=1w');
   await expect(page.getByText('この期間の記録はありません')).toBeVisible();
+  await expect(page.getByText('体重: この期間の体重の記録はありません')).toBeVisible();
   await expect(page.getByRole('img', { name: /の推移/ })).toHaveCount(0);
 });
 

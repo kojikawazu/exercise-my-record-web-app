@@ -11,7 +11,8 @@ import TrendChart from '@/components/TrendChart';
 import { useProfile } from '@/hooks/useProfile';
 import { useRecordTrends } from '@/hooks/useRecordTrends';
 import { useTodayLocalIso } from '@/hooks/useTodayLocalIso';
-import { buildTrendSeries, trendFromDate } from '@/lib/trends';
+import { useWeightHistory } from '@/hooks/useWeightHistory';
+import { buildTrendSeries, buildWeightSeries, trendFromDate } from '@/lib/trends';
 import { TREND_PERIODS, type TrendPeriod } from '@/types/trend';
 
 /** 期間ボタンの表示文言。 */
@@ -29,11 +30,12 @@ type TrendsClientProps = {
 };
 
 /**
- * 推移グラフ画面。合計セット数・有酸素距離・推定消費カロリーを指標ごとのグラフで表示する。
+ * 推移グラフ画面。合計セット数・有酸素距離・推定消費カロリー・体重を指標ごとのグラフで表示する。
  *
  * 期間は URL の `?period=` を唯一の真実とし、切替は URL を書き換えて行う。起点日はブラウザの
  * ローカル日付から求める。推定カロリーはプロフィールの体重（現在値）で算定し、体重が未設定なら
- * 案内を表示する。props の各項目は {@link TrendsClientProps} を参照。
+ * 案内を表示する。体重のグラフは体重の履歴から描き、記録の有無とは独立に表示する。
+ * props の各項目は {@link TrendsClientProps} を参照。
  */
 export default function TrendsClient({ period }: TrendsClientProps) {
   const router = useRouter();
@@ -43,7 +45,10 @@ export default function TrendsClient({ period }: TrendsClientProps) {
   const { points, status } = useRecordTrends(from);
   const { weightKg, status: profileStatus } = useProfile();
 
+  const weights = useWeightHistory(from);
+
   const series = useMemo(() => buildTrendSeries(points, weightKg), [points, weightKg]);
+  const weightSeries = useMemo(() => buildWeightSeries(weights.points), [weights.points]);
 
   return (
     <main className="min-h-screen pb-16">
@@ -104,6 +109,31 @@ export default function TrendsClient({ period }: TrendsClientProps) {
                 <TrendChart title="推定消費カロリー" unit="kcal" points={series.calories} />
               ) : null}
             </>
+          ) : null}
+
+          {weights.status === 'loading' ? (
+            <Card className="p-10">
+              <LoadingSpinner mode="fetching" />
+            </Card>
+          ) : null}
+          {weights.status === 'error' ? (
+            <Card className="p-6 text-sm font-bold text-red-500">
+              体重の履歴の取得に失敗しました。
+            </Card>
+          ) : null}
+          {weights.status === 'ready' && weightSeries.length === 0 ? (
+            <Card className="p-6 text-sm font-bold text-gray-500">
+              体重: この期間の体重の記録はありません
+            </Card>
+          ) : null}
+          {weights.status === 'ready' && weightSeries.length > 0 ? (
+            <TrendChart
+              title="体重"
+              unit="kg"
+              points={weightSeries}
+              formatValue={(v) => String(Math.round(v * 10) / 10)}
+              fitToData
+            />
           ) : null}
         </div>
       </section>

@@ -48,7 +48,7 @@
 
 ## RLS ポリシー（防御の第 2 層）
 
-- Exercise 系全テーブルに RLS ポリシーを設定済み（`front/prisma/migrations/20260322_exercise_rls_policies`）。
+- Exercise 系全テーブルに RLS ポリシーを設定済み（`front/prisma/migrations/20260322_exercise_rls_policies`。`ExerciseWeightLog` は `20261006_exercise_weight_log` で RLS の有効化と同じポリシーを設定）。
 - SELECT: 全ユーザーが閲覧可能（`true`）。
 - INSERT/UPDATE/DELETE: Supabase 認証済みユーザーのみ（`auth.uid() IS NOT NULL`）。
 - Prisma（`DATABASE_URL`）は RLS をバイパスするため、主な防御は上記の API ミドルウェア。RLS は Supabase Client SDK 経由アクセスに対する追加の防御層。

@@ -103,6 +103,7 @@ pnpm dev   # http://localhost:3000
 - **マイグレーションは自動適用されない。** `pnpm run build` は `prisma generate` のみ実行する。
 - デプロイ前に Supabase SQL Editor または `psql` で**手動適用**すること。
 - 本番に適用する前に、ローカル Supabase で同じ SQL を流して結果を確かめる。
+- 各マイグレーションは 1 回だけ適用する（再実行は `CREATE TABLE` / `CREATE POLICY` で失敗する）。`20261006_exercise_weight_log`（体重の履歴、#178）は既存の体重を履歴の 1 件目として移す `INSERT` を含むため、**アプリのデプロイ前に**適用する（新しいアプリは体重の保存時に `ExerciseWeightLog` へ書き込む）。
 
 ```bash
 # ローカル Supabase で事前確認

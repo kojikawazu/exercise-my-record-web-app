@@ -10,6 +10,7 @@ export {
   seedBaseline,
   seedRecordsForDates,
   seedWorkoutRecord,
+  seedWeightLogs,
   resetAndSeedBaseline,
   deleteMaster,
 } from './db';

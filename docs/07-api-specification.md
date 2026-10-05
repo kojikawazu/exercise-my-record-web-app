@@ -45,7 +45,8 @@
 | PATCH | `/masters/:id` | マスター編集 | 必須 |
 | DELETE | `/masters/:id` | マスター削除 | 必須 |
 | GET | `/profile` | 体重取得 | 不要 |
-| POST | `/profile` | 体重保存 | 必須 |
+| POST | `/profile` | 体重保存（履歴にも積む） | 必須 |
+| GET | `/profile/weights?from=YYYY-MM-DD` | 体重の履歴（推移グラフ用） | 不要 |
 
 ## 認証方式
 
@@ -118,7 +119,7 @@
 
   - `points` は日付昇順で、記録がある日のみ（記録の無い日を 0 で埋めない）。
   - `cardios` は推定カロリーの算定用に種別と時間のみを返す（距離は `cardioDistance` に集約済み）。推定カロリーはプロフィールの体重を持つクライアントで算定する（一覧・詳細と同じ）。
-  - 体重は履歴を持たないため返さない（#178）。
+  - 体重の履歴は記録の集約ではないため本 API では返さず、`GET /profile/weights` で取得する（#178）。
 - エラー: 400 `{ "error": "invalid from" }` / 503 `{ "error": "database unavailable" }`。
 
 
@@ -150,6 +151,28 @@
 ### プロフィール
 
 - `GET /profile`（体重取得） / `POST /profile`（体重保存）。暫定: `/api/profile` はフロントの仮実装で使用（本番は Supabase 想定）。
+
+### POST /profile
+
+- リクエスト: `{ "weightKg": 65.5, "date": "2026-10-06" }`
+  - `weightKg`（必須、数値）: 現在の体重として上書き保存する。
+  - `date`（必須、`YYYY-MM-DD`。暦に存在しない日付は不正）: 体重の履歴に積む日付。ブラウザのローカル日付を渡す。同日の履歴は上書きする。
+- 現在の体重の上書きと履歴の upsert は 1 つのトランザクションで行う。
+- レスポンス: 200 `{ "weightKg": 65.5 }`。
+- エラー: 400 `{ "error": "weightKg is required" }` / 400 `{ "error": "invalid date" }` / 401 / 403。DB エラーは暫定実装として握りつぶし、200 で保存値を返す（既存仕様）。
+
+### GET /profile/weights?from=YYYY-MM-DD
+
+- 用途: 推移グラフ画面の「体重」グラフ用。起点日以降（当日を含む）の体重の履歴を返す（#178）。
+- クエリ: `from`（任意、`YYYY-MM-DD`）。省略時は全期間。起点日の決め方は `GET /records/trends` と同じ。
+- レスポンス:
+
+  ```json
+  { "points": [{ "date": "2026-10-01", "weightKg": 65.2 }] }
+  ```
+
+  - `points` は日付昇順で、履歴がある日のみ。
+- エラー: 400 `{ "error": "invalid from" }` / 503 `{ "error": "database unavailable" }`。
 
 ## エラーレスポンス
 
