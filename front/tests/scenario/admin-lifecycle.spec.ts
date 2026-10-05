@@ -24,8 +24,10 @@ test('admin creates, views, edits, and deletes a record end to end', async ({ pa
   await page.getByRole('button', { name: '保存' }).click();
   await expect(page).toHaveURL('/');
 
-  // 2) 一覧に反映される
-  await expect(page.getByText('2026-07-01')).toBeVisible();
+  // 2) 一覧に反映される（最新の記録はダッシュボードにも出るため、一覧の範囲で確認する）
+  await expect(
+    page.getByRole('region', { name: '記録一覧' }).getByText('2026-07-01'),
+  ).toBeVisible();
 
   // 3) 詳細で内容を確認
   await page.goto('/records/2026-07-01');

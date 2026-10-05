@@ -60,7 +60,7 @@ test('should fall back to the current month for an invalid month', async ({ page
 
 test('should open the calendar from the sidebar', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'カレンダー' }).click();
+  await page.getByRole('link', { name: 'カレンダー', exact: true }).click();
   await expect(page).toHaveURL('/calendar');
   await expect(page.getByRole('heading', { name: 'カレンダー' })).toBeVisible();
 });

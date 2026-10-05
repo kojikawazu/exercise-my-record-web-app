@@ -70,6 +70,28 @@ export const seedBaseline = async (): Promise<void> => {
 };
 
 /**
+ * 筋トレ 1 種目だけを持つ記録を作成する（今日基準の相対日付で集計を検証する用）。
+ *
+ * @param date - 記録日（`YYYY-MM-DD`）
+ * @param workout - 筋トレ 1 種目。回数・重量は検証に使わないため固定値
+ * @param workout.part - 部位
+ * @param workout.name - 種目名
+ * @param workout.sets - セット数
+ */
+export const seedWorkoutRecord = async (
+  date: string,
+  workout: { part: string; name: string; sets: number },
+): Promise<void> => {
+  const db = getClient();
+  await db.exerciseRecord.create({
+    data: {
+      date: new Date(date),
+      workouts: { create: [{ ...workout, reps: 10, weight: 40 }] },
+    },
+  });
+};
+
+/**
  * 指定日付の（子行なし）レコードをまとめて作成する（ページング検証用）。
  *
  * @param dates - 作成対象の日付（`YYYY-MM-DD`）。重複を含めない

@@ -33,29 +33,36 @@ test('should redirect to /admin/login when accessing admin page without login', 
 test('should display seeded records on the list', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '記録一覧' })).toBeVisible();
-  await expect(page.getByText('2026-02-02')).toBeVisible();
+  // 1 ページ目は最新の記録がダッシュボードにも出るため、一覧の範囲で確認する（#27）
+  await expect(
+    page.getByRole('region', { name: '記録一覧' }).getByText('2026-02-02'),
+  ).toBeVisible();
 });
 
 test('should show workout and cardio menus of each record on the list card', async ({ page }) => {
   await page.goto('/');
   // seed の 2026-02-02: 筋トレ 3 種目 + ラン 30 分 / 5km。サマリー表示は廃止した（#23）
-  const card = page.locator('div', { has: page.getByText('2026-02-02', { exact: true }) }).filter({
-    has: page.getByText('筋トレメニュー'),
-  });
+  const card = page
+    .getByRole('region', { name: '記録一覧' })
+    .locator('div', { has: page.getByText('2026-02-02', { exact: true }) })
+    .filter({ has: page.getByText('筋トレメニュー') });
   const latest = card.last();
   await expect(latest.getByText('ベンチプレス')).toBeVisible();
   await expect(latest.getByText('3セット × 10回 / 60kg')).toBeVisible();
   await expect(latest.getByText('デッドリフト')).toBeVisible();
   await expect(latest.getByText('スクワット')).toBeVisible();
   await expect(latest.getByText('30分 / 5km')).toBeVisible();
-  await expect(page.getByText('合計セット数')).toHaveCount(0);
-  await expect(page.getByText('有酸素合計時間')).toHaveCount(0);
+  // 一覧カードのサマリー表示は廃止した（ダッシュボードの「合計セット数」は対象外）
+  const list = page.getByRole('region', { name: '記録一覧' });
+  await expect(list.getByText('合計セット数')).toHaveCount(0);
+  await expect(list.getByText('有酸素合計時間')).toHaveCount(0);
 });
 
 test('should show a placeholder when a record has no cardio on the list card', async ({ page }) => {
   await page.goto('/');
   // seed の 2026-01-15 は筋トレのみ
   const card = page
+    .getByRole('region', { name: '記録一覧' })
     .locator('div', { has: page.getByText('2026-01-15', { exact: true }) })
     .filter({ has: page.getByText('有酸素メニュー') })
     .last();
@@ -178,7 +185,9 @@ test('should create a new record and persist it (visible on the list)', async ({
   await expect(page).toHaveURL('/');
 
   // 実 DB に保存され、一覧（日付降順の先頭）に出る。
-  await expect(page.getByText('2026-03-01')).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: '記録一覧' }).getByText('2026-03-01'),
+  ).toBeVisible();
   // 詳細でも確認できる。
   await page.goto('/records/2026-03-01');
   await expect(page.getByText('テストプレス')).toBeVisible();
