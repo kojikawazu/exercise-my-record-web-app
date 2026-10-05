@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createRecord,
   deleteRecord,
+  fetchRecordCalendar,
   fetchRecordDetail,
   fetchRecordList,
   updateRecord,
@@ -64,6 +65,26 @@ describe('fetchRecordList', () => {
   it('should return status 0 when the request itself fails', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
     expect(await fetchRecordList(1)).toEqual({ ok: false, status: 0 });
+  });
+});
+
+describe('fetchRecordCalendar', () => {
+  it('should request the given month and return the recorded dates', async () => {
+    const body = { month: '2026-02', dates: ['2026-02-02'] };
+    fetchMock.mockResolvedValue(jsonResponse(200, body));
+    expect(await fetchRecordCalendar('2026-02')).toEqual({ ok: true, data: body });
+    expect(callOf()[0]).toBe('/api/records/calendar?month=2026-02');
+  });
+
+  it('should return status 400 for an invalid month', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(400, { error: 'invalid month' }));
+    expect(await fetchRecordCalendar('2026-13')).toEqual({ ok: false, status: 400 });
+  });
+
+  it('should encode the month so it cannot add extra query parameters', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(400, { error: 'invalid month' }));
+    await fetchRecordCalendar('2026-02&page=2');
+    expect(callOf()[0]).toBe('/api/records/calendar?month=2026-02%26page%3D2');
   });
 });
 

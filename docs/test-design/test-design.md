@@ -400,6 +400,21 @@ CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全
 | `tests/e2e/record-crud.spec.ts`（一覧カード） | 3 | 正: 公開一覧のカードに種目・セット×回数/重量・有酸素の時間/距離が表示され、サマリーは表示されない・管理者一覧にも表示される / 準: 有酸素の無い日は「有酸素の記録なし」 |
 | `tests/e2e/smoke.spec.ts` | 既存 1 件を更新 | 正: 一覧に「筋トレメニュー」「有酸素メニュー」「推定消費カロリー」が表示される |
 
+### 5n. カレンダー画面（#21）
+
+月表示のカレンダーと `GET /api/records/calendar`。月グリッド・月の検証/移動は純粋関数（`lib/calendar.ts`。日付ピッカーと共用）として UT、月の範囲指定（半開区間）は実 DB の IT、画面の遷移は E2E で確認する。モックは外部 I/O（Prisma・`fetch`・Supabase）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/lib/calendar.test.ts` | 14 | 正: `YYYY-MM` の受理・前月/次月・月初の曜日に合わせた空白（日曜始まり） / 準: 未指定・`00`/`13` 月・ゼロ埋め無し・余分な部分・配列は `null`・12 月→翌年 1 月・1 月→前年 12 月・うるう年 2/29・30 日月 / 異: 非日付文字列・先頭 0 の年・SQL 片を含む値は `null` |
+| `tests/unit/app/api/records/calendar/route.test.ts` | 6 | 正: 記録日の一覧・UTC の半開区間と昇順で問い合わせる / 準: 記録の無い月は空配列・`month` 欠落と範囲外の月は 400（DB を問い合わせない） / 異: DB 接続不可は 503 |
+| `tests/unit/hooks/useRecordCalendar.test.ts` | 7 | 正: 月の記録日を取得 / 準: 月が未確定（空文字）の間は取得しない・記録 0 件は `ready`・月の切替中は前の月を持ち越さない・切替後に届いた古い応答を反映しない / 異: 5xx・通信エラーは `error` |
+| `tests/unit/repositories/record.test.ts`（`fetchRecordCalendar`） | 3 | 正: 月を付けて要求 / 準: 400 を `status` で返す / 異: 月の値をエンコードし、余分なクエリを足せない |
+| `tests/it/app/api/records/calendar/route.it.test.ts` | 5 | 正: 月内の記録日を昇順で返す / 準: 月初・月末を含み隣接月を含まない・12 月と翌年 1 月の境界・うるう年の 2/29・記録の無い月は空配列 |
+| `tests/e2e/calendar.spec.ts` | 6 | 正: 記録日のクリックで詳細へ・前月/次月と戻る・12 月→翌年 1 月・サイドバーから開ける / 準: 記録の無い日・月はリンクにならない・不正な `month` は今月を表示 |
+
+日付ピッカー（`DatePicker`）の月グリッドは `lib/calendar.ts` の `buildMonthCells` に移したため、既存の記録追加・編集の E2E で回帰を確認する。
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。
