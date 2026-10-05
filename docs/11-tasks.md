@@ -40,7 +40,7 @@
 
 | 項目 | 状態 | メモ |
 | --- | --- | --- |
-| 一覧画面（合計値/空状態） | 要改修 | 筋トレ/有酸素メニュー詳細表示に変更 |
+| 一覧画面（メニュー表示/空状態） | 完了 | 一覧カードに筋トレ/有酸素メニューと推定消費カロリーを表示（合計値サマリーは廃止。管理者一覧も同じメニュー表示 / #23） |
 | 一覧のページング（1ページ10件） | 完了 | 前へ/次へボタン（API `page` + `RecordsListClient`） |
 | 詳細画面（筋トレ/有酸素/体調メモ） | 完了 | 有酸素を複数行表示（`RecordDetailClient`） |
 | 一覧の空状態制御 | 完了 | APIが0件時に空状態 |
@@ -96,7 +96,7 @@
 | 書き込み系APIのサーバーサイド認証ガード | 完了 | `requireAdmin` ヘルパーで Bearer トークン検証 + ADMIN_EMAIL チェック |
 | Exercise系テーブルのRLSポリシー追加 | 完了 | SELECT=public, INSERT/UPDATE/DELETE=authenticated（防御の第2層） |
 | GET /records のページング対応 | 完了 | `page` クエリ（limit=10 固定）、`totalCount`/`page`/`totalPages` を返却 |
-| GET /records の筋トレ/有酸素詳細返却 | 一部 | 有酸素は `cardios` 配列で返却済み。筋トレは `totalSets` 集約のみで詳細配列は未返却。一覧カードの全メニュー表示（上記「一覧画面」要改修）も未対応 |
+| GET /records の筋トレ/有酸素詳細返却 | 完了 | `workouts` / `cardios` 配列で返却（行 ID・監査列は除外）。`cardioMinutes` / `cardioDistance` は削除（#23） |
 | GET /records/:date の有酸素複数行対応 | 完了 | `cardios` 配列で返却（筋トレ詳細も返却） |
 | GET /records/calendar（月別記録有無） | 未着手 | カレンダー用 |
 | GET /records/trends（推移データ） | 未着手 | グラフ用 |

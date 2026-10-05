@@ -13,8 +13,7 @@ vi.mock('@/lib/supabase', () => ({
 const item = (date: string) => ({
   date,
   totalSets: 3,
-  cardioMinutes: 30,
-  cardioDistance: 5,
+  workouts: [{ part: '胸', name: 'ベンチプレス', sets: 3, reps: 10, weight: 60 }],
   cardios: [{ type: 'ラン', minutes: 30, distance: 5 }],
 });
 const listBody = (page: number, totalPages: number, dates: string[]) => ({

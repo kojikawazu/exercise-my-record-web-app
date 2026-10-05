@@ -389,6 +389,17 @@ CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全
 | `tests/unit/lib/recordEditNavigation.test.ts` | 10 | 正: 編集リンク（`from` なし / `?from=detail`）・`detail` は詳細へ・省略は管理者一覧へ / 準: 未知の値・空文字・複数指定（配列）・大文字違いは管理者一覧へ / 異: 外部 URL・プロトコル相対 URL を渡されても管理者一覧へ |
 | `tests/e2e/record-crud.spec.ts`（編集の戻り先） | 4 | 正: 詳細 →「編集」→ 保存で詳細へ戻り変更が反映・詳細から入ると戻りリンクが「詳細へ戻る」・管理者一覧から入ると「管理者一覧へ戻る」 / 異: `from` に外部 URL を指定しても保存後は管理者一覧へ |
 
+### 5m. 一覧カードのメニュー表示（#23）
+
+`GET /api/records` が各記録の明細（`workouts` / `cardios`）を返し、公開一覧・管理者一覧のカードが共通部品 `RecordMenuList` でメニューを表示する。レスポンス整形（行 ID・監査列を返さない）は UT、実 DB での明細の取得は IT、表示は E2E で確認する。モックは外部 I/O（Prisma）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/app/api/records/route.test.ts`（一覧の明細） | 3 | 正: 明細と `totalSets` を返す / 準: 明細 0 件の日は空配列・`totalSets` 0 / 異: Prisma の行が持つ `id` / `recordId` / 監査列 / `memo` をレスポンスに含めない（キー集合の完全一致） |
+| `tests/it/app/api/records/route.it.test.ts`（一覧の明細） | 2 | 正: 作成した筋トレ 2 種目・有酸素が一覧に含まれる（並び順に依存しない比較） / 準: 明細なしの記録は空配列 |
+| `tests/e2e/record-crud.spec.ts`（一覧カード） | 3 | 正: 公開一覧のカードに種目・セット×回数/重量・有酸素の時間/距離が表示され、サマリーは表示されない・管理者一覧にも表示される / 準: 有酸素の無い日は「有酸素の記録なし」 |
+| `tests/e2e/smoke.spec.ts` | 既存 1 件を更新 | 正: 一覧に「筋トレメニュー」「有酸素メニュー」「推定消費カロリー」が表示される |
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

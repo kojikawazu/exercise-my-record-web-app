@@ -9,8 +9,8 @@ const PAGE_LIMIT = 10;
  * 記録一覧を日付降順・ページング付きで取得する。
  *
  * 認証不要。1 ページ 10 件固定。クエリ `page` は 1 始まりで、未指定/NaN/0 以下は 1 に
- * 正規化し、総ページ数を超える値は最終ページに丸める。各記録は筋トレのセット数合計・
- * 有酸素の合計時間/距離と有酸素明細を集約して返す。
+ * 正規化し、総ページ数を超える値は最終ページに丸める。各記録は筋トレのセット数合計と、
+ * 一覧カードに表示する筋トレ・有酸素の明細（行 ID・監査列を除く）を返す。
  *
  * @param request - リクエスト。クエリ `page`（取得ページ、任意）を参照する
  * @returns 200: `{ records, totalCount, page, totalPages }`。503: DB 接続不可
@@ -39,13 +39,19 @@ export async function GET(request: Request) {
   const result: RecordListItem[] = records.map(
     (record: {
       date: Date;
-      workouts: { sets: number }[];
+      workouts: { part: string; name: string; sets: number; reps: number; weight: number }[];
       cardios: { type: string; minutes: number; distance: number }[];
     }) => ({
       date: record.date.toISOString().slice(0, 10),
       totalSets: record.workouts.reduce((sum, workout) => sum + workout.sets, 0),
-      cardioMinutes: record.cardios.reduce((sum, c) => sum + c.minutes, 0),
-      cardioDistance: record.cardios.reduce((sum, c) => sum + c.distance, 0),
+      // 行の ID・監査列は一覧カードで使わないため返さない（api.md「レスポンス整形」）
+      workouts: record.workouts.map((w) => ({
+        part: w.part,
+        name: w.name,
+        sets: w.sets,
+        reps: w.reps,
+        weight: w.weight,
+      })),
       cardios: record.cardios.map((c) => ({
         type: c.type,
         minutes: c.minutes,

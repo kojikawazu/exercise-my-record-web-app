@@ -116,7 +116,7 @@ erDiagram
 ## データフロー
 
 - 記録追加（POST `/records`）→ ExerciseRecord + 紐付く Workout/Cardio を作成（同日存在時はエラー）。
-- 一覧（GET `/records`）→ 日付降順・ページングで Record を集約取得（有酸素は `cardios` 配列）。
+- 一覧（GET `/records`）→ 日付降順・ページングで Record を集約取得（筋トレは `workouts`、有酸素は `cardios` 配列。セット数合計 `totalSets` はサーバーで算定）。
 - 詳細（GET `/records/:date`）→ Record + workouts + cardios を返却。
 - カロリーは保存値ではなく表示時に算定（[`03-functional-specification.md`](./03-functional-specification.md) 参照）。
 - API 詳細は [`07-api-specification.md`](./07-api-specification.md)。

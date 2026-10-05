@@ -70,6 +70,98 @@ describe('GET /api/records', () => {
     expect(body.totalPages).toBe(1);
   });
 
+  it('should return workouts and cardios of each record for the list card (#23)', async () => {
+    const prisma = makePrisma();
+    vi.mocked(prisma.exerciseRecord.count).mockResolvedValue(1);
+    vi.mocked(prisma.exerciseRecord.findMany).mockResolvedValue([
+      {
+        date: new Date('2026-01-02'),
+        workouts: [
+          { part: '胸', name: 'ベンチプレス', sets: 3, reps: 10, weight: 60 },
+          { part: '脚', name: 'スクワット', sets: 4, reps: 8, weight: 0 },
+        ],
+        cardios: [
+          { type: 'ラン', minutes: 30, distance: 5 },
+          { type: 'ウォーク', minutes: 20, distance: 1.5 },
+        ],
+      },
+    ] as never);
+    vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+    const res = await GET(new Request('http://localhost/api/records'));
+    const body = await res.json();
+    expect(body.records).toEqual([
+      {
+        date: '2026-01-02',
+        totalSets: 7,
+        workouts: [
+          { part: '胸', name: 'ベンチプレス', sets: 3, reps: 10, weight: 60 },
+          { part: '脚', name: 'スクワット', sets: 4, reps: 8, weight: 0 },
+        ],
+        cardios: [
+          { type: 'ラン', minutes: 30, distance: 5 },
+          { type: 'ウォーク', minutes: 20, distance: 1.5 },
+        ],
+      },
+    ]);
+  });
+
+  it('should return empty arrays and totalSets 0 for a record without workouts and cardios', async () => {
+    const prisma = makePrisma();
+    vi.mocked(prisma.exerciseRecord.count).mockResolvedValue(1);
+    vi.mocked(prisma.exerciseRecord.findMany).mockResolvedValue([
+      { date: new Date('2026-01-03'), workouts: [], cardios: [] },
+    ] as never);
+    vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+    const res = await GET(new Request('http://localhost/api/records'));
+    const body = await res.json();
+    expect(body.records).toEqual([{ date: '2026-01-03', totalSets: 0, workouts: [], cardios: [] }]);
+  });
+
+  it('should not expose row ids, foreign keys, audit columns or record-level fields', async () => {
+    // Prisma の行オブジェクトは id / recordId / createdAt / updatedAt を持つ。素通しすると公開される（api.md）
+    const audit = { createdAt: new Date('2026-01-01'), updatedAt: new Date('2026-01-01') };
+    const prisma = makePrisma();
+    vi.mocked(prisma.exerciseRecord.count).mockResolvedValue(1);
+    vi.mocked(prisma.exerciseRecord.findMany).mockResolvedValue([
+      {
+        id: 'rec-1',
+        date: new Date('2026-01-02'),
+        memo: '体調良好',
+        ...audit,
+        workouts: [
+          {
+            id: 'w-1',
+            recordId: 'rec-1',
+            part: '胸',
+            name: 'ベンチプレス',
+            sets: 3,
+            reps: 10,
+            weight: 60,
+            ...audit,
+          },
+        ],
+        cardios: [
+          { id: 'c-1', recordId: 'rec-1', type: 'ラン', minutes: 30, distance: 5, ...audit },
+        ],
+      },
+    ] as never);
+    vi.mocked(getPrisma).mockReturnValue(prisma as never);
+
+    const res = await GET(new Request('http://localhost/api/records'));
+    const [record] = (await res.json()).records;
+    expect(Object.keys(record).sort()).toEqual(['cardios', 'date', 'totalSets', 'workouts']);
+    expect(Object.keys(record.workouts[0]).sort()).toEqual([
+      'name',
+      'part',
+      'reps',
+      'sets',
+      'weight',
+    ]);
+    expect(Object.keys(record.cardios[0]).sort()).toEqual(['distance', 'minutes', 'type']);
+  });
+
   it('should clamp page to 1 when page param is non-numeric', async () => {
     const prisma = makePrisma();
     vi.mocked(prisma.exerciseRecord.count).mockResolvedValue(5);

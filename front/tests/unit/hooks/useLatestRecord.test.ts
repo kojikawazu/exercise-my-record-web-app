@@ -19,8 +19,7 @@ const listOf = (dates: string[]) => ({
   records: dates.map((date) => ({
     date,
     totalSets: 3,
-    cardioMinutes: 0,
-    cardioDistance: 0,
+    workouts: [{ part: '胸', name: 'ベンチプレス', sets: 3, reps: 10, weight: 60 }],
     cardios: [],
   })),
   totalCount: dates.length,
