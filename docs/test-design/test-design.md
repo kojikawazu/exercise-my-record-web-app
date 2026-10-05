@@ -380,6 +380,15 @@ CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全
 
 既存テストへの影響: UT は `@/lib/prisma` / `@/lib/adminAuth` をモックしているため影響なし。IT は実物を読むため、`vitest.it.config.ts` で `server-only` を空モジュールに差し替えた（IT 19 件パス）。
 
+### 5l. 記録編集の戻り先（#32）
+
+記録編集画面の保存後の遷移先・戻りリンクを遷移元（`?from=`）で切り替える。戻り先の決定は純粋関数（`lib/recordEditNavigation.ts`）として UT で、画面遷移は E2E で確認する。クエリの値を URL として使わないこと（オープンリダイレクト防止）を準正常・異常系で確認する。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/lib/recordEditNavigation.test.ts` | 10 | 正: 編集リンク（`from` なし / `?from=detail`）・`detail` は詳細へ・省略は管理者一覧へ / 準: 未知の値・空文字・複数指定（配列）・大文字違いは管理者一覧へ / 異: 外部 URL・プロトコル相対 URL を渡されても管理者一覧へ |
+| `tests/e2e/record-crud.spec.ts`（編集の戻り先） | 4 | 正: 詳細 →「編集」→ 保存で詳細へ戻り変更が反映・詳細から入ると戻りリンクが「詳細へ戻る」・管理者一覧から入ると「管理者一覧へ戻る」 / 異: `from` に外部 URL を指定しても保存後は管理者一覧へ |
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

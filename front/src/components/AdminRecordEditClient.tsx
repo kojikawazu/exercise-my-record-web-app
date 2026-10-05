@@ -16,11 +16,14 @@ import { useMasters } from '@/hooks/useMasters';
 import { createWorkoutRow, toFormRows, withCurrentOption } from '@/lib/recordForm';
 import type { RecordDetail } from '@/types/record';
 import type { CardioRow, WorkoutRow } from '@/types/recordForm';
+import type { RecordEditReturn } from '@/types/recordEdit';
 
 /** 記録編集クライアントの props。 */
 type AdminRecordEditClientProps = {
   /** 編集対象の記録日（`YYYY-MM-DD`）。Server Component 側で動的セグメントを解決済み */
   date: string;
+  /** 保存後の遷移先と戻りリンク。遷移元（詳細 / 管理者一覧）に応じて Server Component 側で決定済み */
+  returnTo: RecordEditReturn;
 };
 
 /**
@@ -40,9 +43,9 @@ const createCardioRow = (type: string): CardioRow => ({
  * 記録編集画面。URL の日付の既存記録を取得してフォームへプリセットし、記録追加と同一構成
  * （筋トレ・有酸素・体調メモ）で編集する。日付は変更不可。フィールド単位バリデーション（保存
  * 押下後に表示）を経て API へ更新保存し、推定消費カロリーを画面下部に表示する。保存成功後は
- * 管理者向け記録一覧へ遷移する。
+ * `returnTo` の戻り先（遷移元の詳細画面または管理者向け記録一覧）へ遷移する。
  */
-export default function AdminRecordEditClient({ date }: AdminRecordEditClientProps) {
+export default function AdminRecordEditClient({ date, returnTo }: AdminRecordEditClientProps) {
   const router = useRouter();
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([createWorkoutRow()]);
   const [memo, setMemo] = useState('');
@@ -104,7 +107,7 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
       return;
     }
 
-    router.push('/admin/records');
+    router.push(returnTo.href);
   };
 
   if (loading) {
@@ -114,8 +117,8 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
           title="記録編集"
           subtitle="Edit record"
           action={
-            <Link href="/admin/records" className={buttonClasses('outline')}>
-              管理者一覧へ戻る
+            <Link href={returnTo.href} className={buttonClasses('outline')}>
+              {returnTo.label}
             </Link>
           }
         />
@@ -135,8 +138,8 @@ export default function AdminRecordEditClient({ date }: AdminRecordEditClientPro
         title="記録編集"
         subtitle="Edit record"
         action={
-          <Link href="/admin/records" className={buttonClasses('outline')}>
-            管理者一覧へ戻る
+          <Link href={returnTo.href} className={buttonClasses('outline')}>
+            {returnTo.label}
           </Link>
         }
       />

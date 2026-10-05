@@ -185,6 +185,53 @@ test('should edit a record and persist the change', async ({ page }) => {
   await expect(page.getByText('編集後メモ')).toBeVisible();
 });
 
+test('should return to the admin list via the back link when entered from the admin list', async ({
+  page,
+}) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/records');
+  await page.locator('a[href="/admin/records/2026-02-02/edit"]').click();
+  await expect(page).toHaveURL('/admin/records/2026-02-02/edit');
+
+  await page.getByRole('link', { name: '管理者一覧へ戻る' }).click();
+  await expect(page).toHaveURL('/admin/records');
+});
+
+test('should return to the record detail after saving when entered from the detail page', async ({
+  page,
+}) => {
+  await injectAdminSession(page);
+  await page.goto('/records/2026-02-02');
+  await page.getByRole('link', { name: '編集' }).click();
+  await expect(page).toHaveURL('/admin/records/2026-02-02/edit?from=detail');
+  await expect(page.locator('textarea')).toHaveValue('体調良好');
+
+  await page.locator('textarea').fill('詳細から編集');
+  await page.getByRole('button', { name: '保存' }).click();
+  await expect(page).toHaveURL('/records/2026-02-02');
+  await expect(page.getByText('詳細から編集')).toBeVisible();
+});
+
+test('should return to the record detail via the back link when entered from the detail page', async ({
+  page,
+}) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/records/2026-02-02/edit?from=detail');
+  await expect(page.getByRole('link', { name: '管理者一覧へ戻る' })).toHaveCount(0);
+
+  await page.getByRole('link', { name: '詳細へ戻る' }).click();
+  await expect(page).toHaveURL('/records/2026-02-02');
+});
+
+test('should fall back to the admin list when from is an external URL', async ({ page }) => {
+  await injectAdminSession(page);
+  await page.goto('/admin/records/2026-02-02/edit?from=https%3A%2F%2Fevil.example');
+  await expect(page.locator('textarea')).toHaveValue('体調良好');
+
+  await page.getByRole('button', { name: '保存' }).click();
+  await expect(page).toHaveURL('/admin/records');
+});
+
 // ---------------------------------------------------------------------------
 // マスター連動（記録フォームの選択肢）
 // ---------------------------------------------------------------------------

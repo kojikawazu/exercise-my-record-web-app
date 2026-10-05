@@ -10,6 +10,7 @@ import { buttonClasses } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useRecordList } from '@/hooks/useRecordList';
 import { useRecordMutations } from '@/hooks/useRecordMutations';
+import { recordEditHref } from '@/lib/recordEditNavigation';
 
 /**
  * 管理者向けの記録一覧クライアント。ページング付きで記録を表示し、削除・編集への導線を提供する。
@@ -110,7 +111,7 @@ export default function AdminRecordsListClient() {
                       詳細を見る
                     </Link>
                     <Link
-                      href={`/admin/records/${record.date}/edit`}
+                      href={recordEditHref(record.date)}
                       className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
                     >
                       編集

@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useRecordDetail } from '@/hooks/useRecordDetail';
+import { recordEditHref } from '@/lib/recordEditNavigation';
 import type { RecordWorkout } from '@/types/record';
 
 /** {@link RecordDetailClient} の props。 */
@@ -79,7 +80,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
                   </div>
                   {isAdmin ? (
                     <Link
-                      href={`/admin/records/${detail?.date ?? date}/edit`}
+                      href={recordEditHref(detail?.date ?? date, 'detail')}
                       className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
                     >
                       編集
