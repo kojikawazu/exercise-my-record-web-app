@@ -51,6 +51,14 @@ export type RecordListResponse = {
   totalPages: number;
 };
 
+/** `GET /api/records/calendar` のレスポンス。指定月に記録がある日の一覧。 */
+export type RecordCalendarResponse = {
+  /** 対象の月（`YYYY-MM`）。リクエストの `month` と同じ値。 */
+  month: string;
+  /** 記録がある日（`YYYY-MM-DD`）の昇順の一覧。記録が無い月は空配列。 */
+  dates: string[];
+};
+
 /** 記録詳細の筋トレ 1 種目分。 */
 export type RecordWorkout = {
   /** 種目の一意 ID（リストの key に使う）。 */

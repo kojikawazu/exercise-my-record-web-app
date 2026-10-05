@@ -11,7 +11,7 @@
   - [POST /records](#post-records)
   - [GET /records](#get-records)
   - [GET /records/:date](#get-recordsdate)
-  - [GET /records/calendar?month=YYYY-MM ※未実装（設計のみ）](#get-recordscalendarmonthyyyy-mm-未実装設計のみ)
+  - [GET /records/calendar?month=YYYY-MM](#get-recordscalendarmonthyyyy-mm)
   - [GET /records/trends?period=1w|1m|3m|all ※未実装（設計のみ）](#get-recordstrendsperiod1w1m3mall-未実装設計のみ)
   - [GET /admin/me](#get-adminme)
   - [マスター管理](#マスター管理)
@@ -35,7 +35,7 @@
 | GET | `/records/:date` | 詳細取得 | 不要 |
 | PATCH | `/records/:date` | レコード編集 | 必須 |
 | DELETE | `/records/:date` | レコード削除 | 必須 |
-| GET | `/records/calendar?month=YYYY-MM` | 月別記録有無 ※未実装（設計のみ） | 不要 |
+| GET | `/records/calendar?month=YYYY-MM` | 月別記録有無 | 不要 |
 | GET | `/records/trends?period=1w\|1m\|3m\|all` | 推移グラフ用データ ※未実装（設計のみ） | 不要 |
 | GET | `/admin/me` | 管理者判定（`{ isAdmin }`） | 任意 |
 | GET | `/masters?type=...` | マスター取得 | 不要 |
@@ -84,10 +84,20 @@
 
 - 返却項目（最小）: `date` / `memo` / `workouts (part/name/sets/reps/weight, id)` / `cardios (type/minutes/distance)`（複数行）。
 
-### GET /records/calendar?month=YYYY-MM ※未実装（設計のみ）
+### GET /records/calendar?month=YYYY-MM
 
-- 用途: カレンダー用の月別記録有無取得。返却: 記録がある日付の配列。
-- 状態: ルート未実装。カレンダー画面とあわせて今後実装予定。
+- 用途: カレンダー画面用。指定月に記録がある日の一覧を返す（#21）。
+- クエリ: `month`（必須、`YYYY-MM`。月は `01`〜`12`、ゼロ埋め必須）。
+- 取得範囲: `[月初, 翌月初)` の半開区間（UTC 0 時で保存した記録日に対して）。明細は読まず日付のみ取得する。
+- レスポンス:
+
+  ```json
+  { "month": "2026-02", "dates": ["2026-02-02", "2026-02-15"] }
+  ```
+
+  - `dates` は昇順。記録の無い月は空配列。
+- エラー: 400 `{ "error": "invalid month" }`（`month` の欠落・形式不正・範囲外の月）/ 503 `{ "error": "database unavailable" }`。
+- `/records/:date` の動的セグメントより静的セグメント `calendar` が優先されるため、ルートは衝突しない。
 
 ### GET /records/trends?period=1w|1m|3m|all ※未実装（設計のみ）
 

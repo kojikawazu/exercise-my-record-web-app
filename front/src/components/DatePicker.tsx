@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { WEEK_LABELS } from '@/constants/calendar';
+import { buildMonthCells } from '@/lib/calendar';
 import { toLocalIso } from '@/lib/date';
 
 /** {@link DatePicker} の props。 */
@@ -16,8 +18,6 @@ type DatePickerProps = {
   disabled?: boolean;
 };
 
-const WEEK_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
-
 /**
  * `YYYY-MM-DD` 文字列を Date へパースする。
  *
@@ -31,25 +31,6 @@ const parseDate = (value: string) => {
   const parsed = new Date(year, month - 1, day);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed;
-};
-
-/**
- * 月間カレンダーのセル配列を組み立てる。
- *
- * 月初の曜日に合わせて先頭を `null`（空白セル）で埋め、以降に 1〜末日を並べる。
- *
- * @param year - 対象の西暦年
- * @param month - 対象の月（0 始まり。0=1月）
- * @returns 空白は `null`、日付は数値で並ぶセル配列
- */
-const buildCalendar = (year: number, month: number) => {
-  const first = new Date(year, month, 1);
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startOffset = first.getDay();
-  const cells: Array<number | null> = [];
-  for (let i = 0; i < startOffset; i += 1) cells.push(null);
-  for (let day = 1; day <= daysInMonth; day += 1) cells.push(day);
-  return cells;
 };
 
 /**
@@ -78,7 +59,7 @@ export default function DatePicker({
   }, []);
 
   const monthLabel = `${month + 1}月`;
-  const calendar = useMemo(() => buildCalendar(year, month), [year, month]);
+  const calendar = useMemo(() => buildMonthCells(year, month), [year, month]);
 
   const moveMonth = (delta: number) => {
     const next = new Date(year, month + delta, 1);

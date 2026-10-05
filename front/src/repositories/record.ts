@@ -1,6 +1,7 @@
 import { authFetch } from '@/lib/authFetch';
 import { jsonInit, requestJson, requestWithoutBody } from '@/repositories/request';
 import type {
+  RecordCalendarResponse,
   RecordCreateRequest,
   RecordDetail,
   RecordIdResponse,
@@ -16,6 +17,17 @@ import type {
  */
 export const fetchRecordList = (page: number) =>
   requestJson<RecordListResponse>(() => fetch(`/api/records?page=${page}`));
+
+/**
+ * 指定月に記録がある日の一覧を取得する（認証不要）。
+ *
+ * @param month - 対象の月（`YYYY-MM`）
+ * @returns 記録がある日の一覧。形式不正の月は `{ ok: false, status: 400 }`
+ */
+export const fetchRecordCalendar = (month: string) =>
+  requestJson<RecordCalendarResponse>(() =>
+    fetch(`/api/records/calendar?month=${encodeURIComponent(month)}`),
+  );
 
 /**
  * 指定日の記録詳細を取得する（認証不要）。
