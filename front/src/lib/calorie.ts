@@ -42,6 +42,36 @@ export const calculateStrengthCalories = (weightKg: number, totalSets: number) =
   weightKg * 0.1 * totalSets;
 
 /**
+ * 記録の表示画面（一覧・詳細・推移グラフ）で、有酸素種別をカロリー算定用の種別へ寄せる。
+ *
+ * `ウォーク` 以外はすべて `ラン` として算定する（係数を持たない種別も `ラン` 扱いになる）。
+ * 記録の追加・編集フォームの推定カロリーは種別をそのまま渡しており、この寄せを適用しない。
+ *
+ * @param type - 記録された有酸素種別
+ * @returns `ウォーク` または `ラン`
+ */
+export const toCalorieCardioType = (type: string) => (type === 'ウォーク' ? 'ウォーク' : 'ラン');
+
+/**
+ * 1 日分の推定消費カロリー（筋トレ + 有酸素）を算定する。
+ *
+ * 有酸素種別はそのまま {@link calculateCardioCalories} に渡す（寄せが必要なら呼び出し側で
+ * {@link toCalorieCardioType} を適用する）。
+ *
+ * @param weightKg - プロフィールに保存した体重（kg）
+ * @param totalSets - その日の筋トレセット数の合計
+ * @param cardios - その日の有酸素（種別と時間（分））
+ * @returns 推定消費カロリー（kcal、丸め前の実数）
+ */
+export const estimateDailyCalories = (
+  weightKg: number,
+  totalSets: number,
+  cardios: { type: string; minutes: number }[],
+) =>
+  calculateStrengthCalories(weightKg, totalSets) +
+  cardios.reduce((sum, c) => sum + calculateCardioCalories(weightKg, c.minutes, c.type), 0);
+
+/**
  * カロリー値を表示用に整数へ丸め、「N kcal」形式の文字列へ整形する。
  *
  * @param value - 丸め前の推定消費カロリー（kcal）

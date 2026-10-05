@@ -12,7 +12,7 @@
   - [GET /records](#get-records)
   - [GET /records/:date](#get-recordsdate)
   - [GET /records/calendar?month=YYYY-MM](#get-recordscalendarmonthyyyy-mm)
-  - [GET /records/trends?period=1w|1m|3m|all ※未実装（設計のみ）](#get-recordstrendsperiod1w1m3mall-未実装設計のみ)
+  - [GET /records/trends?from=YYYY-MM-DD](#get-recordstrendsfromyyyy-mm-dd)
   - [GET /admin/me](#get-adminme)
   - [マスター管理](#マスター管理)
   - [プロフィール](#プロフィール)
@@ -36,7 +36,7 @@
 | PATCH | `/records/:date` | レコード編集 | 必須 |
 | DELETE | `/records/:date` | レコード削除 | 必須 |
 | GET | `/records/calendar?month=YYYY-MM` | 月別記録有無 | 不要 |
-| GET | `/records/trends?period=1w\|1m\|3m\|all` | 推移グラフ用データ ※未実装（設計のみ） | 不要 |
+| GET | `/records/trends?from=YYYY-MM-DD` | 推移グラフ用データ | 不要 |
 | GET | `/admin/me` | 管理者判定（`{ isAdmin }`） | 任意 |
 | GET | `/masters?type=...` | マスター取得 | 不要 |
 | POST | `/masters?type=...` | マスター追加 | 必須 |
@@ -99,10 +99,25 @@
 - エラー: 400 `{ "error": "invalid month" }`（`month` の欠落・形式不正・範囲外の月）/ 503 `{ "error": "database unavailable" }`。
 - `/records/:date` の動的セグメントより静的セグメント `calendar` が優先されるため、ルートは衝突しない。
 
-### GET /records/trends?period=1w|1m|3m|all ※未実装（設計のみ）
+### GET /records/trends?from=YYYY-MM-DD
 
-- 用途: 推移グラフ用データ取得。返却: `dates` / `weight` / `totalSets` / `cardioDistance` / `calories`。
-- 状態: ルート未実装。推移グラフ画面とあわせて今後実装予定。
+- 用途: 推移グラフ画面用。起点日以降（当日を含む）の記録を日ごとに集約して返す（#22）。
+- クエリ: `from`（任意、`YYYY-MM-DD`。暦に存在しない日付は不正）。省略時は全期間。
+  - 当初設計の `period=1w|1m|3m|all` から変更した。期間の起点となる「今日」をサーバー（UTC）で決めると日本時間の 0〜9 時に 1 日ずれるため、ブラウザのローカル日付で起点日を求めて渡す。
+- レスポンス:
+
+  ```json
+  {
+    "points": [
+      { "date": "2026-02-02", "totalSets": 9, "cardioDistance": 5, "cardios": [{ "type": "ラン", "minutes": 30 }] }
+    ]
+  }
+  ```
+
+  - `points` は日付昇順で、記録がある日のみ（記録の無い日を 0 で埋めない）。
+  - `cardios` は推定カロリーの算定用に種別と時間のみを返す（距離は `cardioDistance` に集約済み）。推定カロリーはプロフィールの体重を持つクライアントで算定する（一覧・詳細と同じ）。
+  - 体重は履歴を持たないため返さない（#178）。
+- エラー: 400 `{ "error": "invalid from" }` / 503 `{ "error": "database unavailable" }`。
 
 ### GET /admin/me
 

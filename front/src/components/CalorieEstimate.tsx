@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useProfile } from '@/hooks/useProfile';
-import { calculateCardioCalories, calculateStrengthCalories, formatCalories } from '@/lib/calorie';
+import { estimateDailyCalories, formatCalories } from '@/lib/calorie';
 
 /** 消費カロリー算定に用いる有酸素 1 件分の入力。 */
 type CardioEntry = {
@@ -31,12 +31,7 @@ export default function CalorieEstimate({ totalSets, cardios }: CalorieEstimateP
 
   const calories = useMemo(() => {
     if (weightKg === null) return null;
-    const strength = calculateStrengthCalories(weightKg, totalSets);
-    const cardioTotal = cardios.reduce(
-      (sum, c) => sum + calculateCardioCalories(weightKg, c.minutes, c.type),
-      0,
-    );
-    return strength + cardioTotal;
+    return estimateDailyCalories(weightKg, totalSets, cardios);
   }, [weightKg, totalSets, cardios]);
 
   return (

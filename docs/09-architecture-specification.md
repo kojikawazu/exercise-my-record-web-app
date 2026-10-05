@@ -59,6 +59,7 @@ flowchart LR
 | フレームワーク | Next.js 16.3.8（App Router, Turbopack）/ React 19.2 |
 | 言語 | TypeScript 5 |
 | スタイリング | Tailwind CSS v4 / lucide-react |
+| グラフ | Recharts 3（推移グラフ画面 `/trends` のみで使用。Client Component に閉じる） |
 | ORM | Prisma v6（`@prisma/client`, `@prisma/adapter-pg`, `pg`） |
 | DB / 認証 | Supabase（PostgreSQL / Google OAuth） |
 | パッケージ管理 | pnpm（workspace: `front/`） |

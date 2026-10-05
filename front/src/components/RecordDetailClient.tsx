@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CalorieEstimate from '@/components/CalorieEstimate';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useRecordDetail } from '@/hooks/useRecordDetail';
+import { toCalorieCardioType } from '@/lib/calorie';
 import { recordEditHref } from '@/lib/recordEditNavigation';
 import type { RecordWorkout } from '@/types/record';
 
@@ -93,7 +94,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
                 <CalorieEstimate
                   totalSets={totalSets}
                   cardios={cardios.map((c) => ({
-                    type: c.type === 'ウォーク' ? 'ウォーク' : 'ラン',
+                    type: toCalorieCardioType(c.type),
                     minutes: c.minutes,
                   }))}
                 />

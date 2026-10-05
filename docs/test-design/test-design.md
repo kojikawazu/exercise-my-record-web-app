@@ -415,6 +415,24 @@ CSP の強制で画面が壊れないことは、既存の E2E / シナリオ全
 
 日付ピッカー（`DatePicker`）の月グリッドは `lib/calendar.ts` の `buildMonthCells` に移したため、既存の記録追加・編集の E2E で回帰を確認する。
 
+### 5o. 推移グラフ（#22）
+
+推移グラフ画面と `GET /api/records/trends`。期間・起点日・日付の検証と系列の組み立ては純粋関数（`lib/trends.ts`）、カロリー算定の共通化（`estimateDailyCalories` / `toCalorieCardioType`）は既存挙動の固定として UT、起点日の扱いは実 DB の IT、画面は E2E で確認する。モックは外部 I/O（Prisma・`fetch`・Supabase）のみ。
+
+| テストファイル | 件数 | 主な正常/準正常/異常 |
+|---|---|---|
+| `tests/unit/lib/trends.test.ts` | 17 | 正: 期間の受理・今日を含む 7/30/90 日・全期間は起点なし・系列の組み立て・現在の体重でのカロリー / 準: 未指定・未知・大文字違い・配列は `1m`・月/年またぎ・うるう年・未知の有酸素種別はラン扱い・体重未設定はカロリー系列なし・点 0 件 / 異: 暦に無い日付（2/29・2/30・4/31）・形式不正 |
+| `tests/unit/lib/calorie.test.ts`（追加分） | 8 | 正: 筋トレ + 有酸素の合算・複数の有酸素 / 準: 有酸素なし・`ウォーク` 以外はラン扱い（一覧・詳細の既存挙動を固定）・寄せない場合の未知種別は 0 / 異: 体重 0 |
+| `tests/unit/app/api/records/trends/route.test.ts` | 8 | 正: 日ごとの集約・`from`（UTC 0 時）以降を昇順で問い合わせる・省略時は全期間 / 準: 記録なしは空配列・明細なしの日は 0 / 異: 不正な `from` は 400（DB を問い合わせない）・ID・監査列・メモを返さない・DB 接続不可は 503 |
+| `tests/unit/hooks/useRecordTrends.test.ts` | 7 | 正: 起点日付き・全期間の取得 / 準: 期間未確定の間は取得しない・切替中は前の期間を持ち越さない・古い応答を反映しない / 異: 5xx・通信エラーは `error` |
+| `tests/unit/repositories/record.test.ts`（`fetchRecordTrends`） | 3 | 正: 起点日付き・全期間はクエリなし / 準: 400 を `status` で返す |
+| `tests/it/app/api/records/trends/route.it.test.ts` | 4 | 正: 日ごとの集約と昇順 / 準: 起点日当日を含み前日を含まない・起点日以降に記録が無ければ空 / 異: 暦に無い日付は 400 |
+| `tests/e2e/trends.spec.ts` | 5 | 正: 全期間で 3 指標のグラフと表（値と日付順）・体重 65kg でのカロリー値・期間の切替が URL に反映・サイドバーから開ける / 準: 記録の無い期間は空状態・不正な期間は 1 ヶ月 |
+
+体重未設定時の案内は E2E では再現できない。`GET /api/profile` が一度読んだ体重をプロセス内に保持し（`fallbackWeightKg`）、DB からプロフィールを消しても同じ値を返すため。分岐の判定は `buildTrendSeries` の UT（体重 `null` でカロリー系列が `null`）で担保する。
+
+一覧・詳細の推定カロリーは `toCalorieCardioType` / `estimateDailyCalories` へ置き換えたため、既存の E2E・シナリオ（`profile-calorie.spec.ts`）で回帰を確認する。
+
 ### 5d-2. テスト DB の接続先ガード（#116）
 
 `front/tests/setup/test-database-url.ts` の UT（`tests/unit/setup/test-database-url.test.ts`）。IT / E2E が本番 DB に接続しないことを保証する。

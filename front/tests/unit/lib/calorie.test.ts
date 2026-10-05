@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { calculateCardioCalories, calculateStrengthCalories, formatCalories } from '@/lib/calorie';
+import {
+  calculateCardioCalories,
+  calculateStrengthCalories,
+  estimateDailyCalories,
+  formatCalories,
+  toCalorieCardioType,
+} from '@/lib/calorie';
 
 describe('calculateCardioCalories', () => {
   // --- 正常系 ---
@@ -76,5 +82,51 @@ describe('formatCalories', () => {
 
   it('should round down when decimal is below .5', () => {
     expect(formatCalories(99.4)).toBe('99 kcal');
+  });
+});
+
+describe('toCalorieCardioType', () => {
+  it('should keep walk as walk', () => {
+    expect(toCalorieCardioType('ウォーク')).toBe('ウォーク');
+  });
+
+  it('should treat run as run', () => {
+    expect(toCalorieCardioType('ラン')).toBe('ラン');
+  });
+
+  it('should treat any other type (including unknown ones) as run', () => {
+    // 一覧・詳細の既存挙動を固定する（係数を持たない種別も ラン として算定する）
+    expect(toCalorieCardioType('サイクリング')).toBe('ラン');
+    expect(toCalorieCardioType('walk')).toBe('ラン');
+    expect(toCalorieCardioType('')).toBe('ラン');
+  });
+});
+
+describe('estimateDailyCalories', () => {
+  it('should sum strength and cardio calories', () => {
+    // 筋トレ 60kg × 0.1 × 10 セット = 60、ラン 60kg × 8.0 × 0.5h = 240
+    expect(estimateDailyCalories(60, 10, [{ type: 'ラン', minutes: 30 }])).toBe(300);
+  });
+
+  it('should add every cardio entry', () => {
+    // ラン 240 + ウォーク 60kg × 4.0 × 0.5h = 120
+    expect(
+      estimateDailyCalories(60, 0, [
+        { type: 'ラン', minutes: 30 },
+        { type: 'ウォーク', minutes: 30 },
+      ]),
+    ).toBe(360);
+  });
+
+  it('should return strength calories only when there is no cardio', () => {
+    expect(estimateDailyCalories(60, 10, [])).toBe(60);
+  });
+
+  it('should count an unknown cardio type as 0 when the type is passed as is', () => {
+    expect(estimateDailyCalories(60, 0, [{ type: 'サイクリング', minutes: 60 }])).toBe(0);
+  });
+
+  it('should return 0 when the weight is 0', () => {
+    expect(estimateDailyCalories(0, 10, [{ type: 'ラン', minutes: 30 }])).toBe(0);
   });
 });

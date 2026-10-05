@@ -17,10 +17,11 @@
 - 👤 **プロフィール** — 体重（kg）の保存
 - ✅ **入力バリデーション** — フィールド単位のエラー表示・保存抑止
 - 📅 **カレンダー** — 月表示。記録がある日をハイライトし、クリックで詳細へ
+- 📈 **推移グラフ** — 合計セット数・有酸素距離・推定消費カロリーの推移（期間: 1 週間 / 1 ヶ月 / 3 ヶ月 / 全期間）
 
 未実装（設計のみ）:
 
-- 📈 **推移グラフ** — 未着手
+- ⚖️ **体重の推移** — 体重履歴が無いため未対応（#178）
 
 詳細な仕様は [`docs/03-functional-specification.md`](docs/03-functional-specification.md)、進捗は [`docs/11-tasks.md`](docs/11-tasks.md) を参照。
 
@@ -31,6 +32,7 @@
 | フレームワーク | Next.js 16（App Router, Turbopack）/ React 19 |
 | 言語 | TypeScript 5 |
 | スタイリング | Tailwind CSS v4 / lucide-react |
+| グラフ | Recharts（推移グラフ画面のみ） |
 | ORM | Prisma v6（`@prisma/adapter-pg` + `pg`） |
 | DB / 認証 | Supabase（PostgreSQL / Google OAuth） |
 | テスト | Vitest（ユニット）/ Playwright（E2E） |

@@ -5,6 +5,7 @@ import {
   fetchRecordCalendar,
   fetchRecordDetail,
   fetchRecordList,
+  fetchRecordTrends,
   updateRecord,
 } from '@/repositories/record';
 import { jsonResponse, stubFetch } from '../../setup/fetchMock';
@@ -85,6 +86,26 @@ describe('fetchRecordCalendar', () => {
     fetchMock.mockResolvedValue(jsonResponse(400, { error: 'invalid month' }));
     await fetchRecordCalendar('2026-02&page=2');
     expect(callOf()[0]).toBe('/api/records/calendar?month=2026-02%26page%3D2');
+  });
+});
+
+describe('fetchRecordTrends', () => {
+  it('should request records from the given start date', async () => {
+    const body = { points: [] };
+    fetchMock.mockResolvedValue(jsonResponse(200, body));
+    expect(await fetchRecordTrends('2026-02-01')).toEqual({ ok: true, data: body });
+    expect(callOf()[0]).toBe('/api/records/trends?from=2026-02-01');
+  });
+
+  it('should request all records without a query when the start date is null', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { points: [] }));
+    await fetchRecordTrends(null);
+    expect(callOf()[0]).toBe('/api/records/trends');
+  });
+
+  it('should return status 400 for an invalid start date', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(400, { error: 'invalid from' }));
+    expect(await fetchRecordTrends('2026-02-30')).toEqual({ ok: false, status: 400 });
   });
 });
 
