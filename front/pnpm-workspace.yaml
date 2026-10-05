@@ -1,3 +1,35 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+# Dependabot alerts の解消（#183）。いずれも推移的依存で、親パッケージが脆弱な版のまま
+# lockfile に固定しており `pnpm update` では再解決されないため、脆弱な範囲だけを修正版へ寄せる。
+# キーは脆弱な範囲に限定しているので、親が修正版へ上がれば効かなくなる（その時点で削除してよい）。
+# vite（server.fs.deny のバイパス等）は @vitejs/plugin-react の peer として自動導入されており、
+# overrides が効かないため package.json の devDependencies に明示して修正版を指定している。
+overrides:
+  # jsdom（UT）/ testcontainers（IT）経由。TLS 検証バイパス・キャッシュ経由の情報漏えい等
+  'undici@>=7.0.0 <7.29.1': ^7.29.1
+  'undici@>=8.0.0 <8.10.2': ^8.10.2
+  # eslint / archiver 経由（minimatch の依存）。ReDoS
+  'brace-expansion@<1.1.21': ^1.1.21
+  'brace-expansion@>=2.0.0 <2.1.7': ^2.1.7
+  'minimatch@<3.1.3': ^3.1.3
+  'minimatch@>=9.0.0 <9.0.7': ^9.0.7
+  # eslint 経由。YAML のマージキーによる CPU 枯渇
+  'js-yaml@>=4.0.0 <4.3.2': ^4.3.2
+  # eslint 経由。シンボリックリンクを辿るコピー
+  '@humanfs/node@<0.16.8': ^0.16.8
+  # eslint 経由。parse() の prototype pollution
+  'flatted@<3.4.2': ^3.4.2
+  # eslint-config-next 経由（fast-glob / tinyglobby）。POSIX 文字クラスのメソッド注入・ReDoS
+  'picomatch@<2.3.2': ^2.3.2
+  'picomatch@>=4.0.0 <4.0.4': ^4.0.4
+  # eslint 経由。`$data` 使用時の ReDoS（Dependabot は未検出だが pnpm audit が検出し、修正版がある）
+  'ajv@<6.14.0': ^6.14.0
+  # @tailwindcss/postcss 経由。sourceMappingURL による任意ファイル読み取り
+  'postcss@<8.5.23': ^8.5.23
+  'nanoid@<3.3.12': ^3.3.12
+  # prisma（@prisma/config）経由。Prisma は 7 系の最新でも 7.1.5 を完全一致で固定しており、
+  # 親の更新では解消できない。設定ファイルの読み込みにのみ使われ、prisma generate と IT の db push で動作確認済み
+  'deepmerge-ts@<8.0.0': ^8.0.0
