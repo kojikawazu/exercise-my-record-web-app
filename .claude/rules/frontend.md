@@ -53,7 +53,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/st
 - 置き場所は**参照範囲**で決める。1 ファイルに閉じる型（props 型等）はコロケーション、2 箇所以上から参照される型は `types/` へ集約する。詳細は `typescript.md`「型定義の配置」に従う。
 - `type` / `interface` は型本体・各メンバーともにコメント必須（`jsdoc.md`）。
 - **共通定数は `constants/` に集約する**（判断軸は型と同じ「参照範囲」。マジックナンバー・マジック文字列を直接書かない）。ただし union の元になる定数は、導出される型と**同じファイルに同居**させる。環境変数は `constants/` に置かない。詳細は `typescript.md`「定数の配置」に従う。
-- **現状**: `types/` は作成済み（`types/master.ts` / `types/record.ts` / `types/recordForm.ts` / `types/apiResult.ts` / `types/profile.ts` / `types/admin.ts` / `types/recordEdit.ts`）。`constants/` は未作成で、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
+- **現状**: `types/` と `constants/` はともに作成済みで、ドメイン単位のファイルに分かれている（一覧は `front/src/types/` / `front/src/constants/` を直接参照する。本ファイルにファイル名を列挙すると追加のたびにずれるため列挙しない）。新しい型・定数は、**2 箇所目の参照が発生した時点で昇格**させる（先回りで作らない）。
 
 ## ディレクトリの役割分担
 
@@ -142,8 +142,8 @@ front/src/
 ├── validation/             # 入力検証（Zod 導入時は schemas/。validation/record.ts）
 ├── lib/                    # 純粋関数・サーバー専用クライアント（prisma / supabase）
 ├── generated/              # Prisma 自動生成（lint・編集対象外）
-├── constants/              # 共通定数（環境変数は置かない。未作成 — 必要時に作る）
-└── types/                  # 型定義（types/master.ts / record.ts / recordForm.ts / apiResult.ts / profile.ts / admin.ts / recordEdit.ts）
+├── constants/              # 共通定数（環境変数は置かない。ドメイン単位のファイル）
+└── types/                  # 型定義（ドメイン単位のファイル）
 ```
 
 ## バリデーション
