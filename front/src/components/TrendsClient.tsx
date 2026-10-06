@@ -84,11 +84,11 @@ export default function TrendsClient({ period }: TrendsClientProps) {
             </Card>
           ) : null}
           {status === 'error' ? (
-            <Card className="p-6 text-sm font-bold text-red-500">記録の取得に失敗しました。</Card>
+            <Card className="p-6 text-sm font-bold text-danger">記録の取得に失敗しました。</Card>
           ) : null}
           {status === 'ready' && points.length === 0 ? (
             <Card className="p-10 text-center">
-              <p className="text-lg font-bold text-gray-500">この期間の記録はありません</p>
+              <p className="text-lg font-bold text-muted">この期間の記録はありません</p>
             </Card>
           ) : null}
           {status === 'ready' && points.length > 0 ? (
@@ -101,7 +101,7 @@ export default function TrendsClient({ period }: TrendsClientProps) {
                 formatValue={(v) => String(Math.round(v * 10) / 10)}
               />
               {profileStatus === 'ready' && weightKg === null ? (
-                <Card className="p-6 text-sm font-bold text-gray-500">
+                <Card className="p-6 text-sm font-bold text-muted">
                   推定消費カロリー: プロフィールで体重を設定すると表示されます
                 </Card>
               ) : null}
@@ -117,12 +117,12 @@ export default function TrendsClient({ period }: TrendsClientProps) {
             </Card>
           ) : null}
           {weights.status === 'error' ? (
-            <Card className="p-6 text-sm font-bold text-red-500">
+            <Card className="p-6 text-sm font-bold text-danger">
               体重の履歴の取得に失敗しました。
             </Card>
           ) : null}
           {weights.status === 'ready' && weightSeries.length === 0 ? (
-            <Card className="p-6 text-sm font-bold text-gray-500">
+            <Card className="p-6 text-sm font-bold text-muted">
               体重: この期間の体重の記録はありません
             </Card>
           ) : null}

@@ -63,9 +63,9 @@ export default function RecordsListClient() {
       />
 
       <section className="mx-auto max-w-5xl px-6 pt-8">
-        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
           {isAdmin ? (
-            <Link href="/admin/records/new" className={`ml-auto ${buttonClasses('pink')}`}>
+            <Link href="/admin/records/new" className={`ml-auto ${buttonClasses('cta')}`}>
               <Plus size={16} />
               記録追加
             </Link>
@@ -79,7 +79,7 @@ export default function RecordsListClient() {
 
         <div className="mt-8 grid gap-6" role="region" aria-label="記録一覧">
           {errorMessage ? (
-            <Card className="p-6 text-sm font-bold text-red-500">{errorMessage}</Card>
+            <Card className="p-6 text-sm font-bold text-danger">{errorMessage}</Card>
           ) : null}
           {!hasFetched ? (
             <Card className="p-10">
@@ -88,7 +88,7 @@ export default function RecordsListClient() {
           ) : null}
           {records.length === 0 && hasFetched ? (
             <Card className="p-10 text-center">
-              <p className="text-lg font-bold text-gray-500">
+              <p className="text-lg font-bold text-muted">
                 記録がありません。最初の記録を追加しましょう
               </p>
             </Card>
@@ -97,12 +97,12 @@ export default function RecordsListClient() {
               <Card key={record.date} className="p-6 md:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-[color:var(--accent)]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
                       <CalendarDays size={22} />
                     </div>
                     <div>
-                      <p className="text-lg font-black text-gray-900">{record.date}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                      <p className="text-lg font-black text-foreground">{record.date}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-subtle">
                         Training Day
                       </p>
                     </div>
@@ -135,7 +135,7 @@ export default function RecordsListClient() {
               >
                 前へ
               </button>
-              <span className="text-sm font-bold text-gray-600">
+              <span className="text-sm font-bold text-muted">
                 {page} / {totalPages} ページ
               </span>
               <button

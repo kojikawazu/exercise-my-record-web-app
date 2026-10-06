@@ -35,7 +35,7 @@ export default function CalorieEstimate({ totalSets, cardios }: CalorieEstimateP
   }, [weightKg, totalSets, cardios]);
 
   return (
-    <div className="rounded-2xl bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600">
+    <div className="rounded-2xl bg-surface-muted px-4 py-3 text-sm font-bold text-muted">
       推定消費カロリー: {calories === null ? '-- kcal' : formatCalories(calories)}
     </div>
   );

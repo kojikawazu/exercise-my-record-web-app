@@ -6,6 +6,7 @@
 
 - [システム構成](#システム構成)
 - [技術スタック](#技術スタック)
+  - [配色トークン](#配色トークン)
 - [インフラ構成](#インフラ構成)
 - [環境変数](#環境変数)
 - [デプロイ方針](#デプロイ方針)
@@ -66,6 +67,30 @@ flowchart LR
 | テスト | Vitest 4 / Playwright（[`08-test-specification.md`](./08-test-specification.md)） |
 
 - `front/next.config.ts` で `agentRules: false` を設定している。Next.js 16.3 以降の `next dev` は `front/` 直下に `AGENTS.md` / `CLAUDE.md`（Next.js のバージョン別ドキュメントを読ませる指示）を自動生成するが、エージェント向け指示の正本はリポジトリ直下の `CLAUDE.md` / `AGENTS.md` と `.claude/rules/` であり、二重化を避けるため生成を止めている。
+
+### 配色トークン
+
+コンポーネントは色を直接書かず（`bg-white` / `text-gray-400` 等を使わない）、**意味で名付けたトークン**を使う（#25）。定義は `front/src/app/globals.css` の CSS 変数で、Tailwind v4 の `@theme inline` でユーティリティ（`bg-surface` / `text-muted` / `border-line` 等）に結ぶ。テーマは `<html data-theme="dark|light">` で切り替える。
+
+| トークン | 用途 | ダーク（既定） | ライト |
+|---|---|---|---|
+| `background` | ページ背景 | `#0f0f14` | `#f8f7f4` |
+| `surface` / `surface-muted` | カード / 入力欄・薄い面 | `#1e1e30` / `#252540` | `#ffffff` / `#f3f2ef` |
+| `foreground` | 本文 | `#f1f5f9` | `#111827` |
+| `muted` / `subtle` | 補足 / ラベル | `#94a3b8` / `#8b95a8` | `#57534e` / `#5f6672` |
+| `line` | 枠線・グラフのグリッド | `#33334d` | `#e7e5e4` |
+| `primary` / `primary-fill` / `primary-soft` | 紫の文字 / 白文字を載せる塗り / 淡い面 | `#a78bfa` / `#7c3aed` / `#2e2a52` | `#6d28d9` / `#6d28d9` / `#ede9fe` |
+| `accent` | 達成（ストリーク） | `#10b981` | `#047857` |
+| `cta` / `cta-foreground` | 主要操作ボタン（オレンジ地に濃色の文字） | `#f97316` / `#1a1a2e` | 同左 |
+| `danger` / `warning` | 削除・エラー / 認証中 | `#f87171` / `#fbbf24` | `#b91c1c` / `#b45309` |
+| `sidebar` | サイドバー（白文字） | `#16162a` | `#5b4bd6` |
+| `chart-series` | グラフの線 | `#8b5cf6` | `#6d28d9` |
+
+- 文字系トークンは、背景・面・`surface-muted` のいずれに対しても 4.5:1 以上（例: ダークの `subtle` は面に対して 5.4:1、ライトの `subtle` は `surface-muted` に対して 5.2:1）。
+- CTA は白文字だと 2.8:1 で AA を満たさないため、濃色の文字（6.1:1）を載せる。
+- `chart-series` は文字用の `primary` と分けている。ダークの `#a78bfa` はグラフの明度帯（dataviz）を外れて明るすぎるため。
+- テーマの初期値は `<head>` のインラインスクリプト（`lib/theme.ts` の `buildThemeInitScript`）が localStorage から描画前に設定する。サーバーは保存値を知らないため HTML は既定（ダーク）で描画し、`<html>` に `suppressHydrationWarning` を付ける。Cookie をサーバーで読む方式は、全ページが動的描画になり静的プリレンダリングを失うため採らない。CSP は `script-src 'unsafe-inline'` を許可済み（[`06-security-specification.md`](./06-security-specification.md)）。
+- 切替は `hooks/useTheme.ts`（`<html data-theme>` を `useSyncExternalStore` で購読）。Context は使わない。
 
 ## インフラ構成
 

@@ -43,7 +43,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   if (isLoading) {
     return (
       <main className="min-h-screen px-6 py-10">
-        <div className="mx-auto flex max-w-5xl justify-center rounded-2xl bg-white p-8">
+        <div className="mx-auto flex max-w-5xl justify-center rounded-2xl bg-surface p-8">
           <LoadingSpinner mode="fetching" />
         </div>
       </main>

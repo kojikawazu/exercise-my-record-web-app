@@ -91,15 +91,15 @@ export default function AdminLoginClient() {
 
       <section className="mx-auto max-w-xl px-6 pt-8">
         <Card className="p-8 text-center">
-          <p className="text-sm font-bold text-gray-500">Google アカウントでログインしてください</p>
+          <p className="text-sm font-bold text-muted">Google アカウントでログインしてください</p>
           <button
             type="button"
-            className={`mt-6 ${buttonClasses('primary')} flex items-center gap-2 rounded-2xl px-6 py-3 text-sm`}
+            className={`mt-6 ${buttonClasses('cta')} flex items-center gap-2 rounded-2xl px-6 py-3 text-sm`}
             onClick={handleLogin}
             disabled={isWorking}
           >
             {isWorking ? (
-              <LoadingSpinner mode="auth" variant="inline" className="text-white" />
+              <LoadingSpinner mode="auth" variant="inline" className="text-cta-foreground" />
             ) : (
               <>
                 <LogIn size={16} />
@@ -107,7 +107,7 @@ export default function AdminLoginClient() {
               </>
             )}
           </button>
-          {error ? <p className="mt-4 text-sm font-bold text-red-500">{error}</p> : null}
+          {error ? <p className="mt-4 text-sm font-bold text-danger">{error}</p> : null}
           {isBypassAllowed ? (
             <button
               type="button"

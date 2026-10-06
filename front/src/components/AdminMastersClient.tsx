@@ -122,8 +122,8 @@ export default function AdminMastersClient() {
               onClick={() => selectType(tab.type)}
               className={`rounded-full border px-4 py-2 text-sm font-bold ${
                 activeType === tab.type
-                  ? 'border-[color:var(--accent)] text-[color:var(--accent)]'
-                  : 'border-gray-200 bg-white text-gray-500'
+                  ? 'border-primary text-primary'
+                  : 'border-line bg-surface text-muted'
               }`}
             >
               {tab.label}
@@ -132,25 +132,25 @@ export default function AdminMastersClient() {
         </div>
 
         <Card className="mt-8 p-6 md:p-8">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">
             {activeLabel}を追加
           </label>
           <div className="mt-3 flex flex-wrap gap-3">
             <input
               type="text"
               placeholder="新しい項目を追加"
-              className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold"
+              className="flex-1 rounded-2xl border border-line bg-surface-muted px-4 py-3 text-sm font-bold"
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
             />
             <button
               type="button"
-              className={`${buttonClasses('pink')} flex items-center gap-2`}
+              className={`${buttonClasses('cta')} flex items-center gap-2`}
               onClick={handleAdd}
               disabled={adding}
             >
               {adding ? (
-                <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+                <LoadingSpinner mode="saving" variant="inline" className="text-cta-foreground" />
               ) : (
                 <>
                   <Plus size={16} />
@@ -161,7 +161,7 @@ export default function AdminMastersClient() {
           </div>
         </Card>
 
-        {message ? <p className="mt-4 text-sm font-bold text-red-500">{message}</p> : null}
+        {message ? <p className="mt-4 text-sm font-bold text-danger">{message}</p> : null}
 
         {loading ? (
           <Card className="mt-6 p-6">
@@ -173,16 +173,16 @@ export default function AdminMastersClient() {
               <Card key={item.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-gray-400">名称</p>
+                    <p className="text-[10px] font-black uppercase text-subtle">名称</p>
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="mt-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold"
+                        className="mt-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold"
                         value={editingValue}
                         onChange={(event) => setEditingValue(event.target.value)}
                       />
                     ) : (
-                      <p className="font-bold text-gray-900">{item.name}</p>
+                      <p className="font-bold text-foreground">{item.name}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -190,12 +190,16 @@ export default function AdminMastersClient() {
                       <>
                         <button
                           type="button"
-                          className={`${buttonClasses('pink')} flex items-center gap-1`}
+                          className={`${buttonClasses('cta')} flex items-center gap-1`}
                           onClick={() => handleSave(item.id)}
                           disabled={savingId === item.id}
                         >
                           {savingId === item.id ? (
-                            <LoadingSpinner mode="saving" variant="inline" className="text-white" />
+                            <LoadingSpinner
+                              mode="saving"
+                              variant="inline"
+                              className="text-cta-foreground"
+                            />
                           ) : (
                             <>
                               <Save size={14} />

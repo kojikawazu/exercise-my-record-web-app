@@ -19,8 +19,8 @@ export default function LatestRecordHighlight({ record }: LatestRecordHighlightP
     <Card className="p-6 md:p-8" role="region" aria-label="最新の記録">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-[color:var(--accent)]">最新の記録</h2>
-          <p className="mt-1 text-sm font-bold text-gray-500">{record.date}</p>
+          <h2 className="text-xl font-black text-primary">最新の記録</h2>
+          <p className="mt-1 text-sm font-bold text-muted">{record.date}</p>
         </div>
         <Link href={`/records/${record.date}`} className={buttonClasses('outline')}>
           詳細を見る

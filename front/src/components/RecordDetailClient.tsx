@@ -62,7 +62,7 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
       <section className="mx-auto max-w-4xl px-6 pt-8">
         <div className="space-y-8">
           {errorMessage ? (
-            <Card className="p-6 text-sm font-bold text-red-500">{errorMessage}</Card>
+            <Card className="p-6 text-sm font-bold text-danger">{errorMessage}</Card>
           ) : null}
           {isLoading ? (
             <Card className="p-10">
@@ -74,15 +74,15 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
               <Card className="p-6 md:p-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-subtle">
                       日付
                     </p>
-                    <h2 className="text-2xl font-black text-gray-900">{detail?.date ?? date}</h2>
+                    <h2 className="text-2xl font-black text-foreground">{detail?.date ?? date}</h2>
                   </div>
                   {isAdmin ? (
                     <Link
                       href={recordEditHref(detail?.date ?? date, 'detail')}
-                      className="rounded-full border border-[#8a6f3c] px-4 py-2 text-sm font-bold text-[#8a6f3c] transition hover:bg-[#8a6f3c] hover:text-white"
+                      className={buttonClasses('outline')}
                     >
                       編集
                     </Link>
@@ -102,33 +102,33 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
 
               <Card className="p-6 md:p-8">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-black text-[color:var(--accent)]">筋トレ</h3>
-                  <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-[color:var(--accent)]">
+                  <h3 className="text-xl font-black text-primary">筋トレ</h3>
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
                     {workouts.length} 件
                   </span>
                 </div>
                 <div className="mt-5 grid gap-4">
                   {workouts.map((item) => (
-                    <div key={item.id} className="rounded-2xl bg-gray-50 p-4">
-                      <div className="grid gap-3 text-sm text-gray-800 md:grid-cols-5">
+                    <div key={item.id} className="rounded-2xl bg-surface-muted p-4">
+                      <div className="grid gap-3 text-sm text-foreground md:grid-cols-5">
                         <div>
-                          <p className="text-[10px] font-black uppercase text-gray-400">種目</p>
+                          <p className="text-[10px] font-black uppercase text-subtle">種目</p>
                           <p className="font-bold">{item.name}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase text-gray-400">部位</p>
+                          <p className="text-[10px] font-black uppercase text-subtle">部位</p>
                           <p className="font-bold">{item.part}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase text-gray-400">セット</p>
+                          <p className="text-[10px] font-black uppercase text-subtle">セット</p>
                           <p className="font-bold">{item.sets}セット</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase text-gray-400">回数</p>
+                          <p className="text-[10px] font-black uppercase text-subtle">回数</p>
                           <p className="font-bold">{item.reps}回</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase text-gray-400">重量</p>
+                          <p className="text-[10px] font-black uppercase text-subtle">重量</p>
                           <p className="font-bold">{item.weight}kg</p>
                         </div>
                       </div>
@@ -139,28 +139,28 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
 
               <Card className="p-6 md:p-8">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-black text-[color:var(--accent)]">有酸素</h3>
-                  <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-[color:var(--accent)]">
+                  <h3 className="text-xl font-black text-primary">有酸素</h3>
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
                     {cardios.length} 件
                   </span>
                 </div>
                 {cardios.length === 0 ? (
-                  <p className="mt-4 text-sm text-gray-400">有酸素の記録なし</p>
+                  <p className="mt-4 text-sm text-subtle">有酸素の記録なし</p>
                 ) : (
                   <div className="mt-5 grid gap-4">
                     {cardios.map((c, i) => (
-                      <div key={i} className="rounded-2xl bg-gray-50 p-4">
-                        <div className="grid gap-3 text-sm text-gray-800 md:grid-cols-3">
+                      <div key={i} className="rounded-2xl bg-surface-muted p-4">
+                        <div className="grid gap-3 text-sm text-foreground md:grid-cols-3">
                           <div>
-                            <p className="text-[10px] font-black uppercase text-gray-400">種別</p>
+                            <p className="text-[10px] font-black uppercase text-subtle">種別</p>
                             <p className="font-bold">{c.type}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black uppercase text-gray-400">時間</p>
+                            <p className="text-[10px] font-black uppercase text-subtle">時間</p>
                             <p className="font-bold">{c.minutes}分</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black uppercase text-gray-400">距離</p>
+                            <p className="text-[10px] font-black uppercase text-subtle">距離</p>
                             <p className="font-bold">{c.distance}km</p>
                           </div>
                         </div>
@@ -171,8 +171,8 @@ export default function RecordDetailClient({ date }: RecordDetailClientProps) {
               </Card>
 
               <Card className="p-6 md:p-8">
-                <h3 className="text-xl font-black text-[color:var(--accent)]">体調メモ</h3>
-                <p className="mt-3 text-sm text-gray-500">
+                <h3 className="text-xl font-black text-primary">体調メモ</h3>
+                <p className="mt-3 text-sm text-muted">
                   {memo.length === 0 ? '体調メモなし' : memo}
                 </p>
               </Card>

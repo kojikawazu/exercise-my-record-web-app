@@ -38,12 +38,14 @@ type TrendChartProps = {
   fitToData?: boolean;
 };
 
-// 系列色はブランドのアクセント（1 系列のみ。dataviz のコントラスト検査は白背景で PASS）。
+// 色は配色トークン（globals.css）を参照し、テーマの切替に追従させる（#25）。
+// 系列色は 1 系列のみで、dataviz の検査（明度帯・面とのコントラスト 3:1 以上）をライト（#6d28d9 on #ffffff）・
+// ダーク（#8b5cf6 on #1e1e30）の両方で PASS する値を --chart-series に置いている。
 // 文字は系列色を使わず、本文用のインク色で書く
-const SERIES_COLOR = 'var(--accent)';
-const SURFACE_COLOR = '#ffffff';
-const GRID_COLOR = '#e5e7eb';
-const AXIS_TEXT_COLOR = '#6b7280';
+const SERIES_COLOR = 'var(--chart-series)';
+const SURFACE_COLOR = 'var(--surface)';
+const GRID_COLOR = 'var(--line)';
+const AXIS_TEXT_COLOR = 'var(--subtle)';
 
 /**
  * 横軸の目盛りを `M/D` に縮める（年は表で確認できる）。
@@ -76,9 +78,9 @@ export default function TrendChart({
     const point = active ? (payload?.[0]?.payload as TrendChartPoint | undefined) : undefined;
     if (!point) return null;
     return (
-      <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm">
-        <p className="font-bold text-gray-500">{point.date}</p>
-        <p className="mt-1 flex items-center gap-2 font-black text-gray-900">
+      <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-sm">
+        <p className="font-bold text-muted">{point.date}</p>
+        <p className="mt-1 flex items-center gap-2 font-black text-foreground">
           <span className="h-2 w-2 rounded-full" style={{ background: SERIES_COLOR }} />
           {formatValue(point.value)}
           {unit}
@@ -89,9 +91,9 @@ export default function TrendChart({
 
   return (
     <Card className="p-6 md:p-8">
-      <h2 className="text-lg font-black text-gray-900">
+      <h2 className="text-lg font-black text-foreground">
         {title}
-        <span className="ml-2 text-xs font-bold text-gray-400">（{unit}）</span>
+        <span className="ml-2 text-xs font-bold text-subtle">（{unit}）</span>
       </h2>
       <div className="mt-4 h-56" role="img" aria-label={`${title}の推移（${points.length} 日分）`}>
         <ResponsiveContainer width="100%" height="100%">
@@ -139,10 +141,10 @@ export default function TrendChart({
         </ResponsiveContainer>
       </div>
       <details className="mt-4 text-sm">
-        <summary className="cursor-pointer font-bold text-gray-500">表で見る</summary>
+        <summary className="cursor-pointer font-bold text-muted">表で見る</summary>
         <table className="mt-2 w-full text-left">
           <thead>
-            <tr className="text-[10px] font-black uppercase text-gray-400">
+            <tr className="text-[10px] font-black uppercase text-subtle">
               <th className="py-1">日付</th>
               <th className="py-1 text-right">
                 {title}（{unit}）
@@ -151,7 +153,7 @@ export default function TrendChart({
           </thead>
           <tbody>
             {points.map((point) => (
-              <tr key={point.date} className="border-t border-gray-100 text-gray-800">
+              <tr key={point.date} className="border-t border-line text-foreground">
                 <td className="py-1">{point.date}</td>
                 <td className="py-1 text-right font-bold">{formatValue(point.value)}</td>
               </tr>
