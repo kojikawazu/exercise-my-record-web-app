@@ -8,9 +8,9 @@ ignoredBuiltDependencies:
 # vite（server.fs.deny のバイパス等）は @vitejs/plugin-react の peer として自動導入されており、
 # overrides が効かないため package.json の devDependencies に明示して修正版を指定している。
 overrides:
-  # jsdom（UT）/ testcontainers（IT）経由。TLS 検証バイパス・キャッシュ経由の情報漏えい等
-  'undici@>=7.0.0 <7.29.1': ^7.29.1
-  'undici@>=8.0.0 <8.10.2': ^8.10.2
+  # jsdom（UT）/ testcontainers（IT）経由。TLS 検証バイパス・キャッシュ経由の情報漏えい等（#183, #194）
+  'undici@>=7.0.0 <7.30.1': ^7.30.1
+  'undici@>=8.0.0 <8.12.2': ^8.12.2
   # eslint / archiver 経由（minimatch の依存）。ReDoS
   'brace-expansion@<1.1.21': ^1.1.21
   'brace-expansion@>=2.0.0 <2.1.7': ^2.1.7
